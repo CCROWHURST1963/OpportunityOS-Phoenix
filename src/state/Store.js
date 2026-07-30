@@ -1,1 +1,0 @@
-export class Store{constructor(){this.state={}}get(){return this.state}}
