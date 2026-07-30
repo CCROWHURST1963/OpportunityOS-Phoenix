@@ -1,12 +1,27 @@
 export class AppState {
 
     constructor() {
+
         this.app = {
-            environment: "local",
-            version: "PHX-001A"
+            name: "OpportunityOS Phoenix",
+            version: "PHX-002"
         };
 
-        this.status = "Ready";
+        this.user = {
+            id: null,
+            name: null,
+            role: null
+        };
+
+        this.dashboard = {
+            view: "default",
+            rows: [],
+            loading: false
+        };
+
+        this.ui = {
+            activePanel: "dashboard"
+        };
     }
 
 }
