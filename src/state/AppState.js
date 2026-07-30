@@ -1,9 +1,12 @@
-import { App } from "./app.js";
-import { AppState } from "../state/AppState.js";
+export class AppState {
 
-window.addEventListener("DOMContentLoaded", () => {
-    const state = new AppState();
-    const app = new App(state);
+    constructor() {
+        this.app = {
+            environment: "local",
+            version: "PHX-001A"
+        };
 
-    app.start();
-});export class Store{constructor(){this.state={}}get(){return this.state}}
+        this.status = "Ready";
+    }
+
+}
