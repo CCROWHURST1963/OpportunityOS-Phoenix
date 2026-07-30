@@ -2,19 +2,36 @@ export class StatusBarController {
 
     constructor(state) {
         this.state = state;
+        this.container = null;
     }
 
-    render(container) {
 
-        container.innerHTML = `
+    mount(container) {
 
-            <footer class="phoenix-status">
+        this.container = container;
 
-                <span>
-                    Ready
-                </span>
+        this.render();
 
-            </footer>
+        this.state.subscribe(() => {
+            this.render();
+        });
+
+    }
+
+
+    render() {
+
+        const status = this.state.get("status");
+
+        this.container.innerHTML = `
+
+            <div class="phoenix-status-pill">
+
+                <span class="status-dot"></span>
+
+                ${status}
+
+            </div>
 
         `;
 

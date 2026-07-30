@@ -45,7 +45,7 @@ export class App {
 
 
         new StatusBarController(this.state)
-            .render(document.getElementById("phoenix-status"));
+            .mount(document.getElementById("phoenix-status"));
 
     }
 
