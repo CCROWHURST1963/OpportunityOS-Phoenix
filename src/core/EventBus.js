@@ -1,0 +1,1 @@
+export class EventBus{constructor(){this.e=new Map()}subscribe(n,h){(this.e.get(n)||this.e.set(n,[]).get(n)).push(h)}publish(n,p={}){(this.e.get(n)||[]).forEach(f=>f(p))}}
