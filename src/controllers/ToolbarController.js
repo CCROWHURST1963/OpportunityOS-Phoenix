@@ -2,19 +2,40 @@ export class ToolbarController {
 
     constructor(state) {
         this.state = state;
+        this.container = null;
     }
 
 
-    render(container) {
+    mount(container) {
 
-        container.innerHTML = `
+        this.container = container;
+
+        this.render();
+
+    }
+
+
+    render() {
+
+        this.container.innerHTML = `
 
             <nav class="phoenix-toolbar">
 
-                <button>Dashboard</button>
-                <button>Workspace</button>
-                <button>Reports</button>
-                <button>Admin</button>
+                <button class="phoenix-button active">
+                    Dashboard
+                </button>
+
+                <button class="phoenix-button">
+                    Workspace
+                </button>
+
+                <button class="phoenix-button">
+                    Reports
+                </button>
+
+                <button class="phoenix-button">
+                    Admin
+                </button>
 
             </nav>
 

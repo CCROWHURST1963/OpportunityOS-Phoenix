@@ -2,19 +2,33 @@ export class DashboardController {
 
     constructor(state) {
         this.state = state;
+        this.container = null;
     }
 
 
-    render(container) {
+    mount(container) {
 
-        container.innerHTML = `
+        this.container = container;
+
+        this.render();
+
+        this.state.subscribe(() => {
+            this.render();
+        });
+
+    }
+
+
+    render() {
+
+        this.container.innerHTML = `
 
             <section class="phoenix-dashboard">
 
                 <h2>Dashboard</h2>
 
                 <p>
-                    Phoenix dashboard area ready.
+                    Current view: ${this.state.get("view")}
                 </p>
 
             </section>

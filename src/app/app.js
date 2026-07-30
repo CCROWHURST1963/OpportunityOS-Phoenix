@@ -37,11 +37,11 @@ export class App {
 
 
         new ToolbarController(this.state)
-            .render(document.getElementById("phoenix-toolbar"));
+            .mount(document.getElementById("phoenix-toolbar"));
 
 
         new DashboardController(this.state)
-            .render(document.getElementById("phoenix-dashboard"));
+            .mount(document.getElementById("phoenix-dashboard"));
 
 
         new StatusBarController(this.state)
