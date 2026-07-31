@@ -1,37 +1,25 @@
-import { ViewColumnAdapter }
-    from "./ViewColumnAdapter.js";
-
-
-
 export class ViewConfigService {
 
 
-    constructor(
-
-        viewConfigRepository
-
-    ) {
+    constructor(viewConfigRepository) {
 
 
         this.viewConfigRepository =
-
             viewConfigRepository;
-
-
-
-        this.columnAdapter =
-
-            new ViewColumnAdapter();
-
 
 
         this.views = {};
 
+        this.currentView = null;
 
 
-        this.currentView =
-
-            "default";
+        console.log(
+            "[PHX ViewConfigService] constructed",
+            {
+                repository:
+                    !!viewConfigRepository
+            }
+        );
 
 
     }
@@ -40,16 +28,15 @@ export class ViewConfigService {
 
 
 
-    async loadViews(
-
-        process = "Can We Sell",
-
-        userKey = "DEFAULT"
-
-    ) {
+    async loadViews(userKey = "DEFAULT") {
 
 
-        let loaded = false;
+        console.log(
+            "[PHX VIEW LOAD START]",
+            {
+                userKey
+            }
+        );
 
 
 
@@ -59,149 +46,73 @@ export class ViewConfigService {
             const rawViews =
 
                 await this.viewConfigRepository
-                    .getViews(
-
-                        userKey
-
-                    );
+                    .getViews(userKey);
 
 
 
             console.log(
-
-                "[PHX VIEW CONFIG RAW]",
-
+                "[PHX RAW VIEW CONFIG]",
                 rawViews
-
             );
 
 
 
-            const processViews =
-
-                rawViews.filter(
-
-                    view =>
-
-                        view.process_view
-
-                        ===
-
-                        process
-
-                );
+            this.parseViews(rawViews);
 
 
 
             console.log(
-
-                "[PHX VIEW CONFIG PROCESS FILTER]",
-
-                {
-
-                    process,
-
-                    count:
-
-                        processViews.length
-
-                }
-
+                "[PHX PARSED VIEWS]",
+                this.views
             );
 
 
 
-            if (
-
-                processViews.length > 0
-
-            ) {
-
-
-                this.views = {};
+            console.log(
+                "[PHX VIEW COUNT]",
+                Object.keys(this.views).length
+            );
 
 
 
-                processViews.forEach(
-
-                    view => {
+            if (!this.currentView) {
 
 
-                        const config =
+                const preferredView =
 
-                            view.view_config;
-
-
-
-                        const adaptedColumns =
-
-                            this.columnAdapter
-                                .adaptColumns(
-
-                                    config.columns || []
-
-                                );
-
-
-
-                        console.log(
-
-                            "[PHX ADAPTED COLUMNS]",
-
-                            adaptedColumns
-
-                        );
-
-
-
-                        this.views[
-
-                            view.active_view
-
-                        ] = {
-
-
-                            id:
-
-                                view.active_view,
-
-
-                            name:
-
-                                view.active_view,
-
-
-                            columns:
-
-                                adaptedColumns,
-
-
-                            raw:
-
-                                config
-
-
-                        };
-
-
-                    }
-
-                );
+                    "Can We Sell";
 
 
 
                 this.currentView =
 
-                    processViews[0]
+                    this.views[preferredView]
 
-                        .active_view;
+                    ?
 
+                    preferredView
 
+                    :
 
-                loaded = true;
+                    Object.keys(this.views)[0]
+
+                    ||
+
+                    null;
 
 
             }
+
+
+
+            console.log(
+                "[PHX ACTIVE VIEW]",
+                this.currentView
+            );
+
+
+
+            return this.views;
 
 
         }
@@ -211,24 +122,12 @@ export class ViewConfigService {
 
 
             console.error(
-
-                "[PHX VIEW CONFIG LOAD FAILED]",
-
+                "[PHX VIEW LOAD ERROR]",
                 error
-
             );
 
 
-        }
-
-
-
-
-
-        if (!loaded) {
-
-
-            this.loadDefaultView();
+            throw error;
 
 
         }
@@ -240,192 +139,307 @@ export class ViewConfigService {
 
 
 
-    loadDefaultView() {
 
 
-        this.views = {
+    parseViews(raw) {
 
 
-            default:
+        console.log(
+            "[PHX PARSE INPUT]",
+            raw
+        );
 
-            {
 
 
-                id:
+        this.views = {};
 
-                    "default",
 
 
-                name:
+        if (!raw) {
 
-                    "Default View",
 
+            console.warn(
+                "[PHX PARSE EMPTY]"
+            );
 
-                columns:
 
-                [
+            return;
 
 
-                    {
+        }
 
-                        field:
 
-                            "asin",
 
-                        label:
 
-                            "ASIN",
 
-                        width:
+        let configs = [];
 
-                            140,
 
-                        visible:
 
-                            true
+        if (
 
-                    },
+            Array.isArray(raw)
 
+        ) {
 
-                    {
 
-                        field:
+            configs = raw;
 
-                            "brand",
 
-                        label:
+        }
 
-                            "Brand",
 
-                        width:
+        else if (
 
-                            180,
+            Array.isArray(raw.views)
 
-                        visible:
+        ) {
 
-                            true
 
-                    },
+            configs = raw.views;
 
 
-                    {
+        }
 
-                        field:
 
-                            "title",
+        else {
 
-                        label:
 
-                            "Product",
+            configs = [
 
-                        width:
+                raw
 
-                            320,
+            ];
 
-                        visible:
 
-                            true
+        }
 
-                    },
 
 
-                    {
 
-                        field:
 
-                            "validated_sales_price",
+        configs.forEach(
 
-                        label:
+            (config,index)=>{
 
-                            "Sales Price",
 
-                        width:
+                let viewConfig =
 
-                            120,
+                    config.view_config
 
-                        visible:
+                    ||
 
-                            true
+                    config.config
 
-                    },
+                    ||
 
+                    config;
 
-                    {
 
-                        field:
 
-                            "opportunity_score",
 
-                        label:
 
-                            "Score",
+                if (
 
-                        width:
+                    typeof viewConfig === "string"
 
-                            100,
+                ) {
 
-                        visible:
 
-                            true
+                    viewConfig =
 
-                    },
+                        JSON.parse(
+                            viewConfig
+                        );
 
 
-                    {
+                }
 
-                        field:
 
-                            "buy_signal",
 
-                        label:
 
-                            "Buy Signal",
 
-                        width:
 
-                            150,
 
-                        visible:
+                const name =
 
-                            true
 
-                    },
+                    config.name
 
+                    ||
 
-                    {
+                    config.view_name
 
-                        field:
+                    ||
 
-                            "status",
+                    config.active_view
 
-                        label:
+                    ||
 
-                            "Status",
+                    config.process_view
 
-                        width:
+                    ||
 
-                            120,
+                    viewConfig.name
 
-                        visible:
+                    ||
 
-                            true
+                    `view_${index}`;
 
-                    }
 
 
-                ]
+
+
+
+
+                const columns =
+
+                    viewConfig.columns
+
+                    ||
+
+                    [];
+
+
+
+
+
+                this.views[name] = {
+
+
+                    id:
+
+                        config.id
+
+                        ||
+
+                        name,
+
+
+
+                    name:
+
+                        name,
+
+
+
+                    columns:
+
+
+                        columns.map(
+
+                            column=>{
+
+
+                                const mapped = {
+
+
+                                    ...column,
+
+
+
+                                    key:
+
+                                        column.key
+
+                                        ||
+
+                                        column.field
+
+                                        ||
+
+                                        column.id,
+
+
+
+                                    field:
+
+                                        column.field
+
+                                        ||
+
+                                        column.key
+
+                                        ||
+
+                                        column.id,
+
+
+
+                                    label:
+
+                                        column.label
+
+                                        ||
+
+                                        column.title
+
+                                        ||
+
+                                        column.name
+
+                                        ||
+
+                                        column.key,
+
+
+
+                                    width:
+
+                                        Number(
+
+                                            column.width
+
+                                            ||
+
+                                            column.column_width
+
+                                            ||
+
+                                            column.width_px
+
+                                        )
+
+                                        ||
+
+                                        null,
+
+
+
+                                    visible:
+
+                                        column.visible
+
+                                        !==
+
+                                        false
+
+
+                                };
+
+
+
+                                console.log(
+                                    "[PHX COLUMN NORMALISED]",
+                                    mapped
+                                );
+
+
+
+                                return mapped;
+
+
+                            }
+
+                        )
+
+
+                };
 
 
             }
 
-
-        };
-
-
-
-        this.currentView =
-
-            "default";
+        );
 
 
     }
@@ -434,13 +448,66 @@ export class ViewConfigService {
 
 
 
-    getCurrentViewName() {
 
 
-        return this.currentView;
+    getColumns(name=null) {
+
+
+        const viewName =
+
+            name
+
+            ||
+
+            this.currentView;
+
+
+
+        const view =
+
+            this.views[viewName];
+
+
+
+        console.log(
+            "[PHX GET COLUMNS]",
+            {
+                viewName,
+                count:
+                    view?.columns?.length
+            }
+        );
+
+
+
+        if (!view) {
+
+
+            console.error(
+                "[PHX VIEW NOT FOUND]",
+                viewName
+            );
+
+
+            return [];
+
+
+        }
+
+
+
+        return view.columns.filter(
+
+            column =>
+
+                column.visible !== false
+
+        );
 
 
     }
+
+
 
 
 
@@ -462,7 +529,16 @@ export class ViewConfigService {
 
 
 
+
+
     setCurrentView(name) {
+
+
+        console.log(
+            "[PHX SET VIEW]",
+            name
+        );
+
 
 
         if (
@@ -476,48 +552,6 @@ export class ViewConfigService {
 
 
         }
-
-
-    }
-
-
-
-
-
-    getColumns(name = null) {
-
-
-        const viewName =
-
-            name
-
-            ||
-
-            this.currentView;
-
-
-
-        const view =
-
-            this.views[
-
-                viewName
-
-            ];
-
-
-
-        if (!view) {
-
-
-            return [];
-
-
-        }
-
-
-
-        return view.columns;
 
 
     }

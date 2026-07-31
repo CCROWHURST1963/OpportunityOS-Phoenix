@@ -4,308 +4,9 @@ export class ColumnRegistry {
     constructor() {
 
 
-        this.resolvers = {
-
-
-            "_asin":
-
-                row =>
-
-                    row.asin
-                    ??
-                    row._asin
-                    ??
-                    "",
-
-
-
-            "actions":
-
-                row =>
-
-                    "",
-
-
-
-            "status":
-
-                row =>
-
-                    row.status
-                    ??
-                    "",
-
-
-
-            "override_status":
-
-                row =>
-
-                    row.override_status
-                    ??
-                    "",
-
-
-
-            "buy_signal":
-
-                row =>
-
-                    row.buy_signal
-                    ??
-                    "",
-
-
-
-            "score":
-
-                row =>
-
-                    row.opportunity_score
-                    ??
-                    row.score
-                    ??
-                    "",
-
-
-
-            "_supplier":
-
-                row =>
-
-                    row.supplier
-                    ??
-                    row._supplier
-                    ??
-                    "",
-
-
-
-            "supplier":
-
-                row =>
-
-                    row.supplier
-                    ??
-                    "",
-
-
-
-            "hazmat_status":
-
-                row =>
-
-                    row.hazmat_status
-                    ??
-                    "",
-
-
-
-            "eligible_to_sell":
-
-                row =>
-
-                    row.eligible_to_sell
-                    ??
-                    "",
-
-
-
-            "ungate_qty":
-
-                row =>
-
-                    row.ungate_qty
-                    ??
-                    "",
-
-
-
-            "pack_size":
-
-                row =>
-
-                    row.pack_size
-                    ??
-                    "",
-
-
-
-            "pack_source":
-
-                row =>
-
-                    row.pack_source
-                    ??
-                    "",
-
-
-
-            "comment":
-
-                row =>
-
-                    row.comment
-                    ??
-                    "",
-
-
-
-            "buy_qty":
-
-                row =>
-
-                    row.buy_qty
-                    ??
-                    "",
-
-
-
-            "_brand":
-
-                row =>
-
-                    row.brand
-                    ??
-                    row._brand
-                    ??
-                    "",
-
-
-
-            "_category":
-
-                row =>
-
-                    row.category
-                    ??
-                    row._category
-                    ??
-                    "",
-
-
-
-            "_title":
-
-                row =>
-
-                    row.title
-                    ??
-                    row._title
-                    ??
-                    "",
-
-
-
-            "max_cost":
-
-                row =>
-
-                    row.max_cost
-                    ??
-                    "",
-
-
-
-            "target_selling_price":
-
-                row =>
-
-                    row.target_selling_price
-                    ??
-                    "",
-
-
-
-            "break_even_price":
-
-                row =>
-
-                    row.break_even_price
-                    ??
-                    "",
-
-
-
-            "product_type":
-
-                row =>
-
-                    row.product_type
-                    ??
-                    "",
-
-
-
-            "competing_sellers":
-
-                row =>
-
-                    row.competing_sellers
-                    ??
-                    "",
-
-
-
-            "competing_stock":
-
-                row =>
-
-                    row.competing_stock
-                    ??
-                    "",
-
-
-
-            "competing_price":
-
-                row =>
-
-                    row.competing_price
-                    ??
-                    "",
-
-
-
-            "decision":
-
-                row =>
-
-                    row.decision
-                    ??
-                    "",
-
-
-
-            "total_seller_sales":
-
-                row =>
-
-                    row.total_seller_sales
-                    ??
-                    "",
-
-
-
-            "30_day_seller_sales":
-
-                row =>
-
-                    row["30_day_seller_sales"]
-                    ??
-                    "",
-
-
-
-            "revised_estimated_share_of_sales":
-
-                row =>
-
-                    row.revised_estimated_share_of_sales
-                    ??
-                    ""
-
-        };
+        console.log(
+            "[PHX COLUMN REGISTRY CREATED]"
+        );
 
 
     }
@@ -314,44 +15,56 @@ export class ColumnRegistry {
 
 
 
-    getValue(
-
-        key,
-
-        row
-
-    ) {
+    getValue(key, row) {
 
 
-        const resolver =
+        console.log(
 
-            this.resolvers[key];
+            "[PHX COLUMN VALUE LOOKUP]",
+
+            {
+                key,
+                hasKey:
+                    row
+                    &&
+                    Object.prototype.hasOwnProperty.call(
+                        row,
+                        key
+                    ),
+
+                sample:
+                    row
+
+            }
+
+        );
 
 
 
-        if (
-
-            resolver
-
-        ) {
+        if (!row || !key) {
 
 
-            return resolver(row);
+            return "";
 
 
         }
 
 
 
-        /*
-            fallback for direct fields
 
+
+        /*
+            Direct match first
         */
 
 
         if (
 
             row[key] !== undefined
+
+            &&
+
+            row[key] !== null
 
         ) {
 
@@ -363,23 +76,88 @@ export class ColumnRegistry {
 
 
 
+
+
+        /*
+            Underscore fallback
+
+            _category -> category
+            _title    -> title
+            _brand    -> brand
+
+        */
+
+
+        if (
+
+            key.startsWith("_")
+
+        ) {
+
+
+            const cleanKey =
+
+                key.substring(1);
+
+
+
+
+            if (
+
+                row[cleanKey] !== undefined
+
+                &&
+
+                row[cleanKey] !== null
+
+            ) {
+
+
+                console.log(
+
+                    "[PHX COLUMN ALIAS MATCH]",
+
+                    {
+                        from:key,
+                        to:cleanKey,
+                        value:
+                            row[cleanKey]
+                    }
+
+                );
+
+
+                return row[cleanKey];
+
+
+            }
+
+
+        }
+
+
+
+
+
+        console.warn(
+
+            "[PHX COLUMN VALUE NOT FOUND]",
+
+            {
+
+                key,
+
+                availableKeys:
+
+                    Object.keys(row)
+
+            }
+
+        );
+
+
+
         return "";
-
-
-    }
-
-
-
-
-
-    has(
-
-        key
-
-    ) {
-
-
-        return !!this.resolvers[key];
 
 
     }

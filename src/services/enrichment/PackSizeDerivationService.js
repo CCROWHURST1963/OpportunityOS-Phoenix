@@ -5,8 +5,7 @@ export class PackSizeDerivationService {
 
         return String(
             value == null ? "" : value
-        )
-        .trim();
+        ).trim();
 
     }
 
@@ -34,7 +33,14 @@ export class PackSizeDerivationService {
 
 
 
+
+
     derive(row) {
+
+
+        /*
+            Direct port of HTML derivePackInfo()
+        */
 
 
         if (!row) {
@@ -53,22 +59,32 @@ export class PackSizeDerivationService {
 
 
 
+
+
         /*
-            1. Manual amazonpackinfo lock
+            Manual amazonpackinfo override
         */
 
 
         const lockedManual =
 
             !!(
+
                 row._packInfoManualLock ||
+
                 row.__packInfoDbLoaded ||
+
                 String(
+
                     row._packSource ||
+
                     row.pack_size_source ||
+
                     ""
+
                 )
                 .toLowerCase() === "manual"
+
             );
 
 
@@ -80,7 +96,9 @@ export class PackSizeDerivationService {
                 this.toNum(
 
                     row._manualPackSize ??
+
                     row.manual_pack_size ??
+
                     row.amazonpackinfo_pack_size
 
                 )
@@ -90,16 +108,22 @@ export class PackSizeDerivationService {
 
 
         if (
+
             lockedManual ||
+
             manual > 0
+
         ) {
 
 
-            const pack =
+            const lockedPack =
 
                 manual > 0
+
                     ? manual
+
                     :
+
                     Math.max(
 
                         1,
@@ -109,6 +133,7 @@ export class PackSizeDerivationService {
                             this.toNum(
 
                                 row._packSize ??
+
                                 row.pack_size
 
                             )
@@ -121,7 +146,11 @@ export class PackSizeDerivationService {
 
             return {
 
-                pack_size: pack,
+
+                pack_size:
+
+                    lockedPack,
+
 
                 buy_qty:
 
@@ -134,11 +163,14 @@ export class PackSizeDerivationService {
                             this.toNum(
 
                                 row._buyQty ??
+
                                 row.buy_qty ??
+
                                 row.amazonpackinfo_buy_qty
 
                             )
-                            || pack
+
+                            || lockedPack
 
                         )
 
@@ -147,7 +179,18 @@ export class PackSizeDerivationService {
 
                 pack_source:
 
-                    "Manual"
+                    "Manual",
+
+
+                confidence:
+
+                    "high",
+
+
+                reason:
+
+                    "Manual amazonpackinfo override"
+
 
             };
 
@@ -156,9 +199,6 @@ export class PackSizeDerivationService {
 
 
 
-        /*
-            2. Number of Items
-        */
 
 
         const numberOfItems =
@@ -167,7 +207,8 @@ export class PackSizeDerivationService {
 
                 this.toNum(
 
-                    row._numberOfItems ??
+                    row._numberOfItems ||
+
                     row.number_of_items
 
                 )
@@ -179,6 +220,7 @@ export class PackSizeDerivationService {
         if (
 
             numberOfItems > 1 &&
+
             numberOfItems <= 500
 
         ) {
@@ -186,7 +228,9 @@ export class PackSizeDerivationService {
 
             return {
 
+
                 pack_size:
+
                     numberOfItems,
 
 
@@ -201,9 +245,11 @@ export class PackSizeDerivationService {
                             this.toNum(
 
                                 row._buyQty ??
+
                                 row.buy_qty
 
                             )
+
                             || numberOfItems
 
                         )
@@ -213,7 +259,18 @@ export class PackSizeDerivationService {
 
                 pack_source:
 
-                    "number_of_items"
+                    "number_of_items",
+
+
+                confidence:
+
+                    "high",
+
+
+                reason:
+
+                    "number_of_items field"
+
 
             };
 
@@ -222,16 +279,14 @@ export class PackSizeDerivationService {
 
 
 
-        /*
-            3. Title / size derivation
-        */
 
 
         const title =
 
             this.clean(
 
-                row._title ??
+                row._title ||
+
                 row.title
 
             )
@@ -243,7 +298,8 @@ export class PackSizeDerivationService {
 
             this.clean(
 
-                row._size ??
+                row._size ||
+
                 row.size
 
             )
@@ -254,21 +310,34 @@ export class PackSizeDerivationService {
         const text =
 
             (
+
                 title +
+
                 " " +
+
                 size
+
             )
             .replace(
+
                 /\s+/g,
+
                 " "
+
             )
             .trim();
 
 
 
+
+
         const derived =
 
-            this.derivePackFromText(text);
+            this.derivePackFromText(
+
+                text
+
+            );
 
 
 
@@ -278,11 +347,68 @@ export class PackSizeDerivationService {
 
                 this.toNum(
 
-                    derived.packSize
+                    derived.packSize || 1
 
                 )
 
             );
+
+
+
+
+
+        /*
+            HTML rule:
+            derived count matching number_of_items
+            is treated as retail unit content
+        */
+
+
+        if (
+
+            derivedPack > 1 &&
+
+            numberOfItems > 1 &&
+
+            derivedPack === numberOfItems
+
+        ) {
+
+
+            return {
+
+
+                pack_size:
+
+                    1,
+
+
+                buy_qty:
+
+                    1,
+
+
+                pack_source:
+
+                    "default",
+
+
+                confidence:
+
+                    "high",
+
+
+                reason:
+
+                    "Derived count matches number_of_items"
+
+
+            };
+
+
+        }
+
+
 
 
 
@@ -295,7 +421,9 @@ export class PackSizeDerivationService {
 
             return {
 
+
                 pack_size:
+
                     derivedPack,
 
 
@@ -310,9 +438,11 @@ export class PackSizeDerivationService {
                             this.toNum(
 
                                 row._buyQty ??
+
                                 row.buy_qty
 
                             )
+
                             || derivedPack
 
                         )
@@ -322,7 +452,18 @@ export class PackSizeDerivationService {
 
                 pack_source:
 
-                    "derived"
+                    "derived",
+
+
+                confidence:
+
+                    derived.confidence,
+
+
+                reason:
+
+                    derived.reason
+
 
             };
 
@@ -331,14 +472,15 @@ export class PackSizeDerivationService {
 
 
 
-        /*
-            4. Default
-        */
 
 
         return {
 
-            pack_size: 1,
+
+            pack_size:
+
+                1,
+
 
             buy_qty:
 
@@ -351,9 +493,11 @@ export class PackSizeDerivationService {
                         this.toNum(
 
                             row._buyQty ??
+
                             row.buy_qty
 
                         )
+
                         || 1
 
                     )
@@ -363,12 +507,24 @@ export class PackSizeDerivationService {
 
             pack_source:
 
-                "default"
+                "default",
+
+
+            confidence:
+
+                "low",
+
+
+            reason:
+
+                "No pack signal found"
+
 
         };
 
 
     }
+
 
 
 
@@ -380,17 +536,24 @@ export class PackSizeDerivationService {
         const t =
 
             this.clean(text)
+
                 .toLowerCase();
 
 
 
         if (!t) {
 
+
             return {
 
-                packSize: 1
+                packSize: 1,
+
+                confidence: "low",
+
+                reason: "empty text"
 
             };
+
 
         }
 
@@ -400,43 +563,97 @@ export class PackSizeDerivationService {
 
 
 
-        match =
+        match = t.match(
 
-            t.match(
-                /(?:pack|pk|set|bundle|case)\s*x?\s*(\d+)/i
-            );
+            /(?:pack|pk|set|bundle|case)\s*(?:of\s*)?x?\s*(\d+)/i
+
+        );
+
 
 
         if (match) {
+
 
             return {
 
                 packSize:
 
-                    Number(match[1])
+                    Number(match[1]),
+
+                confidence:
+
+                    "medium",
+
+                reason:
+
+                    "pack keyword"
 
             };
+
 
         }
 
 
 
-        match =
+        match = t.match(
 
-            t.match(
-                /x\s*(\d+)/
-            );
+            /(\d+)\s*x\s*(\d+)/i
+
+        );
+
 
 
         if (match) {
+
 
             return {
 
                 packSize:
 
-                    Number(match[1])
+                    Number(match[1]),
+
+                confidence:
+
+                    "medium",
+
+                reason:
+
+                    "multiplication pattern"
 
             };
+
+
+        }
+
+
+
+        match = t.match(
+
+            /x\s*(\d+)/i
+
+        );
+
+
+
+        if (match) {
+
+
+            return {
+
+                packSize:
+
+                    Number(match[1]),
+
+                confidence:
+
+                    "medium",
+
+                reason:
+
+                    "x quantity"
+
+            };
+
 
         }
 
@@ -444,7 +661,11 @@ export class PackSizeDerivationService {
 
         return {
 
-            packSize: 1
+            packSize: 1,
+
+            confidence: "low",
+
+            reason: "no match"
 
         };
 

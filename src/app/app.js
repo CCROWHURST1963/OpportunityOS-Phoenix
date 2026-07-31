@@ -67,6 +67,9 @@ export class App {
 
 
 
+
+
+
         /*
             Load current user context
         */
@@ -86,6 +89,16 @@ export class App {
 
 
 
+            console.log(
+
+                "[PHX USER CONTEXT]",
+
+                userContext
+
+            );
+
+
+
             this.state.update(
 
                 userContext
@@ -99,14 +112,15 @@ export class App {
 
 
 
+
+
         /*
-            Load process-specific view configuration
+            Load saved view configuration
 
-            Must happen before:
-            - toolbar
-            - dashboard
-            - grid
+            IMPORTANT:
+            This requires user_key.
 
+            Do NOT pass process name.
         */
 
 
@@ -117,19 +131,27 @@ export class App {
         ) {
 
 
+            console.log(
+
+                "[PHX LOAD VIEWS USER KEY]",
+
+                "DEFAULT"
+
+            );
+
+
+
             await this.services.viewConfig
                 .loadViews(
 
-                    this.state.get(
-
-                        "process"
-
-                    )
+                    "DEFAULT"
 
                 );
 
 
         }
+
+
 
 
 
@@ -162,6 +184,9 @@ export class App {
 
 
 
+
+
+
         if (
 
             this.controllers.toolbar
@@ -183,6 +208,9 @@ export class App {
 
 
 
+
+
+
         if (
 
             this.controllers.dashboard
@@ -200,6 +228,9 @@ export class App {
 
 
         }
+
+
+
 
 
 
