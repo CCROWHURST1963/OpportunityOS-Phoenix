@@ -1,9 +1,26 @@
-import { App } from "./app.js";
 import { AppState } from "../state/AppState.js";
+import { ServiceContainer } from "../services/ServiceContainer.js";
+import { App } from "./app.js";
 
-window.addEventListener("DOMContentLoaded", () => {
-    const state = new AppState();
-    const app = new App(state);
 
-    app.start();
-});
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        const state = new AppState();
+
+        const services =
+            new ServiceContainer();
+
+
+        const app =
+            new App(
+                state,
+                services
+            );
+
+
+        app.start();
+
+    }
+);

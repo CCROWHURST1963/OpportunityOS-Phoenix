@@ -1,33 +1,122 @@
+.phoenix-shell {
+
+    padding: 24px;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+}
+
+
+
+.phoenix-header {
+
+    margin-bottom: 20px;
+
+}
+
+
+
 .phoenix-toolbar {
+
     display: flex;
-    gap: 10px;
-    padding: 12px 0;
-}
 
+    gap: 12px;
 
-.phoenix-button {
-
-    border: 1px solid #cbd5e1;
-    background: white;
-
-    padding: 8px 16px;
-
-    border-radius: 999px;
-
-    cursor: pointer;
-
-    font-size: 14px;
+    margin-bottom: 24px;
 
 }
 
 
-.phoenix-button.active {
 
-    background: #2563eb;
-    color: white;
-    border-color: #2563eb;
+.phoenix-dashboard {
+
+    width: 100%;
 
 }
+
+
+
+.phoenix-grid {
+
+    width: 100%;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 8px;
+
+    overflow: hidden;
+
+}
+
+
+
+.phoenix-grid-row {
+
+    display: flex;
+
+    width: 100%;
+
+    border-bottom: 1px solid #e5e7eb;
+
+}
+
+
+
+.phoenix-grid-row:last-child {
+
+    border-bottom: none;
+
+}
+
+
+
+.phoenix-grid-head {
+
+    background: #f3f4f6;
+
+    font-weight: 600;
+
+}
+
+
+
+.phoenix-grid-cell {
+
+    padding: 10px;
+
+    box-sizing: border-box;
+
+    border-right: 1px solid #e5e7eb;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+
+}
+
+
+
+.phoenix-grid-cell:last-child {
+
+    border-right: none;
+
+}
+
+
+
+.phoenix-grid-empty {
+
+    padding: 20px;
+
+    color: #6b7280;
+
+}
+
 
 
 .phoenix-status-pill {
@@ -46,13 +135,8 @@
 
     color: #166534;
 
-    border: 1px solid #bbf7d0;
-
-    font-weight: 600;
-
-    font-size: 14px;
-
 }
+
 
 
 .status-dot {
@@ -64,115 +148,5 @@
     border-radius: 50%;
 
     background: #22c55e;
-    export class HeaderController {
-
-    constructor(state) {
-        this.state = state;
-    }
-
-
-    mount(container) {
-
-        container.innerHTML = `
-
-            <header class="phoenix-header">
-
-                <h1>
-                    OpportunityOS Phoenix
-                </h1>
-
-            </header>
-
-        `;
-
-    }
-
-}
-.phoenix-version {
-
-    font-size: 12px;
-
-    color: #64748b;
-
-}
-
-
-.phoenix-status-container {
-
-    display: flex;
-
-    justify-content: flex-end;
-
-}
-
-
-.phoenix-toolbar {
-
-    padding: 16px 32px;
-
-    border-bottom: 1px solid #e2e8f0;
-
-}
-export class ToolbarController {
-
-    constructor(state) {
-
-        this.state = state;
-        this.container = null;
-
-    }
-
-
-    mount(container) {
-
-        this.container = container;
-
-        this.render();
-
-    }
-
-
-    render() {
-
-        this.container.innerHTML = `
-
-            <div class="phoenix-toolbar">
-
-                <button class="phoenix-pill">
-                    Opportunities ▼
-                </button>
-
-
-                <button class="phoenix-pill">
-                    By View ▼
-                </button>
-
-
-                <button class="phoenix-pill">
-                    Rows 100 ▼
-                </button>
-
-
-                <button class="phoenix-pill">
-                    Show All ▼
-                </button>
-
-
-                <div class="phoenix-spacer"></div>
-
-
-                <div class="phoenix-count-pill">
-
-                    Total Opportunities - 0
-
-                </div>
-
-            </div>
-
-        `;
-
-    }
-
-}
 
 }
