@@ -96,15 +96,7 @@ export class DashboardController {
         const visibleRows =
 
             this.services.viewEngine
-
-                ?
-
-                this.services.viewEngine
-                    .apply(rows)
-
-                :
-
-                rows;
+                .apply(rows);
 
 
 
