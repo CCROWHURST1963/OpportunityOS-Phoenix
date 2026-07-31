@@ -4,16 +4,27 @@ import { GridRenderer } from "../components/GridRenderer.js";
 export class DashboardController {
 
 
-    constructor(state, services) {
+    constructor(
+        state,
+        services
+    ) {
 
-        this.state = state;
 
-        this.services = services;
+        this.state =
+            state;
 
-        this.container = null;
+
+        this.services =
+            services;
+
+
+        this.container =
+            null;
+
 
         this.gridRenderer =
             new GridRenderer();
+
 
     }
 
@@ -21,17 +32,24 @@ export class DashboardController {
 
     mount(container) {
 
-        this.container = container;
+
+        this.container =
+            container;
+
 
 
         this.render();
 
 
+
         this.state.subscribe(() => {
+
 
             this.render();
 
+
         });
+
 
     }
 
@@ -41,25 +59,52 @@ export class DashboardController {
 
 
         const currentView =
-            this.state.get("view") || "default";
+
+            this.state.get("view")
+            ||
+            "default";
 
 
 
         const view =
+
             this.services.viewConfig
-                .getView(currentView);
+                .getView(
+                    currentView
+                );
 
 
 
         const columns =
+
             this.services.viewConfig
-                .getColumns(currentView);
+                .getColumns(
+                    currentView
+                );
 
 
 
         const rows =
+
             await this.services.opportunity
-                .getRows(currentView);
+                .getRows(
+                    currentView
+                );
+
+
+
+        const visibleRows =
+
+            this.services.viewEngine
+
+                ?
+
+                this.services.viewEngine
+                    .apply(rows)
+
+                :
+
+                rows;
 
 
 
@@ -71,11 +116,13 @@ export class DashboardController {
 
                 <div class="phoenix-grid-header">
 
+
                     <h2>
 
                         ${view.name}
 
                     </h2>
+
 
                 </div>
 
@@ -99,7 +146,7 @@ export class DashboardController {
 
             columns,
 
-            rows
+            visibleRows
 
         );
 
