@@ -1,156 +1,423 @@
-import { GridRenderer } from "../components/GridRenderer.js";
+import { ColumnRegistry }
+    from "../services/ColumnRegistry.js";
+
 
 
 export class DashboardController {
 
 
     constructor(
-        state,
-        services
+
+        opportunityService,
+
+        viewConfigService,
+
+        viewState,
+
+        appState
+
     ) {
 
 
-        this.state =
-            state;
+        this.opportunityService =
+
+            opportunityService;
 
 
-        this.services =
-            services;
+        this.viewConfigService =
+
+            viewConfigService;
 
 
-        this.container =
+        this.viewState =
+
+            viewState;
+
+
+        this.appState =
+
+            appState;
+
+
+        this.columnRegistry =
+
+            new ColumnRegistry();
+
+
+        this.element =
+
             null;
 
 
-        this.gridRenderer =
-            new GridRenderer();
+        this.loading =
+
+            false;
 
 
     }
 
 
 
-    mount(container) {
 
 
-        this.container =
-            container;
+    mount(element) {
 
+
+        this.element = element;
 
 
         this.render();
 
 
-
-        this.services.viewState.subscribe(() => {
-
-
-            this.render();
-
-
-        });
-
-
     }
+
+
 
 
 
     async render() {
 
 
-        const activeView =
-
-            this.services.viewState
-                .get()
-                .activeView;
+        if (!this.element) {
 
 
+            return;
 
-        const currentView =
 
-            activeView === "By Supplier"
-
-                ? "supplier"
-
-                : "default";
+        }
 
 
 
-        const view =
+        if (this.loading) {
 
-            this.services.viewConfig
-                .getView(
-                    currentView
-                );
 
+            return;
+
+
+        }
+
+
+
+        this.loading = true;
+
+
+
+        try {
+
+
+            const state =
+
+                this.viewState.get();
+
+
+
+            const mode =
+
+                state.activeView
+
+                ||
+
+                "By View";
+
+
+
+            const rows =
+
+                await this.opportunityService
+                    .getRows(
+
+                        mode
+
+                    );
+
+
+
+
+
+            /*
+                DEBUG ONLY
+
+                expose final rows
+                after enrichment
+
+            */
+
+
+            window.__phoenixRows = rows;
+
+
+
+            console.log(
+
+                "[PHX SAMPLE ROW]",
+
+                rows[0]
+
+            );
+
+
+
+
+
+            this.renderGrid(
+
+                rows
+
+            );
+
+
+        }
+
+
+        catch(error) {
+
+
+            console.error(
+
+                "[PHX DASHBOARD ERROR]",
+
+                error
+
+            );
+
+
+            this.element.innerHTML =
+
+                `
+
+                <div>
+
+                    Dashboard load failed
+
+                </div>
+
+                `;
+
+
+        }
+
+
+        finally {
+
+
+            this.loading = false;
+
+
+        }
+
+
+    }
+
+
+
+
+
+    renderGrid(rows = []) {
 
 
         const columns =
 
-            this.services.viewConfig
-                .getColumns(
-                    currentView
-                );
+            this.viewConfigService
+                .getColumns();
 
 
 
-        const rows =
+        let html =
 
-            await this.services.opportunity
-                .getRows(
-                    currentView
-                );
+            `
 
+            <table class="phoenix-grid">
 
+                <thead>
 
-        const visibleRows =
+                    <tr>
 
-            this.services.viewEngine
-                .apply(rows);
+            `;
 
 
 
-        this.container.innerHTML = `
+        columns.forEach(
+
+            column => {
 
 
-            <section class="phoenix-dashboard">
+                if (
+
+                    column.visible === false
+
+                ) {
 
 
-                <div class="phoenix-grid-header">
+                    return;
 
 
-                    <h2>
-
-                        ${view.name}
-
-                    </h2>
-
-
-                </div>
-
-
-
-                <div id="phoenix-grid-container"></div>
-
-
-            </section>
-
-
-        `;
+                }
 
 
 
-        this.gridRenderer.render(
+                html +=
 
-            document.getElementById(
-                "phoenix-grid-container"
-            ),
+                    `
 
-            columns,
+                    <th>
 
-            visibleRows
+                        ${
+
+                            column.label
+
+                            ||
+
+                            column.key
+
+                            ||
+
+                            column.field
+
+                        }
+
+                    </th>
+
+                    `;
+
+
+            }
 
         );
+
+
+
+        html +=
+
+            `
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+            `;
+
+
+
+
+
+        rows.forEach(
+
+            row => {
+
+
+                html +=
+
+                    `
+
+                    <tr>
+
+                    `;
+
+
+
+                columns.forEach(
+
+                    column => {
+
+
+                        if (
+
+                            column.visible === false
+
+                        ) {
+
+
+                            return;
+
+
+                        }
+
+
+
+                        const key =
+
+                            column.key
+
+                            ||
+
+                            column.field;
+
+
+
+
+
+                        const value =
+
+                            this.columnRegistry
+                                .getValue(
+
+                                    key,
+
+                                    row
+
+                                );
+
+
+
+
+
+                        html +=
+
+                            `
+
+                            <td>
+
+                                ${
+
+                                    value
+
+                                    ?? 
+
+                                    ""
+
+                                }
+
+                            </td>
+
+                            `;
+
+
+                    }
+
+                );
+
+
+
+                html +=
+
+                    `
+
+                    </tr>
+
+                    `;
+
+
+            }
+
+        );
+
+
+
+        html +=
+
+            `
+
+                </tbody>
+
+            </table>
+
+            `;
+
+
+
+        this.element.innerHTML = html;
 
 
     }

@@ -1,11 +1,27 @@
 export class OpportunityService {
 
 
-    constructor(repository) {
+    constructor(
+
+        repository,
+
+        calculationPipeline = null,
+
+        enrichmentPipeline = null
+
+    ) {
 
 
         this.repository =
             repository;
+
+
+        this.calculationPipeline =
+            calculationPipeline;
+
+
+        this.enrichmentPipeline =
+            enrichmentPipeline;
 
 
     }
@@ -13,6 +29,13 @@ export class OpportunityService {
 
 
     async getRows(view = "default") {
+
+
+        console.log(
+            "[PHX-038 getRows START]",
+            view
+        );
+
 
 
         const rows =
@@ -23,56 +46,121 @@ export class OpportunityService {
 
 
 
-        return rows.map(row => {
 
 
-            return {
+
+        return await Promise.all(
 
 
-                asin:
-                    row.asin || "",
+            (rows || []).map(
+
+                async row => {
 
 
-                locale:
-                    row.locale || "UK",
+                    let enrichedRow = {
 
 
-                brand:
-                    row.brand || "",
+                        ...row
 
 
-                title:
-                    row.title || "",
+                    };
 
 
-                validated_sales_price:
-                    row.validated_sales_price || 0,
+
+                    /*
+                        Phase 1:
+                        Data enrichment
+                    */
 
 
-                supplier:
-                    row.supplier || "",
+                    if (
+
+                        this.enrichmentPipeline
+
+                    ) {
 
 
-                supplier_price:
-                    row.supplier_price || 0,
+                        enrichedRow =
+
+                            await this.enrichmentPipeline.run(
+
+                                enrichedRow
+
+                            );
 
 
-                opportunity_score:
-                    row.opportunity_score || 0,
+                    }
 
 
-                buy_signal:
-                    row.buy_signal || "",
+
+                    /*
+                        Phase 2:
+                        Business calculations
+                    */
 
 
-                status:
-                    row.status || ""
+                    if (
+
+                        this.calculationPipeline
+
+                    ) {
 
 
-            };
+                        enrichedRow =
+
+                            this.calculationPipeline.run(
+
+                                enrichedRow
+
+                            );
 
 
-        });
+                    }
+
+                    return {
+
+
+                        ...enrichedRow,
+
+
+                        asin:
+                            enrichedRow.asin || "",
+
+
+                        locale:
+                            enrichedRow.locale || "",
+
+
+                        brand:
+                            enrichedRow.brand || "",
+
+
+                        title:
+                            enrichedRow.title || "",
+
+
+                        validated_sales_price:
+                            enrichedRow.validated_sales_price || 0,
+
+
+                        supplier:
+                            enrichedRow.supplier || "",
+
+
+                        supplier_price:
+                            enrichedRow.supplier_price || 0
+
+
+                    };
+
+
+                }
+
+
+            )
+
+
+        );
 
 
     }

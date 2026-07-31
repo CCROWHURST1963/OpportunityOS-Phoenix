@@ -1,17 +1,23 @@
-import { HeaderController } from "../controllers/HeaderController.js";
-import { ToolbarController } from "../controllers/ToolbarController.js";
-import { DashboardController } from "../controllers/DashboardController.js";
-import { StatusBarController } from "../controllers/StatusBarController.js";
-
-
 export class App {
 
 
-    constructor(state, services) {
+    constructor(
+
+        state,
+
+        controllers,
+
+        services
+
+    ) {
 
 
         this.state =
             state;
+
+
+        this.controllers =
+            controllers;
 
 
         this.services =
@@ -22,42 +28,35 @@ export class App {
 
 
 
-    start() {
 
 
-        const root =
+    async start() {
+
+
+        const app =
+
             document.getElementById(
                 "app"
             );
 
 
 
-        if (!root) {
-
-            throw new Error(
-                "Phoenix root element missing"
-            );
-
-        }
-
-
-
-        root.innerHTML = `
+        app.innerHTML = `
 
 
             <div class="phoenix-shell">
 
 
-                <div id="phoenix-header"></div>
+                <header id="phoenix-header"></header>
 
 
-                <div id="phoenix-toolbar"></div>
+                <nav id="phoenix-toolbar"></nav>
 
 
                 <main id="phoenix-dashboard"></main>
 
 
-                <div id="phoenix-status"></div>
+                <footer id="phoenix-status"></footer>
 
 
             </div>
@@ -67,61 +66,161 @@ export class App {
 
 
 
-        new HeaderController(
-            this.state
-        )
-        .mount(
-            document.getElementById(
-                "phoenix-header"
-            )
-        );
+
+        /*
+            Load current user context
+        */
+
+
+        if (
+
+            this.services.wixUser
+
+        ) {
+
+
+            const userContext =
+
+                await this.services.wixUser
+                    .loadUserContext();
 
 
 
-        new ToolbarController(
+            this.state.update(
 
-            this.state,
+                userContext
 
-            this.services.viewState
+            );
 
-        )
-        .mount(
 
-            document.getElementById(
-                "phoenix-toolbar"
-            )
-
-        );
+        }
 
 
 
-        new DashboardController(
-
-            this.state,
-
-            this.services
-
-        )
-        .mount(
-
-            document.getElementById(
-                "phoenix-dashboard"
-            )
-
-        );
 
 
+        /*
+            Load process-specific view configuration
 
-        new StatusBarController(
-            this.state
-        )
-        .mount(
+            Must happen before:
+            - toolbar
+            - dashboard
+            - grid
 
-            document.getElementById(
-                "phoenix-status"
-            )
+        */
 
-        );
+
+        if (
+
+            this.services.viewConfig
+
+        ) {
+
+
+            await this.services.viewConfig
+                .loadViews(
+
+                    this.state.get(
+
+                        "process"
+
+                    )
+
+                );
+
+
+        }
+
+
+
+
+
+        /*
+            Mount controllers
+
+        */
+
+
+        if (
+
+            this.controllers.header
+
+        ) {
+
+
+            this.controllers.header.mount(
+
+                document.getElementById(
+                    "phoenix-header"
+                )
+
+            );
+
+
+        }
+
+
+
+
+        if (
+
+            this.controllers.toolbar
+
+        ) {
+
+
+            this.controllers.toolbar.mount(
+
+                document.getElementById(
+                    "phoenix-toolbar"
+                )
+
+            );
+
+
+        }
+
+
+
+
+        if (
+
+            this.controllers.dashboard
+
+        ) {
+
+
+            this.controllers.dashboard.mount(
+
+                document.getElementById(
+                    "phoenix-dashboard"
+                )
+
+            );
+
+
+        }
+
+
+
+
+        if (
+
+            this.controllers.status
+
+        ) {
+
+
+            this.controllers.status.mount(
+
+                document.getElementById(
+                    "phoenix-status"
+                )
+
+            );
+
+
+        }
 
 
     }

@@ -1,54 +1,219 @@
 export class AppState {
 
+
     constructor() {
 
+
         this.state = {
-            view: "default",
-            status: "Ready"
+
+
+            /*
+                User context
+            */
+
+
+            wixUserId:
+
+                null,
+
+
+            userKey:
+
+                "DEFAULT",
+
+
+            userName:
+
+                "",
+
+
+            role:
+
+                "",
+
+
+            multiUsers:
+
+                false,
+
+
+
+            /*
+                Dashboard context
+            */
+
+
+            process:
+
+                "Can We Sell",
+
+
+            currentView:
+
+                "default",
+
+
+
+            /*
+                Grid state
+            */
+
+
+            rowsPerPage:
+
+                100,
+
+
+            filterMode:
+
+                "show_all",
+
+
+            rows:
+
+                [],
+
+
+
+            /*
+                Status
+            */
+
+
+            status:
+
+                "System Ready"
+
+
         };
+
+
 
         this.listeners = [];
 
+
     }
+
+
+
 
 
     get(key) {
 
+
         return this.state[key];
 
+
     }
+
+
+
 
 
     set(key, value) {
 
+
         this.state[key] = value;
+
 
         this.notify();
 
+
     }
+
+
+
+
+
+    update(values) {
+
+
+        Object.assign(
+
+            this.state,
+
+            values
+
+        );
+
+
+        this.notify();
+
+
+    }
+
+
+
+
+
+    getState() {
+
+
+        return {
+
+            ...this.state
+
+        };
+
+
+    }
+
+
+
 
 
     subscribe(callback) {
 
-        this.listeners.push(callback);
+
+        this.listeners.push(
+
+            callback
+
+        );
+
 
         return () => {
 
+
             this.listeners =
+
                 this.listeners.filter(
-                    listener => listener !== callback
+
+                    listener =>
+
+                        listener !== callback
+
                 );
 
+
         };
+
 
     }
 
 
+
+
+
     notify() {
 
-        this.listeners.forEach(
-            listener => listener(this.state)
-        );
+
+        for (
+
+            const listener of this.listeners
+
+        ) {
+
+
+            listener(
+
+                this.getState()
+
+            );
+
+
+        }
+
 
     }
 
