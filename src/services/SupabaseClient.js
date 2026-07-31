@@ -20,8 +20,11 @@ export class SupabaseClient {
 
 
         return Boolean(
-            this.url &&
+
+            this.url
+            &&
             this.key
+
         );
 
 
@@ -29,7 +32,10 @@ export class SupabaseClient {
 
 
 
-    async rpc(functionName, params = {}) {
+    async rpc(
+        functionName,
+        params = {}
+    ) {
 
 
         if (!this.isConfigured()) {
@@ -45,28 +51,42 @@ export class SupabaseClient {
 
 
         const response =
+
             await fetch(
+
                 `${this.url}/rest/v1/rpc/${functionName}`,
+
                 {
 
                     method: "POST",
 
+
                     headers: {
 
-                        "apikey": this.key,
+
+                        "apikey":
+                            this.key,
+
 
                         "Authorization":
                             `Bearer ${this.key}`,
 
+
                         "Content-Type":
                             "application/json"
 
+
                     },
 
+
                     body:
-                        JSON.stringify(params)
+
+                        JSON.stringify(
+                            params
+                        )
 
                 }
+
             );
 
 
@@ -75,7 +95,9 @@ export class SupabaseClient {
 
 
             throw new Error(
+
                 `Supabase RPC failed: ${response.status}`
+
             );
 
 

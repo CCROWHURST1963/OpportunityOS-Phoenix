@@ -1,2 +1,18 @@
+# Dependencies
 node_modules/
+
+
+# Build output
 dist/
+
+
+# Local Phoenix configuration
+phoenix.config.js
+
+
+# Operating system files
+.DS_Store
+
+
+# Editor files
+.vscode/
