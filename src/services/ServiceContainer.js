@@ -6,7 +6,7 @@ import { DemoOpportunityRepository } from "../repositories/DemoOpportunityReposi
 import { SupabaseOpportunityRepository } from "../repositories/SupabaseOpportunityRepository.js";
 
 import { SupabaseClient } from "./SupabaseClient.js";
-import { AppConfig } from "../config/AppConfig.js";
+import { PhoenixConfig } from "../config/PhoenixConfig.js";
 
 
 export class ServiceContainer {
@@ -21,7 +21,7 @@ export class ServiceContainer {
 
 
         this.config =
-            new AppConfig();
+            new PhoenixConfig();
 
 
 
@@ -31,40 +31,47 @@ export class ServiceContainer {
 
 
         this.supabaseClient =
-            new SupabaseClient(
-                this.config.getSupabaseConfig()
-            );
+            new SupabaseClient({
+
+                url:
+                    this.config.getSupabaseUrl(),
+
+                key:
+                    this.config.getSupabaseKey()
+
+            });
 
 
 
-        /*
-            Repository switch point.
-
-            false = demo data
-            true  = Supabase
-
-            We keep demo mode for now.
-        */
-
-
-        const useSupabase = false;
+        let opportunityRepository;
 
 
 
-        const opportunityRepository =
+        if (
+            this.config.isSupabaseConfigured()
+        ) {
 
 
-            useSupabase
-
-                ?
+            opportunityRepository =
 
                 new SupabaseOpportunityRepository(
-                    this.supabaseClient
-                )
 
-                :
+                    this.supabaseClient,
+
+                    this.config
+
+                );
+
+
+        } else {
+
+
+            opportunityRepository =
 
                 new DemoOpportunityRepository();
+
+
+        }
 
 
 

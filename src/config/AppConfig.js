@@ -7,9 +7,14 @@ export class AppConfig {
         this.supabase = {
 
 
-            url: null,
+            url:
+                window.PHOENIX_CONFIG?.supabaseUrl
+                || null,
 
-            key: null
+
+            key:
+                window.PHOENIX_CONFIG?.supabaseKey
+                || null
 
 
         };
@@ -27,26 +32,6 @@ export class AppConfig {
 
     }
 
-
-
-    setSupabaseConfig(config = {}) {
-
-
-        this.supabase = {
-
-
-            url:
-                config.url || null,
-
-
-            key:
-                config.key || null
-
-
-        };
-
-
-    }
 
 
 }
