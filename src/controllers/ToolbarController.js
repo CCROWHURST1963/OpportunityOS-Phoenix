@@ -1,8 +1,10 @@
 export class ToolbarController {
 
     constructor(state) {
+
         this.state = state;
         this.container = null;
+
     }
 
 
@@ -19,25 +21,38 @@ export class ToolbarController {
 
         this.container.innerHTML = `
 
-            <nav class="phoenix-toolbar">
+            <div class="phoenix-toolbar">
 
-                <button class="phoenix-button active">
-                    Dashboard
+                <button class="phoenix-pill">
+                    Opportunities ▼
                 </button>
 
-                <button class="phoenix-button">
-                    Workspace
+
+                <button class="phoenix-pill">
+                    By View ▼
                 </button>
 
-                <button class="phoenix-button">
-                    Reports
+
+                <button class="phoenix-pill">
+                    Rows 100 ▼
                 </button>
 
-                <button class="phoenix-button">
-                    Admin
+
+                <button class="phoenix-pill">
+                    Show All ▼
                 </button>
 
-            </nav>
+
+                <div class="phoenix-spacer"></div>
+
+
+                <div class="phoenix-count-pill">
+
+                    Total Opportunities - 0
+
+                </div>
+
+            </div>
 
         `;
 

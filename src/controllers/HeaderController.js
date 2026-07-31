@@ -5,15 +5,23 @@ export class HeaderController {
     }
 
 
-    render(container) {
+    mount(container) {
 
         container.innerHTML = `
 
             <header class="phoenix-header">
 
-                <h1>
-                    OpportunityOS Phoenix
-                </h1>
+                <div>
+
+                    <h1>
+                        OpportunityOS Phoenix
+                    </h1>
+
+                    <span class="phoenix-version">
+                        PHX-0.1
+                    </span>
+
+                </div>
 
             </header>
 

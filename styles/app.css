@@ -64,5 +64,115 @@
     border-radius: 50%;
 
     background: #22c55e;
+    export class HeaderController {
+
+    constructor(state) {
+        this.state = state;
+    }
+
+
+    mount(container) {
+
+        container.innerHTML = `
+
+            <header class="phoenix-header">
+
+                <h1>
+                    OpportunityOS Phoenix
+                </h1>
+
+            </header>
+
+        `;
+
+    }
+
+}
+.phoenix-version {
+
+    font-size: 12px;
+
+    color: #64748b;
+
+}
+
+
+.phoenix-status-container {
+
+    display: flex;
+
+    justify-content: flex-end;
+
+}
+
+
+.phoenix-toolbar {
+
+    padding: 16px 32px;
+
+    border-bottom: 1px solid #e2e8f0;
+
+}
+export class ToolbarController {
+
+    constructor(state) {
+
+        this.state = state;
+        this.container = null;
+
+    }
+
+
+    mount(container) {
+
+        this.container = container;
+
+        this.render();
+
+    }
+
+
+    render() {
+
+        this.container.innerHTML = `
+
+            <div class="phoenix-toolbar">
+
+                <button class="phoenix-pill">
+                    Opportunities ▼
+                </button>
+
+
+                <button class="phoenix-pill">
+                    By View ▼
+                </button>
+
+
+                <button class="phoenix-pill">
+                    Rows 100 ▼
+                </button>
+
+
+                <button class="phoenix-pill">
+                    Show All ▼
+                </button>
+
+
+                <div class="phoenix-spacer"></div>
+
+
+                <div class="phoenix-count-pill">
+
+                    Total Opportunities - 0
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+}
 
 }

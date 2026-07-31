@@ -33,7 +33,7 @@ export class App {
 
 
         new HeaderController(this.state)
-            .render(document.getElementById("phoenix-header"));
+            .mount(document.getElementById("phoenix-header"));
 
 
         new ToolbarController(this.state)
