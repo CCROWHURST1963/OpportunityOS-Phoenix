@@ -42,7 +42,7 @@ export class DashboardController {
 
 
 
-        this.state.subscribe(() => {
+        this.services.viewState.subscribe(() => {
 
 
             this.render();
@@ -58,11 +58,21 @@ export class DashboardController {
     async render() {
 
 
+        const activeView =
+
+            this.services.viewState
+                .get()
+                .activeView;
+
+
+
         const currentView =
 
-            this.state.get("view")
-            ||
-            "default";
+            activeView === "By Supplier"
+
+                ? "supplier"
+
+                : "default";
 
 
 

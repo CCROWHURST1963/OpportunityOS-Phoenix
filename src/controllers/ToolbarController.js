@@ -1,11 +1,23 @@
 export class ToolbarController {
 
 
-    constructor(state) {
+    constructor(
+        state,
+        viewState
+    ) {
 
-        this.state = state;
 
-        this.container = null;
+        this.state =
+            state;
+
+
+        this.viewState =
+            viewState;
+
+
+        this.container =
+            null;
+
 
     }
 
@@ -13,9 +25,13 @@ export class ToolbarController {
 
     mount(container) {
 
-        this.container = container;
+
+        this.container =
+            container;
+
 
         this.render();
+
 
     }
 
@@ -24,8 +40,21 @@ export class ToolbarController {
     render() {
 
 
-        const currentView =
-            this.state.get("view") || "default";
+        const view =
+            this.viewState.get()
+                .activeView;
+
+
+
+        const filter =
+            this.viewState.get()
+                .filter;
+
+
+
+        const rows =
+            this.viewState.get()
+                .rowLimit;
 
 
 
@@ -35,20 +64,12 @@ export class ToolbarController {
             <div class="phoenix-toolbar">
 
 
-                <button class="phoenix-pill">
-
-                    Opportunities ▼
-
-                </button>
-
-
-
                 <button
                     class="phoenix-pill"
-                    data-action="default-view"
+                    data-action="view"
                 >
 
-                    By View
+                    ${view}
 
                 </button>
 
@@ -56,7 +77,7 @@ export class ToolbarController {
 
                 <button
                     class="phoenix-pill"
-                    data-action="supplier-view"
+                    data-action="supplier"
                 >
 
                     By Supplier
@@ -65,39 +86,32 @@ export class ToolbarController {
 
 
 
-                <button class="phoenix-pill">
+                <button
+                    class="phoenix-pill"
+                    data-action="rows"
+                >
 
-                    Rows 100 ▼
-
-                </button>
-
-
-
-                <button class="phoenix-pill">
-
-                    Show All ▼
+                    Rows ${rows}
 
                 </button>
 
 
 
-                <div class="phoenix-spacer"></div>
+                <button
+                    class="phoenix-pill"
+                    data-action="filter"
+                >
 
+                    ${filter}
 
+                </button>
 
-                <div class="phoenix-count-pill">
-
-                    Total Opportunities -
-                    ${this.state.get("count") || 0}
-
-                </div>
 
 
             </div>
 
 
         `;
-
 
 
         this.bindEvents();
@@ -110,44 +124,96 @@ export class ToolbarController {
     bindEvents() {
 
 
-        const defaultButton =
+        const viewButton =
+
             this.container.querySelector(
-                "[data-action='default-view']"
+                "[data-action='view']"
             );
 
 
         const supplierButton =
+
             this.container.querySelector(
-                "[data-action='supplier-view']"
+                "[data-action='supplier']"
+            );
+
+
+        const rowsButton =
+
+            this.container.querySelector(
+                "[data-action='rows']"
+            );
+
+
+        const filterButton =
+
+            this.container.querySelector(
+                "[data-action='filter']"
             );
 
 
 
-        defaultButton.addEventListener(
-            "click",
-            () => {
-
-                this.state.set(
-                    "view",
-                    "default"
-                );
-
-            }
-        );
+        viewButton.onclick = () => {
 
 
+            this.viewState.set(
 
-        supplierButton.addEventListener(
-            "click",
-            () => {
+                "activeView",
 
-                this.state.set(
-                    "view",
-                    "supplier"
-                );
+                "By View"
 
-            }
-        );
+            );
+
+
+        };
+
+
+
+        supplierButton.onclick = () => {
+
+
+            this.viewState.set(
+
+                "activeView",
+
+                "By Supplier"
+
+            );
+
+
+        };
+
+
+
+        rowsButton.onclick = () => {
+
+
+            this.viewState.set(
+
+                "rowLimit",
+
+                250
+
+            );
+
+
+        };
+
+
+
+        filterButton.onclick = () => {
+
+
+            this.viewState.set(
+
+                "filter",
+
+                "Strong Only"
+
+            );
+
+
+        };
 
 
     }

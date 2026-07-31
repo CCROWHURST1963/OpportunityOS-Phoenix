@@ -9,9 +9,14 @@ export class App {
 
     constructor(state, services) {
 
-        this.state = state;
 
-        this.services = services;
+        this.state =
+            state;
+
+
+        this.services =
+            services;
+
 
     }
 
@@ -21,7 +26,10 @@ export class App {
 
 
         const root =
-            document.getElementById("app");
+            document.getElementById(
+                "app"
+            );
+
 
 
         if (!root) {
@@ -35,6 +43,7 @@ export class App {
 
 
         root.innerHTML = `
+
 
             <div class="phoenix-shell">
 
@@ -53,46 +62,66 @@ export class App {
 
             </div>
 
+
         `;
 
 
 
-        new HeaderController(this.state)
-            .mount(
-                document.getElementById(
-                    "phoenix-header"
-                )
-            );
-
-
-
-        new ToolbarController(this.state)
-            .mount(
-                document.getElementById(
-                    "phoenix-toolbar"
-                )
-            );
-
-
-
-        new DashboardController(
-            this.state,
-            this.services
+        new HeaderController(
+            this.state
         )
         .mount(
             document.getElementById(
-                "phoenix-dashboard"
+                "phoenix-header"
             )
         );
 
 
 
-        new StatusBarController(this.state)
-            .mount(
-                document.getElementById(
-                    "phoenix-status"
-                )
-            );
+        new ToolbarController(
+
+            this.state,
+
+            this.services.viewState
+
+        )
+        .mount(
+
+            document.getElementById(
+                "phoenix-toolbar"
+            )
+
+        );
+
+
+
+        new DashboardController(
+
+            this.state,
+
+            this.services
+
+        )
+        .mount(
+
+            document.getElementById(
+                "phoenix-dashboard"
+            )
+
+        );
+
+
+
+        new StatusBarController(
+            this.state
+        )
+        .mount(
+
+            document.getElementById(
+                "phoenix-status"
+            )
+
+        );
 
 
     }
