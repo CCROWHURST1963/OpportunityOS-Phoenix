@@ -60,12 +60,39 @@ export class DashboardController {
 
 
         console.log(
-            "[PHX DASHBOARD MOUNT]",
-            element
+
+            "[PHX DASHBOARD MOUNT]"
+
         );
 
 
-        this.render();
+
+        this.renderEmpty();
+
+
+
+
+
+        window.addEventListener(
+
+            "phoenix-dashboard-load",
+
+            () => {
+
+
+                console.log(
+
+                    "[PHX DASHBOARD LOAD EVENT]"
+
+                );
+
+
+                this.render();
+
+
+            }
+
+        );
 
 
     }
@@ -74,24 +101,55 @@ export class DashboardController {
 
 
 
-    async render() {
 
 
-        if (!this.element) {
+    renderEmpty(){
 
+
+        this.element.innerHTML = `
+
+
+            <div class="phoenix-dashboard-empty">
+
+
+                Select options then click
+
+
+                <strong>
+
+                    Load Dashboard
+
+                </strong>
+
+
+            </div>
+
+
+        `;
+
+
+    }
+
+
+
+
+
+
+
+    async render(){
+
+
+        if(!this.element){
 
             return;
-
 
         }
 
 
 
-        if (this.loading) {
-
+        if(this.loading){
 
             return;
-
 
         }
 
@@ -101,12 +159,18 @@ export class DashboardController {
 
 
 
-        try {
+        try{
 
 
             const state =
 
-                this.viewState.get();
+                this.appState?.get?.()
+
+                ||
+
+                {};
+
+
 
 
 
@@ -120,19 +184,47 @@ export class DashboardController {
 
 
 
+
+
+            const limit =
+
+                state.rowsLimit
+
+                ??
+
+                null;
+
+
+
+
+
             console.log(
-                "[PHX DASHBOARD MODE]",
-                mode
+
+                "[PHX DASHBOARD REQUEST]",
+
+                {
+
+                    mode,
+
+                    limit
+
+                }
+
             );
+
+
 
 
 
             const rows =
 
                 await this.opportunityService
+
                     .getRows(
 
-                        mode
+                        mode,
+
+                        limit
 
                     );
 
@@ -141,6 +233,16 @@ export class DashboardController {
 
 
             window.__phoenixRows = rows;
+
+
+
+            console.log(
+
+                "[PHX ROW COUNT]",
+
+                rows.length
+
+            );
 
 
 
@@ -156,17 +258,13 @@ export class DashboardController {
 
 
 
-            this.renderGrid(
-
-                rows
-
-            );
+            this.renderGrid(rows);
 
 
         }
 
 
-        catch(error) {
+        catch(error){
 
 
             console.error(
@@ -178,9 +276,10 @@ export class DashboardController {
             );
 
 
+
             this.element.innerHTML =
 
-                `
+            `
 
                 <div>
 
@@ -188,13 +287,13 @@ export class DashboardController {
 
                 </div>
 
-                `;
+            `;
 
 
         }
 
 
-        finally {
+        finally{
 
 
             this.loading = false;
@@ -211,7 +310,7 @@ export class DashboardController {
 
 
 
-    getColumnWidth(column) {
+    getColumnWidth(column){
 
 
         const width =
@@ -224,15 +323,9 @@ export class DashboardController {
 
 
 
-        if (
-
-            width > 0
-
-        ) {
-
+        if(width > 0){
 
             return `${width}px`;
-
 
         }
 
@@ -249,31 +342,19 @@ export class DashboardController {
 
 
 
-    renderGrid(rows = []) {
+    renderGrid(rows=[]){
 
 
         const currentView =
 
-            this.viewConfigService
-                .currentView;
+            this.viewConfigService.currentView;
 
 
 
-        console.log(
-
-            "[PHX DASHBOARD CURRENT VIEW]",
-
-            currentView
-
-        );
-
-
-
-
-
-        let columns =
+        const columns =
 
             this.viewConfigService
+
                 .getColumns(
 
                     currentView
@@ -284,148 +365,17 @@ export class DashboardController {
 
 
 
-        console.log(
+        let html = `
 
-            "[PHX BEFORE COLUMN CHANGE]",
 
-            {
+        <table class="phoenix-grid">
 
-                count:
-                    columns.length,
 
-                first:
-                    columns.slice(0,5)
+            <thead>
 
-            }
+                <tr>
 
-        );
-
-
-
-
-
-        console.log(
-
-            "[PHX COLUMN ARRAY TYPE]",
-
-            {
-
-                isArray:
-                    Array.isArray(columns),
-
-                constructor:
-                    columns?.constructor?.name
-
-            }
-
-        );
-
-
-
-
-
-        console.log(
-
-            "[PHX CONTROLLER FILE CHECK]",
-
-            "NEW DASHBOARD CONTROLLER RUNNING",
-
-            {
-
-                columnCount:
-                    columns.length
-
-            }
-
-        );
-
-
-
-
-
-        console.log(
-
-            "[PHX AFTER COLUMN CHANGE]",
-
-            {
-
-                count:
-                    columns.length,
-
-                first:
-                    columns.slice(0,5)
-
-            }
-
-        );
-
-
-
-
-
-        console.log(
-
-            "[PHX GRID COLUMN DETAILS]",
-
-            columns.map(
-
-                column => ({
-
-                    key:
-                        column.key,
-
-                    label:
-                        column.label,
-
-                    width:
-                        column.width,
-
-                    visible:
-                        column.visible
-
-                })
-
-            )
-
-        );
-
-
-
-
-
-        console.log(
-
-            "[PHX GRID COLUMNS]",
-
-            {
-
-                view:
-                    currentView,
-
-                count:
-                    columns.length
-
-            }
-
-        );
-
-
-
-
-
-        let html =
-
-
-            `
-
-            <table class="phoenix-grid">
-
-
-                <thead>
-
-                    <tr>
-
-            `;
+        `;
 
 
 
@@ -433,7 +383,7 @@ export class DashboardController {
 
         columns.forEach(
 
-            column => {
+            column=>{
 
 
                 const width =
@@ -446,36 +396,27 @@ export class DashboardController {
 
 
 
-                html +=
+                html += `
 
 
-                    `
+                <th
 
-                    <th
+                style="
 
-                        style="
+                width:${width};
 
-                            width:${width};
+                min-width:${width};
 
-                            min-width:${width};
+                "
 
-                        "
+                >
 
-                    >
+                ${column.label || column.key}
 
-                        ${
+                </th>
 
-                            column.label
 
-                            ||
-
-                            column.key
-
-                        }
-
-                    </th>
-
-                    `;
+                `;
 
 
             }
@@ -486,21 +427,18 @@ export class DashboardController {
 
 
 
-        html +=
+        html += `
 
 
-            `
+                </tr>
 
-                    </tr>
-
-                </thead>
+            </thead>
 
 
-                <tbody>
-
-            `;
+            <tbody>
 
 
+        `;
 
 
 
@@ -508,80 +446,43 @@ export class DashboardController {
 
         rows.forEach(
 
-            row => {
+            row=>{
 
 
-                html +=
-
-
-                    `
-
-                    <tr>
-
-                    `;
-
-
+                html += "<tr>";
 
 
 
                 columns.forEach(
 
-                    column => {
+                    column=>{
 
 
                         const value =
 
                             this.columnRegistry
-                                .getValue(
 
-                                    column.key,
+                            .getValue(
 
-                                    row
+                                column.key,
 
-                                );
-
-
-
-
-
-                        const width =
-
-                            this.getColumnWidth(
-
-                                column
+                                row
 
                             );
 
 
 
+                        html += `
 
 
-                        html +=
+                        <td>
+
+                            ${value ?? ""}
+
+                        </td>
 
 
-                            `
-
-                            <td
-
-                                style="
-
-                                    width:${width};
-
-                                    min-width:${width};
-
-                                "
-
-                            >
-
-                                ${
-
-                                    value ?? ""
-
-                                }
-
-                            </td>
-
-                            `;
+                        `;
 
 
                     }
@@ -590,16 +491,7 @@ export class DashboardController {
 
 
 
-
-
-                html +=
-
-
-                    `
-
-                    </tr>
-
-                    `;
+                html += "</tr>";
 
 
             }
@@ -610,41 +502,20 @@ export class DashboardController {
 
 
 
+        html += `
 
 
-        html +=
+            </tbody>
 
 
-            `
-
-                </tbody>
-
-            </table>
-
-            `;
+        </table>
 
 
+        `;
 
 
 
         this.element.innerHTML = html;
-
-
-        console.log(
-
-            "[PHX GRID RENDER COMPLETE]",
-
-            {
-
-                columns:
-                    columns.length,
-
-                rows:
-                    rows.length
-
-            }
-
-        );
 
 
     }

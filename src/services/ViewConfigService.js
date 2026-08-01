@@ -419,10 +419,7 @@ export class ViewConfigService {
 
 
 
-                                console.log(
-                                    "[PHX COLUMN NORMALISED]",
-                                    mapped
-                                );
+                            
 
 
 

@@ -2,218 +2,471 @@ export class ToolbarController {
 
 
     constructor(
-        state,
-        viewState
+
+        appState
+
     ) {
 
 
-        this.state =
-            state;
+        this.appState = appState;
 
 
-        this.viewState =
-            viewState;
-
-
-        this.container =
-            null;
+        this.element = null;
 
 
     }
 
 
 
-    mount(container) {
 
 
-        this.container =
-            container;
+
+
+    mount(element) {
+
+
+        this.element = element;
 
 
         this.render();
 
 
+        this.bind();
+
+
     }
+
+
+
+
 
 
 
     render() {
 
 
-        const view =
-            this.viewState.get()
-                .activeView;
+        const state =
+
+            this.appState.get();
 
 
 
-        const filter =
-            this.viewState.get()
-                .filter;
+        const currentMode =
+
+            state.activeView
+
+            ||
+
+            "By View";
 
 
 
-        const rows =
-            this.viewState.get()
-                .rowLimit;
+        const currentLimit =
+
+            state.rowsLimit === null
+
+            ?
+
+            "all"
+
+            :
+
+            String(
+
+                state.rowsLimit
+
+            );
 
 
 
-        this.container.innerHTML = `
 
 
-            <div class="phoenix-toolbar">
+        this.element.innerHTML = `
 
 
-                <button
-                    class="phoenix-pill"
-                    data-action="view"
+        <div class="phoenix-toolbar">
+
+
+            <div class="phoenix-toolbar-group">
+
+
+                <label class="phoenix-toolbar-label">
+
+                    Opportunities
+
+                </label>
+
+
+
+                <select
+
+                    id="phoenix-opportunity-mode"
+
+                    class="phoenix-toolbar-select"
+
                 >
 
-                    ${view}
 
-                </button>
+                    <option value="By View"
+                    ${currentMode === "By View" ? "selected" : ""}>
 
+                        By View
 
-
-                <button
-                    class="phoenix-pill"
-                    data-action="supplier"
-                >
-
-                    By Supplier
-
-                </button>
+                    </option>
 
 
 
-                <button
-                    class="phoenix-pill"
-                    data-action="rows"
-                >
+                    <option value="By Supplier"
+                    ${currentMode === "By Supplier" ? "selected" : ""}>
 
-                    Rows ${rows}
+                        By Supplier
 
-                </button>
+                    </option>
 
 
 
-                <button
-                    class="phoenix-pill"
-                    data-action="filter"
-                >
+                    <option value="By Status Tracker"
+                    ${currentMode === "By Status Tracker" ? "selected" : ""}>
 
-                    ${filter}
+                        By Status Tracker
 
-                </button>
+                    </option>
 
+
+                </select>
 
 
             </div>
 
 
+
+
+
+            <div class="phoenix-toolbar-group">
+
+
+                <label class="phoenix-toolbar-label">
+
+                    Rows
+
+                </label>
+
+
+
+                <select
+
+                    id="phoenix-row-limit"
+
+                    class="phoenix-toolbar-select"
+
+                >
+
+
+                    <option value="all"
+                    ${currentLimit === "all" ? "selected" : ""}>
+
+                        All
+
+                    </option>
+
+
+                    <option value="50"
+                    ${currentLimit === "50" ? "selected" : ""}>
+
+                        50
+
+                    </option>
+
+
+                    <option value="100"
+                    ${currentLimit === "100" ? "selected" : ""}>
+
+                        100
+
+                    </option>
+
+
+
+                    <option value="250"
+                    ${currentLimit === "250" ? "selected" : ""}>
+
+                        250
+
+                    </option>
+
+
+
+                    <option value="500"
+                    ${currentLimit === "500" ? "selected" : ""}>
+
+                        500
+
+                    </option>
+
+
+
+                    <option value="1000"
+                    ${currentLimit === "1000" ? "selected" : ""}>
+
+                        1000
+
+                    </option>
+
+
+                </select>
+
+
+            </div>
+
+
+
+
+
+            <div class="phoenix-toolbar-group">
+
+
+                <button
+
+                    id="phoenix-load-dashboard"
+
+                    class="phoenix-toolbar-button"
+
+                >
+
+                    Load Dashboard
+
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+
         `;
-
-
-        this.bindEvents();
 
 
     }
 
 
 
-    bindEvents() {
-
-
-        const viewButton =
-
-            this.container.querySelector(
-                "[data-action='view']"
-            );
-
-
-        const supplierButton =
-
-            this.container.querySelector(
-                "[data-action='supplier']"
-            );
-
-
-        const rowsButton =
-
-            this.container.querySelector(
-                "[data-action='rows']"
-            );
-
-
-        const filterButton =
-
-            this.container.querySelector(
-                "[data-action='filter']"
-            );
 
 
 
-        viewButton.onclick = () => {
+
+    bind() {
 
 
-            this.viewState.set(
+        const modeSelect =
 
-                "activeView",
+            this.element.querySelector(
 
-                "By View"
+                "#phoenix-opportunity-mode"
 
             );
 
 
-        };
 
+        const limitSelect =
 
+            this.element.querySelector(
 
-        supplierButton.onclick = () => {
-
-
-            this.viewState.set(
-
-                "activeView",
-
-                "By Supplier"
+                "#phoenix-row-limit"
 
             );
 
 
-        };
 
+        const loadButton =
 
+            this.element.querySelector(
 
-        rowsButton.onclick = () => {
-
-
-            this.viewState.set(
-
-                "rowLimit",
-
-                250
+                "#phoenix-load-dashboard"
 
             );
 
 
-        };
 
 
 
-        filterButton.onclick = () => {
 
 
-            this.viewState.set(
+        if(modeSelect){
 
-                "filter",
 
-                "Strong Only"
+            modeSelect.addEventListener(
+
+                "change",
+
+                event => {
+
+
+                    const mode =
+
+                        event.target.value;
+
+
+
+                    console.log(
+
+                        "[PHX MODE CHANGE]",
+
+                        mode
+
+                    );
+
+
+
+                    this.appState.update({
+
+                        activeView:
+
+                            mode
+
+                    });
+
+
+                }
 
             );
 
 
-        };
+        }
+
+
+
+
+
+
+
+        if(limitSelect){
+
+
+            limitSelect.addEventListener(
+
+                "change",
+
+                event => {
+
+
+                    const value =
+
+                        event.target.value;
+
+
+
+                    const limit =
+
+                        value === "all"
+
+                        ?
+
+                        null
+
+                        :
+
+                        Number(value);
+
+
+
+
+
+                    console.log(
+
+                        "[PHX ROW LIMIT CHANGE]",
+
+                        limit
+
+                    );
+
+
+
+
+
+                    console.log(
+
+                        "[PHX TOOLBAR BEFORE]",
+
+                        this.appState.get()
+
+                    );
+
+
+
+
+
+                    this.appState.update({
+
+                        rowsLimit:
+
+                            limit
+
+                    });
+
+
+
+
+
+                    console.log(
+
+                        "[PHX TOOLBAR AFTER]",
+
+                        this.appState.get()
+
+                    );
+
+
+                }
+
+            );
+
+
+        }
+
+
+
+
+
+
+
+        if(loadButton){
+
+
+            loadButton.addEventListener(
+
+                "click",
+
+                ()=>{
+
+
+                    console.log(
+
+                        "[PHX LOAD DASHBOARD CLICK]",
+
+                        this.appState.get()
+
+                    );
+
+
+
+                    window.dispatchEvent(
+
+                        new CustomEvent(
+
+                            "phoenix-dashboard-load"
+
+                        )
+
+                    );
+
+
+                }
+
+            );
+
+
+        }
 
 
     }

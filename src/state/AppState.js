@@ -11,7 +11,6 @@ export class AppState {
                 User context
             */
 
-
             wixUserId:
 
                 null,
@@ -38,10 +37,11 @@ export class AppState {
 
 
 
+
+
             /*
                 Dashboard context
             */
-
 
             process:
 
@@ -53,11 +53,29 @@ export class AppState {
                 "default",
 
 
+            activeView:
+
+                "By View",
+
+
+
+
+
+            /*
+                Retrieval state
+            */
+
+            rowsLimit:
+
+                null,
+
+
+
+
 
             /*
                 Grid state
             */
-
 
             rowsPerPage:
 
@@ -75,10 +93,11 @@ export class AppState {
 
 
 
+
+
             /*
                 Status
             */
-
 
             status:
 
@@ -98,7 +117,36 @@ export class AppState {
 
 
 
-    get(key) {
+
+
+    /*
+        Supports:
+
+        get("key")
+
+        AND
+
+        get()
+        -> returns full state
+
+    */
+
+
+    get(key = null) {
+
+
+        if(key === null){
+
+
+            return {
+
+                ...this.state
+
+            };
+
+
+        }
+
 
 
         return this.state[key];
@@ -110,29 +158,25 @@ export class AppState {
 
 
 
-    set(key, value) {
+
+
+    set(key,value){
 
 
         this.state[key] = value;
 
 
-        this.notify();
+        console.log(
 
+            "[PHX STATE SET]",
 
-    }
+            {
 
+                key,
 
+                value
 
-
-
-    update(values) {
-
-
-        Object.assign(
-
-            this.state,
-
-            values
+            }
 
         );
 
@@ -146,7 +190,43 @@ export class AppState {
 
 
 
-    getState() {
+
+
+    update(values){
+
+
+        Object.assign(
+
+            this.state,
+
+            values
+
+        );
+
+
+
+        console.log(
+
+            "[PHX STATE UPDATE]",
+
+            values
+
+        );
+
+
+
+        this.notify();
+
+
+    }
+
+
+
+
+
+
+
+    getState(){
 
 
         return {
@@ -162,7 +242,9 @@ export class AppState {
 
 
 
-    subscribe(callback) {
+
+
+    subscribe(callback){
 
 
         this.listeners.push(
@@ -170,6 +252,7 @@ export class AppState {
             callback
 
         );
+
 
 
         return () => {
@@ -181,7 +264,7 @@ export class AppState {
 
                     listener =>
 
-                        listener !== callback
+                    listener !== callback
 
                 );
 
@@ -195,19 +278,27 @@ export class AppState {
 
 
 
-    notify() {
 
 
-        for (
+    notify(){
+
+
+        const snapshot =
+
+            this.getState();
+
+
+
+        for(
 
             const listener of this.listeners
 
-        ) {
+        ){
 
 
             listener(
 
-                this.getState()
+                snapshot
 
             );
 
