@@ -23,6 +23,8 @@ import { UserRepository }
 
 
 
+
+
 document.addEventListener(
 
     "DOMContentLoaded",
@@ -37,9 +39,12 @@ document.addEventListener(
 
 
 
+
         const viewState =
 
             new ViewState();
+
+
 
 
 
@@ -55,13 +60,28 @@ document.addEventListener(
 
 
 
+
+        await container.build();
+
+
+
+
+
+
         const userRepository =
 
             new UserRepository(
 
-                container.supabaseClient
+                container.get(
+
+                    "supabaseClient"
+
+                )
 
             );
+
+
+
 
 
 
@@ -72,6 +92,9 @@ document.addEventListener(
                 userRepository
 
             );
+
+
+
 
 
 
@@ -86,28 +109,44 @@ document.addEventListener(
 
                     header:
 
-                        container.headerController,
+                        container.get(
+
+                            "headerController"
+
+                        ),
 
 
 
                     toolbar:
 
-                        container.toolbarController,
+                        container.get(
+
+                            "toolbarController"
+
+                        ),
 
 
 
                     dashboard:
 
-                        container.dashboardController,
+                        container.get(
+
+                            "dashboardController"
+
+                        ),
 
 
 
                     status:
 
-                        container.statusController
+                        container.get(
 
+                            "statusController"
+
+                        )
 
                 },
+
 
                 {
 
@@ -117,7 +156,22 @@ document.addEventListener(
 
                     viewConfig:
 
-                        container.viewConfig
+                        container.get(
+
+                            "viewConfig"
+
+                        ),
+
+
+
+                    processRepository:
+
+                        container.get(
+
+                            "processRepository"
+
+                        )
+
 
 
                 }
@@ -126,7 +180,12 @@ document.addEventListener(
 
 
 
+
+
+
+
         await app.start();
+
 
 
     }

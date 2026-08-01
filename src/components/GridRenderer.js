@@ -1,18 +1,64 @@
+import { ColumnRegistry }
+    from "../services/ColumnRegistry.js";
+
+
+
 export class GridRenderer {
 
 
     constructor() {
 
+
         this.container = null;
+
+
+        this.columnRegistry =
+
+            new ColumnRegistry();
+
 
     }
 
 
 
-    render(container, columns, rows = []) {
+
+
+
+    render(
+
+        container,
+
+        columns,
+
+        rows = []
+
+    ) {
 
 
         this.container = container;
+
+
+
+        console.log(
+
+            "[PHX GRID COLUMNS RECEIVED]",
+
+            columns
+
+        );
+
+
+        console.log(
+
+            "[PHX GRID ROWS RECEIVED]",
+
+            rows
+
+        );
+
+
+
+
 
 
 
@@ -28,8 +74,11 @@ export class GridRenderer {
                     ${columns.map(column => `
 
                         <div
+
                             class="phoenix-grid-cell"
+
                             style="width:${column.width}px"
+
                         >
 
                             ${column.label}
@@ -40,6 +89,8 @@ export class GridRenderer {
 
 
                 </div>
+
+
 
 
 
@@ -66,20 +117,41 @@ export class GridRenderer {
                         <div class="phoenix-grid-row">
 
 
-                            ${columns.map(column => `
+                            ${columns.map(column => {
+
+
+                                const value =
+
+                                    this.columnRegistry.getValue(
+
+                                        column.field,
+
+                                        row
+
+                                    );
+
+
+
+                                return `
 
 
                                 <div
+
                                     class="phoenix-grid-cell"
+
                                     style="width:${column.width}px"
+
                                 >
 
-                                    ${row[column.field] ?? ""}
+                                    ${value ?? ""}
 
                                 </div>
 
 
-                            `).join("")}
+                                `;
+
+
+                            }).join("")}
 
 
                         </div>

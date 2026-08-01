@@ -7,7 +7,7 @@ export class ToolbarController {
 
         viewState
 
-    ) {
+    ){
 
 
         this.appState = appState;
@@ -27,6 +27,7 @@ export class ToolbarController {
 
 
 
+
     mount(element){
 
 
@@ -37,24 +38,6 @@ export class ToolbarController {
 
 
         this.bind();
-
-
-
-        this.unsubscribe =
-
-            this.appState.subscribe(
-
-                () => {
-
-
-                    this.render();
-
-                    this.bind();
-
-
-                }
-
-            );
 
 
     }
@@ -79,6 +62,7 @@ export class ToolbarController {
 
 
 
+
         const state =
 
             this.appState.getState();
@@ -87,17 +71,11 @@ export class ToolbarController {
 
 
 
-        const processes =
-
-            state.processes || [];
-
-
-
-
-
         const process =
 
-            state.process ||
+            state.process
+
+            ||
 
             "Can We Sell";
 
@@ -107,7 +85,9 @@ export class ToolbarController {
 
         const opportunityMode =
 
-            state.opportunityMode ||
+            state.opportunityMode
+
+            ||
 
             "By View";
 
@@ -117,31 +97,11 @@ export class ToolbarController {
 
         const rowsLimit =
 
-            state.rowsLimit ||
+            state.rowsLimit
 
-            "100";
+            ||
 
-
-
-
-
-        const role =
-
-            String(
-
-                state.role || ""
-
-            ).toLowerCase();
-
-
-
-
-
-        const isAdmin =
-
-            role === "admin";
-
-
+            100;
 
 
 
@@ -157,424 +117,264 @@ export class ToolbarController {
 
 
 
-<div class="phoenix-toolbar-top">
+
+
+    <div class="phoenix-toolbar-top">
 
 
 
 
 
+        <div class="toolbar-pill toolbar-green">
 
 
-<div class="toolbar-pill">
+            <span class="toolbar-pill-label">
 
+                Process
 
-    <span class="toolbar-pill-label">
-
-        Process
-
-    </span>
+            </span>
 
 
 
-    <select id="phoenix-process">
+            <select id="phoenix-process">
 
 
-        ${
-            processes.length
+                <option>
 
-            ?
-
-            processes.map(
-
-                p => `
-
-                <option
-
-                    value="${p.process_name}"
-
-                    ${
-                        p.process_name === process
-
-                        ?
-
-                        "selected"
-
-                        :
-
-                        ""
-
-                    }
-
-                >
-
-                    ${p.process_name}
+                    ${process}
 
                 </option>
 
-                `
 
-            ).join("")
-
-
-            :
-
-            `
-
-            <option>
-
-                ${process}
-
-            </option>
-
-            `
-
-        }
-
-
-    </select>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<div class="toolbar-pill">
-
-
-    <span class="toolbar-pill-label">
-
-        Opportunities
-
-    </span>
-
-
-
-    <select id="phoenix-opportunity-mode">
-
-
-        <option
-
-        ${
-            opportunityMode === "By View"
-
-            ?
-
-            "selected"
-
-            :
-
-            ""
-
-        }
-
-        >
-
-            By View
-
-        </option>
-
-
-
-
-        <option
-
-        ${
-            opportunityMode === "By Supplier"
-
-            ?
-
-            "selected"
-
-            :
-
-            ""
-
-        }
-
-        >
-
-            By Supplier
-
-        </option>
-
-
-    </select>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<button
-
-    id="phoenix-load-dashboard"
-
-    class="toolbar-button blue"
-
->
-
-    Load Dashboard
-
-</button>
-
-
-
-
-
-</div>
-
-
-
-
-
-
-
-
-<div class="phoenix-toolbar-bottom">
-
-
-
-
-
-
-
-<div class="toolbar-pill">
-
-
-    <span class="toolbar-pill-label">
-
-        Load Rows
-
-    </span>
-
-
-
-    <select id="phoenix-row-limit">
-
-
-        <option>
-
-            ${rowsLimit}
-
-        </option>
-
-
-        <option>
-
-            100
-
-        </option>
-
-
-        <option>
-
-            250
-
-        </option>
-
-
-        <option>
-
-            500
-
-        </option>
-
-
-        <option>
-
-            1000
-
-        </option>
-
-
-    </select>
-
-
-</div>
-<button
-
-    class="toolbar-button orange"
-
->
-
-    ⚠ Open Hazmat Check
-
-</button>
-
-
-
-
-
-
-<button
-
-    class="toolbar-button blue"
-
->
-
-    ↗ View Opportunities
-
-</button>
-
-
-
-
-
-
-<button
-
-    class="toolbar-button green"
-
->
-
-    🔍 Search Master Price File
-
-</button>
-
-
-
-
-
-
-<div class="tools-wrapper">
-
-
-
-    <button
-
-        id="phoenix-tools"
-
-        class="toolbar-button tools"
-
-    >
-
-        ⚙ Tools ▼
-
-    </button>
-
-
-
-
-
-
-
-    ${
-
-        this.openTools
-
-        ?
-
-        `
-
-        <div class="tools-menu">
-
-
-            <div>
-
-                Custom Views
-
-            </div>
-
-
-
-            <div>
-
-                Constants
-
-            </div>
-
-
-
-            ${
-
-            isAdmin
-
-            ?
-
-            `
-
-
-            <hr>
-
-
-            <div>
-
-                Assign To User
-
-            </div>
-
-
-            <div>
-
-                Apply Assignment
-
-            </div>
-
-
-            <div>
-
-                Opportunity Scoring
-
-            </div>
-
-
-            <div>
-
-                PurchaseOS
-
-            </div>
-
-
-            <div>
-
-                OrderOS
-
-            </div>
-
-
-            `
-
-            :
-
-            ""
-
-            }
+            </select>
 
 
 
         </div>
 
-        `
 
-        :
 
-        ""
 
-    }
+
+
+
+
+        <div class="toolbar-pill toolbar-green">
+
+
+            <span class="toolbar-pill-label">
+
+                Opportunities
+
+            </span>
+
+
+
+            <select id="phoenix-opportunity-mode">
+
+
+                <option>
+
+                    ${opportunityMode}
+
+                </option>
+
+
+                <option>
+
+                    By View
+
+                </option>
+
+
+                <option>
+
+                    By Supplier
+
+                </option>
+
+
+            </select>
+
+
+
+        </div>
+
+
+
+
+
+
+
+        <button
+
+            id="phoenix-load-dashboard"
+
+            class="toolbar-button blue"
+
+        >
+
+            Load Dashboard
+
+        </button>
+
+
+
+
+
+    </div>
+
+
+
+
+
+
+
+
+    <div class="phoenix-toolbar-bottom">
+
+
+
+
+
+        <div class="toolbar-pill toolbar-green">
+
+
+            <span class="toolbar-pill-label">
+
+                Load Rows
+
+            </span>
+
+
+
+            <select id="phoenix-row-limit">
+
+
+                <option value="100"
+
+                ${rowsLimit === 100 ? "selected" : ""}
+
+                >
+
+                    100
+
+                </option>
+
+
+
+                <option value="250"
+
+                ${rowsLimit === 250 ? "selected" : ""}
+
+                >
+
+                    250
+
+                </option>
+
+
+
+                <option value="500"
+
+                ${rowsLimit === 500 ? "selected" : ""}
+
+                >
+
+                    500
+
+                </option>
+
+
+
+                <option value="1000"
+
+                ${rowsLimit === 1000 ? "selected" : ""}
+
+                >
+
+                    1000
+
+                </option>
+
+
+            </select>
+
+
+
+        </div>
+
+
+
+
+
+
+
+
+
+        <button class="toolbar-button orange">
+
+            ⚠ Open Hazmat Check
+
+        </button>
+
+
+
+
+
+
+
+
+        <button class="toolbar-button blue">
+
+            ↗ View Opportunities
+
+        </button>
+
+
+
+
+
+
+
+
+        <button class="toolbar-button green">
+
+            🔍 Search Master Price File
+
+        </button>
+
+
+
+
+
+
+
+
+        <button
+
+            id="phoenix-tools"
+
+            class="toolbar-button tools"
+
+        >
+
+            ⚙ Tools ▼
+
+        </button>
+
+
+
+
+
+    </div>
+
+
 
 
 
 </div>
 
-
-
-</div>
-
-
-
-</div>
 
 
 `;
@@ -595,30 +395,71 @@ export class ToolbarController {
 
 
 
-        const tools =
+        const loadButton =
 
             this.element.querySelector(
 
-                "#phoenix-tools"
+                "#phoenix-load-dashboard"
 
             );
 
 
 
-        if(tools){
+        if(loadButton){
 
 
-            tools.onclick = () => {
+            loadButton.onclick = () => {
 
 
-                this.openTools =
+                document.dispatchEvent(
 
-                    !this.openTools;
+                    new CustomEvent(
+
+                        "phoenix-load-dashboard"
+
+                    )
+
+                );
 
 
-                this.render();
+            };
 
-                this.bind();
+
+        }
+
+
+
+
+
+
+
+        const rowsSelect =
+
+            this.element.querySelector(
+
+                "#phoenix-row-limit"
+
+            );
+
+
+
+        if(rowsSelect){
+
+
+            rowsSelect.onchange = e => {
+
+
+                this.appState.update({
+
+                    rowsLimit:
+
+                        Number(
+
+                            e.target.value
+
+                        )
+
+                });
 
 
             };
@@ -633,8 +474,7 @@ export class ToolbarController {
 
 
 
-
-        const process =
+        const processSelect =
 
             this.element.querySelector(
 
@@ -644,10 +484,10 @@ export class ToolbarController {
 
 
 
-        if(process){
+        if(processSelect){
 
 
-            process.onchange = e => {
+            processSelect.onchange = e => {
 
 
                 this.appState.update({
@@ -671,8 +511,7 @@ export class ToolbarController {
 
 
 
-
-        const mode =
+        const opportunitySelect =
 
             this.element.querySelector(
 
@@ -682,10 +521,10 @@ export class ToolbarController {
 
 
 
-        if(mode){
+        if(opportunitySelect){
 
 
-            mode.onchange = e => {
+            opportunitySelect.onchange = e => {
 
 
                 this.appState.update({
@@ -704,45 +543,8 @@ export class ToolbarController {
 
 
 
-
-
-
-
-
-
-        const rows =
-
-            this.element.querySelector(
-
-                "#phoenix-row-limit"
-
-            );
-
-
-
-        if(rows){
-
-
-            rows.onchange = e => {
-
-
-                this.appState.update({
-
-                    rowsLimit:
-
-                        e.target.value
-
-                });
-
-
-            };
-
-
-        }
-
-
-
     }
+
 
 
 }

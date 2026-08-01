@@ -1,21 +1,5 @@
-import { Logger }
-    from "./Logger.js";
-
-
-import { ViewConfigService }
-    from "./ViewConfigService.js";
-
-
-import { OpportunityService }
-    from "./OpportunityService.js";
-
-
-import { ViewEngine }
-    from "./ViewEngine.js";
-
-
-import { DemoOpportunityRepository }
-    from "../repositories/DemoOpportunityRepository.js";
+import { SupabaseClient }
+    from "./SupabaseClient.js";
 
 
 import { SupabaseOpportunityRepository }
@@ -26,24 +10,28 @@ import { ViewConfigRepository }
     from "../repositories/ViewConfigRepository.js";
 
 
-import { SupabaseClient }
-    from "./SupabaseClient.js";
+import { DashboardProcessRepository }
+    from "../repositories/DashboardProcessRepository.js";
 
 
-import { PhoenixConfig }
-    from "../config/PhoenixConfig.js";
+import { ViewConfigService }
+    from "./ViewConfigService.js";
 
 
-import { CalculationPipeline }
-    from "./calculations/CalculationPipeline.js";
+import { EnrichmentPipeline }
+    from "./enrichment/EnrichmentPipeline.js";
 
 
-import { PriceValidationCalculator }
-    from "./calculations/PriceValidationCalculator.js";
+import { AmazonPackInfoEnricher }
+    from "./enrichment/AmazonPackInfoEnricher.js";
 
 
 import { PackSizeDerivationService }
     from "./enrichment/PackSizeDerivationService.js";
+
+
+import { OpportunityService }
+    from "./OpportunityService.js";
 
 
 import { HeaderController }
@@ -54,16 +42,23 @@ import { ToolbarController }
     from "../controllers/ToolbarController.js";
 
 
-import { StatusBarController }
-    from "../controllers/StatusBarController.js";
-
-
 import { DashboardController }
     from "../controllers/DashboardController.js";
 
 
+import { StatusBarController }
+    from "../controllers/StatusBarController.js";
+
+
+import { GridRenderer }
+    from "../components/GridRenderer.js";
+
+
+
+
 
 export class ServiceContainer {
+
 
 
     constructor(
@@ -72,55 +67,57 @@ export class ServiceContainer {
 
         viewState
 
-    ) {
+    ){
 
 
-
-        this.logger =
-
-            new Logger();
+        this.appState = appState;
 
 
+        this.viewState = viewState;
 
 
-
-        this.config =
-
-            new PhoenixConfig();
+        this.services = {};
 
 
-
-
-
-        this.appState =
-
-            appState;
-
-
-
-
-        this.viewState =
-
-            viewState;
+    }
 
 
 
 
 
-        this.supabaseClient =
+
+
+
+
+    async build(){
+
+
+
+        const supabaseClient =
 
             new SupabaseClient({
 
                 url:
 
-                    this.config.getSupabaseUrl(),
+                    window.PHOENIX_CONFIG?.supabaseUrl,
 
 
                 key:
 
-                    this.config.getSupabaseKey()
+                    window.PHOENIX_CONFIG?.supabaseKey
+
 
             });
+
+
+
+
+
+        this.services.supabaseClient =
+
+            supabaseClient;
+
+
 
 
 
@@ -129,21 +126,182 @@ export class ServiceContainer {
 
 
         /*
-            View Config
+            REPOSITORIES
         */
+
+
+        const opportunityRepository =
+
+            new SupabaseOpportunityRepository(
+
+                supabaseClient,
+
+                this.appState
+
+            );
+
+
+
 
 
         const viewConfigRepository =
 
             new ViewConfigRepository(
 
-                this.supabaseClient
+                supabaseClient
 
             );
 
 
 
-        this.viewConfig =
+
+
+        const processRepository =
+
+            new DashboardProcessRepository(
+
+                supabaseClient
+
+            );
+
+
+
+
+
+        this.services.opportunityRepository =
+
+            opportunityRepository;
+
+
+
+        this.services.viewConfigRepository =
+
+            viewConfigRepository;
+
+
+
+        this.services.processRepository =
+
+            processRepository;
+
+
+
+
+
+
+
+
+
+        /*
+            PACK SIZE ENRICHMENT
+
+            No PackRepository yet.
+            Uses derivation only.
+        */
+
+
+        const packSizeDerivationService =
+
+            new PackSizeDerivationService();
+
+
+
+
+
+        this.services.packSizeDerivationService =
+
+            packSizeDerivationService;
+
+
+
+
+
+        const amazonPackInfoEnricher =
+
+            new AmazonPackInfoEnricher(
+
+                null,
+
+                packSizeDerivationService
+
+            );
+
+
+
+
+
+        this.services.amazonPackInfoEnricher =
+
+            amazonPackInfoEnricher;
+
+
+
+
+
+
+
+
+
+        const enrichmentPipeline =
+
+            new EnrichmentPipeline(
+
+                [
+
+                    amazonPackInfoEnricher
+
+                ]
+
+            );
+
+
+
+
+
+        this.services.enrichmentPipeline =
+
+            enrichmentPipeline;
+
+
+
+
+
+
+
+
+
+        /*
+            SERVICES
+        */
+
+
+        const opportunityService =
+
+            new OpportunityService(
+
+                opportunityRepository,
+
+                enrichmentPipeline
+
+            );
+
+
+
+
+
+        this.services.opportunityService =
+
+            opportunityService;
+
+
+
+
+
+
+
+
+
+        const viewConfigService =
 
             new ViewConfigService(
 
@@ -155,13 +313,11 @@ export class ServiceContainer {
 
 
 
-        this.viewEngine =
+        this.services.viewConfig =
 
-            new ViewEngine(
+            viewConfigService;
 
-                this.viewState
 
-            );
 
 
 
@@ -170,11 +326,36 @@ export class ServiceContainer {
 
 
         /*
-            Controllers
+            GRID
         */
 
 
-        this.headerController =
+        const gridRenderer =
+
+            new GridRenderer();
+
+
+
+
+
+        this.services.gridRenderer =
+
+            gridRenderer;
+
+
+
+
+
+
+
+
+
+        /*
+            CONTROLLERS
+        */
+
+
+        this.services.headerController =
 
             new HeaderController(
 
@@ -184,19 +365,41 @@ export class ServiceContainer {
 
 
 
-        this.toolbarController =
+
+
+        this.services.toolbarController =
 
             new ToolbarController(
 
-                this.appState,
-
-                this.viewState
+                this.appState
 
             );
 
 
 
-        this.statusController =
+
+
+        this.services.dashboardController =
+
+            new DashboardController(
+
+                opportunityService,
+
+                viewConfigService,
+
+                this.viewState,
+
+                this.appState,
+
+                gridRenderer
+
+            );
+
+
+
+
+
+        this.services.statusController =
 
             new StatusBarController(
 
@@ -210,148 +413,36 @@ export class ServiceContainer {
 
 
 
-        /*
-            Pack Size Derivation
 
-            Only runs when RPC row
-            has no pack_size
 
-        */
+        console.log(
 
+            "[PHX SERVICE CONTAINER READY]",
 
-        this.packSizeDerivationService =
+            this.services
 
-            new PackSizeDerivationService();
+        );
 
-
-
-
-
-
-
-        /*
-            Calculation Pipeline
-        */
-
-
-        this.calculationPipeline =
-
-            new CalculationPipeline([
-
-
-                new PriceValidationCalculator()
-
-
-            ]);
-
-
-
-
-
-
-
-        /*
-            Opportunity Repository
-        */
-
-
-        let opportunityRepository;
-
-
-
-
-
-        if (
-
-            this.config.isSupabaseConfigured()
-
-        ) {
-
-
-            opportunityRepository =
-
-                new SupabaseOpportunityRepository(
-
-                    this.supabaseClient,
-
-                    this.config
-
-                );
-
-
-        }
-
-        else {
-
-
-            opportunityRepository =
-
-                new DemoOpportunityRepository();
-
-
-        }
-
-
-
-
-
-
-
-        /*
-            Opportunity Service
-
-            RPC now supplies:
-
-            - status_tracker
-            - master_price_file
-            - amazonpackinfo
-
-            Only remaining enrichment:
-
-            - PackSizeDerivationService
-
-        */
-
-
-        this.opportunity =
-
-            new OpportunityService(
-
-                opportunityRepository,
-
-                this.calculationPipeline,
-
-                this.packSizeDerivationService
-
-            );
-
-
-
-
-
-
-
-        /*
-            Dashboard Controller
-        */
-
-
-        this.dashboardController =
-
-            new DashboardController(
-
-                this.opportunity,
-
-                this.viewConfig,
-
-                this.viewState,
-
-                this.appState
-
-            );
 
 
     }
+
+
+
+
+
+
+
+
+
+    get(name){
+
+
+        return this.services[name];
+
+
+    }
+
 
 
 }

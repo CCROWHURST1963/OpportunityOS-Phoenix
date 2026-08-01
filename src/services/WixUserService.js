@@ -5,66 +5,16 @@ export class WixUserService {
 
         userRepository
 
-    ) {
+    ){
 
 
-        this.userRepository =
-            userRepository;
+        this.userRepository = userRepository;
 
 
-    }
+        this.user = null;
 
 
-
-
-
-    async getRequestedUserKey() {
-
-
-        /*
-            Phoenix / OpportunityOS behaviour:
-
-            The application works from
-            internal userKey.
-
-            Wix identity is only used
-            to determine the active user.
-
-            Local fallback:
-            DEFAULT
-        */
-
-
-        try {
-
-
-            if (
-
-                window.PHOENIX_CONFIG?.userKey
-
-            ) {
-
-
-                return (
-
-                    window.PHOENIX_CONFIG.userKey
-
-                );
-
-
-            }
-
-
-        }
-
-        catch(error) {
-
-
-        }
-
-
-
-        return "DEFAULT";
+        this.userKey = "DEFAULT";
 
 
     }
@@ -73,70 +23,33 @@ export class WixUserService {
 
 
 
-    clean(value) {
 
 
-        return String(
-
-            value ?? ""
-
-        )
-        .trim();
-
-
-    }
+    async loadUserContext(){
 
 
 
-
-
-    async loadUserContext() {
-
-
-        const requestedUserKey =
-
-            await this.getRequestedUserKey();
-
-
-
-        let appUser =
-
-            await this.userRepository
-                .getUserByKey(
-
-                    requestedUserKey
-
-                );
-
-
-
-        let sourceKey =
-
-            requestedUserKey;
+        let wixId = null;
 
 
 
         /*
-            DEFAULT fallback
+            Try Wix user id
         */
 
 
-        if (!appUser) {
+        if(
+
+            window.wixUsers &&
+
+            window.wixUsers.currentUser
+
+        ){
 
 
-            appUser =
+            wixId =
 
-                await this.userRepository
-                    .getUserByKey(
-
-                        "DEFAULT"
-
-                    );
-
-
-            sourceKey =
-
-                "DEFAULT";
+                window.wixUsers.currentUser.id;
 
 
         }
@@ -145,32 +58,73 @@ export class WixUserService {
 
 
 
-        /*
-            Final fallback
 
+
+        this.userKey =
+
+            wixId ||
+
+            "DEFAULT";
+
+
+
+
+
+
+        console.log(
+
+            "[PHX USER KEY]",
+
+            this.userKey
+
+        );
+
+
+
+
+
+
+
+        this.user =
+
+            await this.userRepository.getUserByKey(
+
+                this.userKey
+
+            );
+
+
+
+
+
+
+
+
+        /*
+            Safety fallback
         */
 
 
-        if (!appUser) {
+        if(!this.user){
 
 
-            return {
+
+            this.user = {
 
 
-                userKey:
+                user_key:
+
                     "DEFAULT",
 
 
-                userName:
-                    "Default User",
+                user_name:
+
+                    "Testing",
 
 
                 role:
-                    "User",
 
-
-                multiUsers:
-                    false
+                    "admin"
 
 
             };
@@ -182,70 +136,42 @@ export class WixUserService {
 
 
 
-        return {
-
-
-            userKey:
-
-                this.clean(
-
-                    appUser.user_key
-                    ||
-                    appUser.user_id
-                    ||
-                    sourceKey
-
-                )
-                ||
-                "DEFAULT",
 
 
 
-            userName:
+        console.log(
 
-                this.clean(
+            "[PHX USER LOADED]",
 
-                    appUser.user_name
-                    ||
-                    appUser.name
-                    ||
-                    appUser.display_name
-                    ||
-                    "User"
+            this.user
 
-                ),
+        );
 
 
 
-            role:
-
-                this.clean(
-
-                    appUser.role
-                    ||
-                    appUser.user_role
-                    ||
-                    appUser.user_type
-                    ||
-                    "User"
-
-                ),
 
 
+        return this.user;
 
-            multiUsers:
-
-                Boolean(
-
-                    appUser.multi_users
-
-                )
-
-
-        };
 
 
     }
+
+
+
+
+
+
+
+
+    getUserKey(){
+
+
+        return this.userKey;
+
+
+    }
+
 
 
 }

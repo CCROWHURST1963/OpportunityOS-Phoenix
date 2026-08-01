@@ -1098,3 +1098,133 @@ body {
     font-size:15px;
 
 }
+/* =====================================
+   HEADER LOGO + VIEW PILL ALIGNMENT
+===================================== */
+
+
+.phoenix-header-left {
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+}
+
+
+
+.phoenix-logo {
+
+    font-size:20px;
+
+    font-weight:800;
+
+    color:#2563eb;
+
+}
+
+
+
+
+
+.header-pill select {
+
+
+    height:32px;
+
+    border-radius:8px;
+
+    border:1px solid #dce5f2;
+
+    padding:0 10px;
+
+    font-weight:700;
+
+    color:#17233d;
+
+    background:white;
+
+
+}
+/* =========================================
+   PHOENIX GRID FLEX RENDERER
+========================================= */
+
+
+.phoenix-grid {
+
+    width:100%;
+
+    background:white;
+
+    border-radius:18px;
+
+    overflow:auto;
+
+}
+
+
+
+.phoenix-grid-row {
+
+    display:flex;
+
+    flex-direction:row;
+
+    width:max-content;
+
+    min-width:100%;
+
+    border-bottom:1px solid #e5e7eb;
+
+}
+
+
+
+.phoenix-grid-head {
+
+    background:#eef5ff;
+
+    font-weight:700;
+
+    color:#23395d;
+
+}
+
+
+
+.phoenix-grid-cell {
+
+    display:flex;
+
+    align-items:center;
+
+    padding:10px 14px;
+
+    box-sizing:border-box;
+
+    border-right:1px solid #edf0f5;
+
+    min-height:42px;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+}
+
+
+
+.phoenix-grid-empty {
+
+    padding:40px;
+
+    text-align:center;
+
+    color:#64748b;
+
+}

@@ -1,7 +1,7 @@
 export class HeaderController {
 
 
-    constructor(state) {
+    constructor(state){
 
 
         this.state = state;
@@ -18,8 +18,7 @@ export class HeaderController {
 
 
 
-
-    mount(element) {
+    mount(element){
 
 
         this.element = element;
@@ -29,15 +28,12 @@ export class HeaderController {
 
 
 
+
         this.unsubscribe =
 
             this.state.subscribe(
 
-                () => {
-
-                    this.render();
-
-                }
+                () => this.render()
 
             );
 
@@ -50,14 +46,15 @@ export class HeaderController {
 
 
 
+
     render(){
 
 
-        if(!this.element){
+
+        if(!this.element)
 
             return;
 
-        }
 
 
 
@@ -70,19 +67,18 @@ export class HeaderController {
 
 
 
+
+
+
         const userName =
 
-            state.userName ||
+            state.userName
 
-            "Loading User";
+            ||
 
+            state.user?.user_name
 
-
-
-
-        const role =
-
-            state.role ||
+            ||
 
             "User";
 
@@ -90,13 +86,47 @@ export class HeaderController {
 
 
 
+
+
+        const role =
+
+            state.role
+
+            ||
+
+            state.user?.role
+
+            ||
+
+            "User";
+
+
+
+
+
+
+
+        const process =
+
+            state.process
+
+            ||
+
+            "";
+
+
+
+
+
+
+
         const currentView =
 
-            state.currentView ||
+            state.currentView
 
-            "default";
+            ||
 
-
+            "";
 
 
 
@@ -107,12 +137,27 @@ export class HeaderController {
         this.element.innerHTML = `
 
 
-
 <div class="phoenix-header">
 
 
 
-    <div class="header-context-group">
+    <div class="phoenix-header-left">
+
+
+
+        <div class="phoenix-logo">
+
+
+            <strong>
+
+                OpportunityOS
+
+            </strong>
+
+
+        </div>
+
+
 
 
 
@@ -144,8 +189,33 @@ export class HeaderController {
 
 
 
+        <div class="header-pill">
 
-        <div class="header-pill header-view-pill">
+
+            <span class="header-label">
+
+                Process
+
+            </span>
+
+
+            <span class="header-value">
+
+                ${process}
+
+            </span>
+
+
+        </div>
+
+
+
+
+
+
+
+
+        <div class="header-pill">
 
 
             <span class="header-label">
@@ -155,17 +225,11 @@ export class HeaderController {
             </span>
 
 
-            <select id="phoenix-header-view">
+            <span class="header-value">
 
+                ${currentView}
 
-                <option>
-
-                    ${currentView}
-
-                </option>
-
-
-            </select>
+            </span>
 
 
         </div>
@@ -178,23 +242,7 @@ export class HeaderController {
 
 
 
-
-
-
-
-
-    <div class="phoenix-logo">
-
-
-        Opportunity<span>OS</span>
-
-
-    </div>
-
-
-
 </div>
-
 
 
 `;

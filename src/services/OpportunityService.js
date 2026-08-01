@@ -1,28 +1,20 @@
 export class OpportunityService {
 
 
+
     constructor(
 
         repository,
 
-        calculationPipeline = null,
+        enrichmentPipeline
 
-        packSizeDerivationService = null
-
-    ) {
+    ){
 
 
         this.repository = repository;
 
 
-        this.calculationPipeline =
-
-            calculationPipeline;
-
-
-        this.packSizeDerivationService =
-
-            packSizeDerivationService;
+        this.enrichmentPipeline = enrichmentPipeline;
 
 
     }
@@ -32,25 +24,111 @@ export class OpportunityService {
 
 
 
-    async getRows(
 
-        view = "default",
 
-        limit = null
 
-    ){
+    async getRows(params){
+
 
 
         console.log(
 
             "[PHX SERVICE REQUEST]",
 
+            params
+
+        );
+
+
+
+
+
+
+
+
+        /*
+            DashboardController sends:
+
             {
+                process,
                 view,
                 limit
             }
 
+            Repository expects:
+
+            getRows(
+                view,
+                limit
+            )
+
+            IMPORTANT:
+            Only pass the view string.
+        */
+
+
+
+
+
+
+
+        const view =
+
+            typeof params.view === "string"
+
+            ?
+
+            params.view
+
+            :
+
+            params.view?.active_view
+
+            ||
+
+            params.view?.process_view
+
+            ||
+
+            "";
+
+
+
+
+
+
+
+        const limit =
+
+            params.limit
+
+            ||
+
+            100;
+
+
+
+
+
+
+
+        console.log(
+
+            "[PHX SERVICE NORMALISED]",
+
+            {
+
+                view,
+
+                limit
+
+            }
+
         );
+
+
+
+
 
 
 
@@ -70,11 +148,13 @@ export class OpportunityService {
 
 
 
+
+
         console.log(
 
-            "[PHX SERVICE ROW COUNT]",
+            "[PHX RAW ROW COUNT]",
 
-            rows?.length || 0
+            rows.length
 
         );
 
@@ -82,172 +162,129 @@ export class OpportunityService {
 
 
 
-        return (
 
-            rows || []
 
-        ).map(
 
-            row => {
+        console.log(
 
+            "[PHX FIRST RAW ROW]",
 
-                let hydratedRow = {
-
-
-                    ...row
-
-                };
-
-
-
-
-
-
-
-                /*
-                    Pack Size Derivation
-
-                    RPC already provides:
-
-                    pack_size
-                    buy_qty
-
-                    Only derive if missing
-
-                */
-
-
-                if(
-
-                    this.packSizeDerivationService
-
-                    &&
-
-                    !hydratedRow.pack_size
-
-                ){
-
-
-                    const derived =
-
-                        this.packSizeDerivationService.derive(
-
-                            hydratedRow
-
-                        );
-
-
-
-                    hydratedRow = {
-
-
-                        ...hydratedRow,
-
-
-                        ...derived
-
-
-                    };
-
-
-                }
-
-
-
-
-
-
-
-                /*
-                    Calculation pipeline
-
-                */
-
-
-                if(
-
-                    this.calculationPipeline
-
-                ){
-
-
-                    hydratedRow =
-
-                        this.calculationPipeline.run(
-
-                            hydratedRow
-
-                        );
-
-
-                }
-
-
-
-
-
-
-
-                return {
-
-
-                    ...hydratedRow,
-
-
-                    asin:
-
-                        hydratedRow.asin || "",
-
-
-                    locale:
-
-                        hydratedRow.locale || "",
-
-
-                    brand:
-
-                        hydratedRow.brand || "",
-
-
-                    title:
-
-                        hydratedRow.title || "",
-
-
-                    category:
-
-                        hydratedRow.category || "",
-
-
-                    supplier:
-
-                        hydratedRow.supplier || "",
-
-
-                    supplier_price:
-
-                        hydratedRow.supplier_price ?? 0,
-
-
-                    pack_size:
-
-                        hydratedRow.pack_size ?? 1,
-
-
-                    buy_qty:
-
-                        hydratedRow.buy_qty ?? 1
-
-
-                };
-
-
-            }
+            rows[0]
 
         );
+
+
+
+
+
+
+
+
+        /*
+            Run enrichment.
+
+            Must use Promise.all.
+            Do NOT return Promise[].
+        */
+
+
+
+
+
+        const processedRows =
+
+            await Promise.all(
+
+
+
+                rows.map(
+
+                    async row => {
+
+
+
+                        if(
+
+
+                            this.enrichmentPipeline &&
+
+
+                            typeof this.enrichmentPipeline.run === "function"
+
+
+                        ){
+
+
+
+                            return await this.enrichmentPipeline.run(
+
+                                row
+
+                            );
+
+
+
+                        }
+
+
+
+
+
+                        return row;
+
+
+
+                    }
+
+                )
+
+
+
+            );
+
+
+
+
+
+
+
+
+        console.log(
+
+            "[PHX PROCESSED ROW COUNT]",
+
+            processedRows.length
+
+        );
+
+
+
+
+
+
+
+
+        console.log(
+
+            "[PHX FIRST PROCESSED ROW]",
+
+            processedRows[0]
+
+        );
+
+
+
+
+
+
+
+
+        return processedRows;
+
 
 
     }
+
 
 
 }

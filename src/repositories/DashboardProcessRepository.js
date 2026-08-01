@@ -1,5 +1,4 @@
-export class ViewConfigRepository {
-
+export class DashboardProcessRepository {
 
 
     constructor(
@@ -22,23 +21,44 @@ export class ViewConfigRepository {
 
 
 
+    async getProcesses(){
 
-    async getViews(
 
-        userKey
 
-    ){
+        if(
+
+            !this.supabaseClient ||
+
+            !this.supabaseClient.isConfigured()
+
+        ){
+
+
+            console.warn(
+
+                "[PHX PROCESS] Supabase not configured"
+
+            );
+
+
+            return [];
+
+
+        }
+
+
+
+
 
 
 
         const url =
 
 
-            `${this.supabaseClient.url}/rest/v1/dashboard_views`
+            `${this.supabaseClient.url}/rest/v1/dashboard_processes`
             +
-            `?user_key=eq.${encodeURIComponent(userKey)}`
-            +
-            `&select=*`;
+            `?select=*`;
+
 
 
 
@@ -52,6 +72,9 @@ export class ViewConfigRepository {
                 url,
 
                 {
+
+
+                    method:"GET",
 
 
                     headers:{
@@ -79,12 +102,14 @@ export class ViewConfigRepository {
 
 
 
+
+
         if(!response.ok){
 
 
             throw new Error(
 
-                "View load failed"
+                `Dashboard processes failed ${response.status}`
 
             );
 
@@ -96,52 +121,30 @@ export class ViewConfigRepository {
 
 
 
-        return await response.json();
 
 
+        const rows =
 
-    }
-
-
-
-
+            await response.json();
 
 
 
 
 
-    async getUserView(
+        console.log(
 
-        userKey,
+            "[PHX PROCESSES]",
 
-        process
+            rows
 
-    ){
-
-
-
-        const views =
-
-            await this.getViews(
-
-                userKey
-
-            );
+        );
 
 
 
 
 
 
-        return views.find(
-
-            view =>
-
-                view.process_view === process
-
-        )
-
-        || null;
+        return rows;
 
 
 

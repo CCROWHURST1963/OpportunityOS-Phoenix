@@ -3,10 +3,7 @@ export class EnrichmentPipeline {
 
     constructor(enrichers = []) {
 
-
-        this.enrichers =
-            enrichers;
-
+        this.enrichers = enrichers;
 
     }
 
@@ -17,9 +14,7 @@ export class EnrichmentPipeline {
 
         let enrichedRow = {
 
-
             ...row
-
 
         };
 
@@ -40,9 +35,7 @@ export class EnrichmentPipeline {
 
             ) {
 
-
                 continue;
-
 
             }
 

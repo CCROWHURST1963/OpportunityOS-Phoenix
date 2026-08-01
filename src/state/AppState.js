@@ -63,6 +63,20 @@ export class AppState {
                 "default",
 
 
+            /*
+                Custom View configuration
+            */
+
+            views:
+
+                [],
+
+
+            currentViewConfig:
+
+                null,
+
+
 
 
 
@@ -100,7 +114,12 @@ export class AppState {
 
             status:
 
-                "System Ready"
+                "System Ready",
+
+
+            dashboardStatus:
+
+                "Ready"
 
 
         };

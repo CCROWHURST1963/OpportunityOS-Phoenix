@@ -1,17 +1,20 @@
 export class DashboardController {
 
 
+
     constructor(
 
         opportunityService,
 
-        viewConfigService,
+        viewConfig,
 
         viewState,
 
-        appState
+        appState,
 
-    ) {
+        gridRenderer
+
+    ){
 
 
         this.opportunityService =
@@ -19,9 +22,9 @@ export class DashboardController {
             opportunityService;
 
 
-        this.viewConfigService =
+        this.viewConfig =
 
-            viewConfigService;
+            viewConfig;
 
 
         this.viewState =
@@ -34,9 +37,16 @@ export class DashboardController {
             appState;
 
 
-        this.element =
+        this.gridRenderer =
 
-            null;
+            gridRenderer;
+
+
+
+        this.container = null;
+
+
+        this.gridContainer = null;
 
 
     }
@@ -47,74 +57,26 @@ export class DashboardController {
 
 
 
-    mount(element){
 
 
-        this.element =
+    mount(container){
 
-            element;
+
+
+        this.container = container;
+
 
 
         this.render();
 
 
+
         this.bind();
 
 
-    }
-
-
-
-
-
-
-
-
-    async render(){
-
-
-        if(!this.element){
-
-            return;
-
-        }
-
-
-
-
-        this.element.innerHTML = `
-
-
-            <div class="phoenix-grid">
-
-
-                <div class="phoenix-empty">
-
-
-                    <h2>
-
-                        Dashboard Ready
-
-                    </h2>
-
-
-                    <p>
-
-                        Click Load Dashboard to retrieve opportunities
-
-                    </p>
-
-
-                </div>
-
-
-            </div>
-
-
-        `;
-
 
     }
+
 
 
 
@@ -126,36 +88,25 @@ export class DashboardController {
     bind(){
 
 
-        const loadButton =
 
-            document.querySelector(
+        document.addEventListener(
 
-                "#phoenix-load-dashboard"
+            "phoenix-load-dashboard",
 
-            );
-
+            async () => {
 
 
-        if(!loadButton){
-
-            return;
-
-        }
+                await this.loadDashboard();
 
 
+            }
 
+        );
 
-
-        loadButton.onclick = async () => {
-
-
-            await this.loadDashboard();
-
-
-        };
 
 
     }
+
 
 
 
@@ -168,66 +119,24 @@ export class DashboardController {
 
 
 
-        this.appState.update({
-
-            dashboardStatus:
-
-                "Loading"
-
-
-        });
-
-
-
-
-
         try {
 
 
 
-            const rows =
+            const state =
 
-                await this.opportunityService
-
-                    .getRows({
-
-                        process:
-
-                            this.appState
-
-                                .getState()
-
-                                .process,
-
-
-                        view:
-
-                            this.appState
-
-                                .getState()
-
-                                .currentView,
-
-
-                        limit:
-
-                            this.appState
-
-                                .getState()
-
-                                .rowsLimit
-
-                    });
+                this.appState.getState();
 
 
 
 
 
 
+            console.log(
 
-            this.viewState.setRows(
+                "[PHX DASHBOARD LOAD STATE]",
 
-                rows || []
+                state
 
             );
 
@@ -237,16 +146,101 @@ export class DashboardController {
 
 
 
+
+
+            const rows =
+
+                await this.opportunityService.getRows({
+
+                    process:
+
+                        state.process,
+
+
+                    view:
+
+                        state.currentView,
+
+
+                    limit:
+
+                        state.rowsLimit || 100
+
+
+                });
+
+
+
+
+
+
+
+
+            console.log(
+
+                "[PHX DASHBOARD ROWS]",
+
+                rows
+
+            );
+
+
+
+
+
+
+
+            console.log(
+
+                "[PHX DASHBOARD ROW COUNT]",
+
+                rows.length
+
+            );
+
+
+
+
+
+
+
+            console.log(
+
+                "[PHX DASHBOARD FIRST ROW KEYS]",
+
+                Object.keys(
+
+                    rows[0] || {}
+
+                )
+
+            );
+
+
+
+
+
+
+
+
             this.appState.update({
 
-                dashboardStatus:
 
-                    "Ready",
+
+                rows,
+
 
 
                 totalRecords:
 
-                    rows?.length || 0
+                    rows.length,
+
+
+
+                status:
+
+                    "Dashboard Ready"
+
 
 
             });
@@ -257,19 +251,14 @@ export class DashboardController {
 
 
 
-            this.renderRows(
-
-                rows || []
-
-            );
+            this.renderRows(rows);
 
 
 
         }
 
-
-
         catch(error){
+
 
 
             console.error(
@@ -284,15 +273,77 @@ export class DashboardController {
 
             this.appState.update({
 
-                dashboardStatus:
 
-                    "Error"
+
+                status:
+
+                    "Dashboard Error"
+
 
 
             });
 
 
+
         }
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+    render(){
+
+
+
+        if(!this.container)
+
+            return;
+
+
+
+
+
+
+        this.container.innerHTML = `
+
+
+
+            <div
+
+                id="phoenix-grid-container"
+
+                class="phoenix-dashboard-grid"
+
+            >
+
+                Loading dashboard...
+
+            </div>
+
+
+
+        `;
+
+
+
+
+
+
+        this.gridContainer =
+
+            document.getElementById(
+
+                "phoenix-grid-container"
+
+            );
 
 
 
@@ -309,81 +360,149 @@ export class DashboardController {
     renderRows(rows){
 
 
-        if(!this.element){
+
+        console.log(
+
+            "[PHX RENDER ROWS]",
+
+            rows
+
+        );
+
+
+
+
+
+
+
+        /*
+            CURRENT VIEW CONFIG
+            Comes from AppState.
+            ViewConfigService only loads it.
+        */
+
+
+
+        const state =
+
+            this.appState.getState();
+
+
+
+
+
+
+
+        const config =
+
+            state.currentViewConfig || {};
+
+
+
+
+
+
+
+        console.log(
+
+            "[PHX RENDER CONFIG]",
+
+            config
+
+        );
+
+
+
+
+
+
+
+
+        const visibleKeys =
+
+            config.visibleColumns || [];
+
+
+
+
+
+
+
+
+        const columns =
+
+
+            (config.columns || [])
+
+                .filter(
+
+
+                    column =>
+
+
+                        visibleKeys.includes(
+
+                            column.key
+
+                        )
+
+
+                );
+
+
+
+
+
+
+
+
+        console.log(
+
+            "[PHX RENDER COLUMNS]",
+
+            columns
+
+        );
+
+
+
+
+
+
+
+
+
+        if(!this.gridRenderer){
+
+
+            console.error(
+
+                "[PHX GRID RENDERER MISSING]"
+
+            );
+
 
             return;
+
 
         }
 
 
 
 
-        if(!rows.length){
-
-
-            this.element.innerHTML = `
-
-
-                <div class="phoenix-grid">
-
-
-                    <div class="phoenix-empty">
-
-
-                        <h2>
-
-                            No Opportunities
-
-                        </h2>
-
-
-                        <p>
-
-                            No records found
-
-                        </p>
-
-
-                    </div>
-
-
-                </div>
-
-
-            `;
-
-
-            return;
-
-
-        }
 
 
 
 
+        this.gridRenderer.render(
 
+            this.gridContainer,
 
-        this.element.innerHTML = `
+            columns,
 
+            rows
 
-            <div class="phoenix-grid">
-
-
-                <div class="phoenix-grid-header">
-
-
-                    Loaded Records:
-
-                    ${rows.length}
-
-
-                </div>
-
-
-            </div>
-
-
-        `;
+        );
 
 
 

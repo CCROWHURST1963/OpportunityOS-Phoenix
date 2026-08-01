@@ -7,7 +7,7 @@ export class AmazonPackInfoEnricher {
 
         packSizeDerivationService
 
-    ) {
+    ){
 
 
         this.packRepository =
@@ -16,22 +16,40 @@ export class AmazonPackInfoEnricher {
 
         this.packSizeDerivationService =
             packSizeDerivationService;
-console.log(
-    "[PHX-038 PACK DEPENDENCY CHECK]",
-    {
-        packRepository: !!packRepository,
-        packSizeDerivationService: !!packSizeDerivationService
-    }
-);
+
+
+
+        console.log(
+
+            "[PHX-038 PACK DEPENDENCY CHECK]",
+
+            {
+
+                packRepository:
+                    !!packRepository,
+
+
+                packSizeDerivationService:
+                    !!packSizeDerivationService
+
+            }
+
+        );
+
 
     }
 
 
 
-    async enrich(row) {
 
 
-        if (!row || !row.asin) {
+
+
+    async enrich(row){
+
+
+
+        if(!row || !row.asin){
 
 
             return row;
@@ -41,11 +59,25 @@ console.log(
 
 
 
+
+
+        /*
+            Manual pack info lookup only
+            if repository exists.
+        */
+
+
         let packInfo = null;
 
 
 
-        if (row.locale) {
+        if(
+
+            this.packRepository &&
+
+            row.locale
+
+        ){
 
 
             packInfo =
@@ -64,13 +96,18 @@ console.log(
 
 
 
-        if (
+
+
+
+
+
+        if(
 
             packInfo &&
 
             Number(packInfo.pack_size) > 0
 
-        ) {
+        ){
 
 
             return {
@@ -80,15 +117,21 @@ console.log(
 
 
                 pack_size:
+
                     Number(packInfo.pack_size),
 
 
+
                 buy_qty:
+
                     packInfo.buy_qty || null,
 
 
+
                 pack_source:
+
                     "Manual"
+
 
 
             };
@@ -98,35 +141,77 @@ console.log(
 
 
 
-        const derived =
-
-            this.packSizeDerivationService
-                .derive(row);
 
 
 
-        return {
 
 
-            ...row,
+
+        /*
+            Derive pack size
+        */
 
 
-            pack_size:
-                derived.pack_size,
+        if(
+
+            this.packSizeDerivationService &&
+
+            typeof this.packSizeDerivationService.derive === "function"
+
+        ){
 
 
-            buy_qty:
-                row.buy_qty || null,
+            const derived =
+
+                this.packSizeDerivationService
+                    .derive(row);
 
 
-            pack_source:
-                derived.pack_source
 
 
-        };
+
+            return {
+
+
+                ...row,
+
+
+                pack_size:
+
+                    derived.pack_size,
+
+
+
+                buy_qty:
+
+                    row.buy_qty || null,
+
+
+
+                pack_source:
+
+                    derived.pack_source
+
+
+
+            };
+
+
+        }
+
+
+
+
+
+
+
+
+        return row;
+
 
 
     }
+
 
 
 }

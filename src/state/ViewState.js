@@ -1,33 +1,10 @@
 export class ViewState {
 
 
-    constructor() {
+    constructor(){
 
 
-        this.state = {
-
-
-            activeView:
-                "By View",
-
-
-            supplier:
-                null,
-
-
-            filter:
-                "Show All",
-
-
-            rowLimit:
-                100,
-
-
-            sort:
-                "opportunity_score_desc"
-
-
-        };
+        this.rows = [];
 
 
         this.listeners = [];
@@ -37,21 +14,14 @@ export class ViewState {
 
 
 
-    get() {
-
-
-        return this.state;
-
-
-    }
 
 
 
-    set(key, value) {
+
+    setRows(rows){
 
 
-        this.state[key] =
-            value;
+        this.rows = rows || [];
 
 
         this.notify();
@@ -61,47 +31,71 @@ export class ViewState {
 
 
 
-    update(values) {
 
 
-        Object.assign(
-
-            this.state,
-
-            values
-
-        );
 
 
-        this.notify();
+    getRows(){
+
+
+        return this.rows;
 
 
     }
 
 
 
-    subscribe(callback) {
+
+
+
+
+    subscribe(callback){
 
 
         this.listeners.push(
+
             callback
+
         );
+
+
+        return () => {
+
+
+            this.listeners =
+
+                this.listeners.filter(
+
+                    l => l !== callback
+
+                );
+
+
+        };
 
 
     }
 
 
 
-    notify() {
+
+
+
+
+    notify(){
 
 
         this.listeners.forEach(
+
             callback =>
-                callback(this.state)
+
+                callback(this.rows)
+
         );
 
 
     }
+
 
 
 }

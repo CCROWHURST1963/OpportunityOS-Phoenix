@@ -5,9 +5,9 @@ export class SupabaseOpportunityRepository {
 
         supabaseClient,
 
-        config
+        appState
 
-    ){
+    ) {
 
 
         this.supabaseClient =
@@ -15,9 +15,9 @@ export class SupabaseOpportunityRepository {
             supabaseClient;
 
 
-        this.config =
+        this.appState =
 
-            config;
+            appState;
 
 
     }
@@ -28,19 +28,42 @@ export class SupabaseOpportunityRepository {
 
 
 
+
+
     async getRows(
 
-        view = "default",
+        view,
 
-        limit = null
+        limit = 100
 
-    ){
+    ) {
 
 
 
         const userKey =
 
-            this.config.getUserKey();
+            this.appState?.getUserKey?.()
+
+            ||
+
+            "DEFAULT";
+
+
+
+
+
+
+
+        console.log(
+
+            "[PHX REPOSITORY USER KEY]",
+
+            userKey
+
+        );
+
+
+
 
 
 
@@ -49,9 +72,11 @@ export class SupabaseOpportunityRepository {
         const params = {
 
 
+
             p_view:
 
                 view,
+
 
 
             p_user_key:
@@ -59,12 +84,16 @@ export class SupabaseOpportunityRepository {
                 userKey,
 
 
+
             p_limit:
 
                 limit
 
 
+
         };
+
+
 
 
 
@@ -84,7 +113,8 @@ export class SupabaseOpportunityRepository {
 
 
 
-        const result =
+
+        const response =
 
             await this.supabaseClient.rpc(
 
@@ -100,11 +130,12 @@ export class SupabaseOpportunityRepository {
 
 
 
+
         console.log(
 
             "[PHX RPC RAW RESPONSE]",
 
-            result
+            response
 
         );
 
@@ -114,18 +145,52 @@ export class SupabaseOpportunityRepository {
 
 
 
+
+
+        /*
+            Support both:
+
+            1. direct array
+
+            [
+              {...}
+            ]
+
+            2. Supabase style:
+
+            {
+              data:[...],
+              error:null
+            }
+
+        */
+
+
+
+
+
         const rows =
 
 
-            Array.isArray(result)
+
+            Array.isArray(response)
+
+
 
             ?
 
-            result
+
+
+            response
+
+
 
             :
 
-            result?.data || [];
+
+
+            response?.data || [];
+
 
 
 
@@ -135,7 +200,7 @@ export class SupabaseOpportunityRepository {
 
         console.log(
 
-            "[PHX RPC DATA COUNT]",
+            "[PHX RPC ROW COUNT]",
 
             rows.length
 
@@ -147,10 +212,27 @@ export class SupabaseOpportunityRepository {
 
 
 
+        console.log(
+
+            "[PHX FIRST RPC ROW]",
+
+            rows[0]
+
+        );
+
+
+
+
+
+
+
+
         return rows;
 
 
+
     }
+
 
 
 }
