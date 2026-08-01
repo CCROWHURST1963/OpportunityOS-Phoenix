@@ -3,15 +3,20 @@ export class ToolbarController {
 
     constructor(
 
-        appState
+        appState,
+
+        viewState
 
     ) {
 
 
         this.appState = appState;
 
+        this.viewState = viewState;
 
         this.element = null;
+
+        this.openTools = false;
 
 
     }
@@ -22,7 +27,7 @@ export class ToolbarController {
 
 
 
-    mount(element) {
+    mount(element){
 
 
         this.element = element;
@@ -34,6 +39,24 @@ export class ToolbarController {
         this.bind();
 
 
+
+        this.unsubscribe =
+
+            this.appState.subscribe(
+
+                () => {
+
+
+                    this.render();
+
+                    this.bind();
+
+
+                }
+
+            );
+
+
     }
 
 
@@ -42,40 +65,85 @@ export class ToolbarController {
 
 
 
-    render() {
+
+
+    render(){
+
+
+        if(!this.element){
+
+            return;
+
+        }
+
+
 
 
         const state =
 
-            this.appState.get();
+            this.appState.getState();
 
 
 
-        const currentMode =
 
-            state.activeView
 
-            ||
+        const processes =
+
+            state.processes || [];
+
+
+
+
+
+        const process =
+
+            state.process ||
+
+            "Can We Sell";
+
+
+
+
+
+        const opportunityMode =
+
+            state.opportunityMode ||
 
             "By View";
 
 
 
-        const currentLimit =
 
-            state.rowsLimit === null
 
-            ?
+        const rowsLimit =
 
-            "all"
+            state.rowsLimit ||
 
-            :
+            "100";
+
+
+
+
+
+        const role =
 
             String(
 
-                state.rowsLimit
+                state.role || ""
 
-            );
+            ).toLowerCase();
+
+
+
+
+
+        const isAdmin =
+
+            role === "admin";
+
+
+
+
 
 
 
@@ -84,167 +152,433 @@ export class ToolbarController {
         this.element.innerHTML = `
 
 
-        <div class="phoenix-toolbar">
 
-
-            <div class="phoenix-toolbar-group">
-
-
-                <label class="phoenix-toolbar-label">
-
-                    Opportunities
-
-                </label>
+<div class="phoenix-toolbar">
 
 
 
-                <select
+<div class="phoenix-toolbar-top">
 
-                    id="phoenix-opportunity-mode"
 
-                    class="phoenix-toolbar-select"
+
+
+
+
+
+<div class="toolbar-pill">
+
+
+    <span class="toolbar-pill-label">
+
+        Process
+
+    </span>
+
+
+
+    <select id="phoenix-process">
+
+
+        ${
+            processes.length
+
+            ?
+
+            processes.map(
+
+                p => `
+
+                <option
+
+                    value="${p.process_name}"
+
+                    ${
+                        p.process_name === process
+
+                        ?
+
+                        "selected"
+
+                        :
+
+                        ""
+
+                    }
 
                 >
 
+                    ${p.process_name}
 
-                    <option value="By View"
-                    ${currentMode === "By View" ? "selected" : ""}>
+                </option>
 
-                        By View
+                `
 
-                    </option>
-
-
-
-                    <option value="By Supplier"
-                    ${currentMode === "By Supplier" ? "selected" : ""}>
-
-                        By Supplier
-
-                    </option>
+            ).join("")
 
 
+            :
 
-                    <option value="By Status Tracker"
-                    ${currentMode === "By Status Tracker" ? "selected" : ""}>
+            `
 
-                        By Status Tracker
+            <option>
 
-                    </option>
+                ${process}
+
+            </option>
+
+            `
+
+        }
 
 
-                </select>
+    </select>
 
+
+</div>
+
+
+
+
+
+
+
+
+
+<div class="toolbar-pill">
+
+
+    <span class="toolbar-pill-label">
+
+        Opportunities
+
+    </span>
+
+
+
+    <select id="phoenix-opportunity-mode">
+
+
+        <option
+
+        ${
+            opportunityMode === "By View"
+
+            ?
+
+            "selected"
+
+            :
+
+            ""
+
+        }
+
+        >
+
+            By View
+
+        </option>
+
+
+
+
+        <option
+
+        ${
+            opportunityMode === "By Supplier"
+
+            ?
+
+            "selected"
+
+            :
+
+            ""
+
+        }
+
+        >
+
+            By Supplier
+
+        </option>
+
+
+    </select>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<button
+
+    id="phoenix-load-dashboard"
+
+    class="toolbar-button blue"
+
+>
+
+    Load Dashboard
+
+</button>
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+<div class="phoenix-toolbar-bottom">
+
+
+
+
+
+
+
+<div class="toolbar-pill">
+
+
+    <span class="toolbar-pill-label">
+
+        Load Rows
+
+    </span>
+
+
+
+    <select id="phoenix-row-limit">
+
+
+        <option>
+
+            ${rowsLimit}
+
+        </option>
+
+
+        <option>
+
+            100
+
+        </option>
+
+
+        <option>
+
+            250
+
+        </option>
+
+
+        <option>
+
+            500
+
+        </option>
+
+
+        <option>
+
+            1000
+
+        </option>
+
+
+    </select>
+
+
+</div>
+<button
+
+    class="toolbar-button orange"
+
+>
+
+    ⚠ Open Hazmat Check
+
+</button>
+
+
+
+
+
+
+<button
+
+    class="toolbar-button blue"
+
+>
+
+    ↗ View Opportunities
+
+</button>
+
+
+
+
+
+
+<button
+
+    class="toolbar-button green"
+
+>
+
+    🔍 Search Master Price File
+
+</button>
+
+
+
+
+
+
+<div class="tools-wrapper">
+
+
+
+    <button
+
+        id="phoenix-tools"
+
+        class="toolbar-button tools"
+
+    >
+
+        ⚙ Tools ▼
+
+    </button>
+
+
+
+
+
+
+
+    ${
+
+        this.openTools
+
+        ?
+
+        `
+
+        <div class="tools-menu">
+
+
+            <div>
+
+                Custom Views
 
             </div>
 
 
 
+            <div>
 
-
-            <div class="phoenix-toolbar-group">
-
-
-                <label class="phoenix-toolbar-label">
-
-                    Rows
-
-                </label>
-
-
-
-                <select
-
-                    id="phoenix-row-limit"
-
-                    class="phoenix-toolbar-select"
-
-                >
-
-
-                    <option value="all"
-                    ${currentLimit === "all" ? "selected" : ""}>
-
-                        All
-
-                    </option>
-
-
-                    <option value="50"
-                    ${currentLimit === "50" ? "selected" : ""}>
-
-                        50
-
-                    </option>
-
-
-                    <option value="100"
-                    ${currentLimit === "100" ? "selected" : ""}>
-
-                        100
-
-                    </option>
-
-
-
-                    <option value="250"
-                    ${currentLimit === "250" ? "selected" : ""}>
-
-                        250
-
-                    </option>
-
-
-
-                    <option value="500"
-                    ${currentLimit === "500" ? "selected" : ""}>
-
-                        500
-
-                    </option>
-
-
-
-                    <option value="1000"
-                    ${currentLimit === "1000" ? "selected" : ""}>
-
-                        1000
-
-                    </option>
-
-
-                </select>
-
+                Constants
 
             </div>
 
 
 
+            ${
+
+            isAdmin
+
+            ?
+
+            `
 
 
-            <div class="phoenix-toolbar-group">
+            <hr>
 
 
-                <button
+            <div>
 
-                    id="phoenix-load-dashboard"
-
-                    class="phoenix-toolbar-button"
-
-                >
-
-                    Load Dashboard
-
-                </button>
-
+                Assign To User
 
             </div>
+
+
+            <div>
+
+                Apply Assignment
+
+            </div>
+
+
+            <div>
+
+                Opportunity Scoring
+
+            </div>
+
+
+            <div>
+
+                PurchaseOS
+
+            </div>
+
+
+            <div>
+
+                OrderOS
+
+            </div>
+
+
+            `
+
+            :
+
+            ""
+
+            }
+
 
 
         </div>
 
+        `
 
-        `;
+        :
+
+        ""
+
+    }
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+</div>
+
+
+`;
+
 
 
     }
@@ -255,10 +589,90 @@ export class ToolbarController {
 
 
 
-    bind() {
 
 
-        const modeSelect =
+    bind(){
+
+
+
+        const tools =
+
+            this.element.querySelector(
+
+                "#phoenix-tools"
+
+            );
+
+
+
+        if(tools){
+
+
+            tools.onclick = () => {
+
+
+                this.openTools =
+
+                    !this.openTools;
+
+
+                this.render();
+
+                this.bind();
+
+
+            };
+
+
+        }
+
+
+
+
+
+
+
+
+
+        const process =
+
+            this.element.querySelector(
+
+                "#phoenix-process"
+
+            );
+
+
+
+        if(process){
+
+
+            process.onchange = e => {
+
+
+                this.appState.update({
+
+                    process:
+
+                        e.target.value
+
+                });
+
+
+            };
+
+
+        }
+
+
+
+
+
+
+
+
+
+        const mode =
 
             this.element.querySelector(
 
@@ -268,7 +682,35 @@ export class ToolbarController {
 
 
 
-        const limitSelect =
+        if(mode){
+
+
+            mode.onchange = e => {
+
+
+                this.appState.update({
+
+                    opportunityMode:
+
+                        e.target.value
+
+                });
+
+
+            };
+
+
+        }
+
+
+
+
+
+
+
+
+
+        const rows =
 
             this.element.querySelector(
 
@@ -278,195 +720,26 @@ export class ToolbarController {
 
 
 
-        const loadButton =
-
-            this.element.querySelector(
-
-                "#phoenix-load-dashboard"
-
-            );
+        if(rows){
 
 
+            rows.onchange = e => {
 
 
+                this.appState.update({
+
+                    rowsLimit:
+
+                        e.target.value
+
+                });
 
 
-
-        if(modeSelect){
-
-
-            modeSelect.addEventListener(
-
-                "change",
-
-                event => {
-
-
-                    const mode =
-
-                        event.target.value;
-
-
-
-                    console.log(
-
-                        "[PHX MODE CHANGE]",
-
-                        mode
-
-                    );
-
-
-
-                    this.appState.update({
-
-                        activeView:
-
-                            mode
-
-                    });
-
-
-                }
-
-            );
+            };
 
 
         }
 
-
-
-
-
-
-
-        if(limitSelect){
-
-
-            limitSelect.addEventListener(
-
-                "change",
-
-                event => {
-
-
-                    const value =
-
-                        event.target.value;
-
-
-
-                    const limit =
-
-                        value === "all"
-
-                        ?
-
-                        null
-
-                        :
-
-                        Number(value);
-
-
-
-
-
-                    console.log(
-
-                        "[PHX ROW LIMIT CHANGE]",
-
-                        limit
-
-                    );
-
-
-
-
-
-                    console.log(
-
-                        "[PHX TOOLBAR BEFORE]",
-
-                        this.appState.get()
-
-                    );
-
-
-
-
-
-                    this.appState.update({
-
-                        rowsLimit:
-
-                            limit
-
-                    });
-
-
-
-
-
-                    console.log(
-
-                        "[PHX TOOLBAR AFTER]",
-
-                        this.appState.get()
-
-                    );
-
-
-                }
-
-            );
-
-
-        }
-
-
-
-
-
-
-
-        if(loadButton){
-
-
-            loadButton.addEventListener(
-
-                "click",
-
-                ()=>{
-
-
-                    console.log(
-
-                        "[PHX LOAD DASHBOARD CLICK]",
-
-                        this.appState.get()
-
-                    );
-
-
-
-                    window.dispatchEvent(
-
-                        new CustomEvent(
-
-                            "phoenix-dashboard-load"
-
-                        )
-
-                    );
-
-
-                }
-
-            );
-
-
-        }
 
 
     }

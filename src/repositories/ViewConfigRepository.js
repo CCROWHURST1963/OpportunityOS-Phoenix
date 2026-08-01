@@ -19,6 +19,7 @@ export class ViewConfigRepository {
 
 
 
+
     async getViews(
 
         userKey = "DEFAULT"
@@ -46,6 +47,7 @@ export class ViewConfigRepository {
 
 
 
+
         const url =
 
             `${this.supabaseClient.url}/rest/v1/dashboard_views`
@@ -53,6 +55,7 @@ export class ViewConfigRepository {
             `?user_key=eq.${encodeURIComponent(userKey)}`
             +
             `&select=*`;
+
 
 
 
@@ -101,6 +104,8 @@ export class ViewConfigRepository {
 
 
 
+
+
         if (
 
             !response.ok
@@ -126,9 +131,12 @@ export class ViewConfigRepository {
 
 
 
+
+
         const data =
 
             await response.json();
+
 
 
 
@@ -141,6 +149,155 @@ export class ViewConfigRepository {
             data
 
         );
+
+
+
+
+
+
+        return data;
+
+
+    }
+
+
+
+
+
+
+
+
+
+    async getProcesses(){
+
+
+        if (
+
+            !this.supabaseClient
+
+            ||
+
+            !this.supabaseClient.isConfigured()
+
+        ) {
+
+
+            return [];
+
+
+        }
+
+
+
+
+
+
+
+        const url =
+
+            `${this.supabaseClient.url}/rest/v1/dashboard_processes`
+            +
+            `?select=process_name`
+            +
+            `&order=process_name`;
+
+
+
+
+
+
+
+        const response =
+
+            await fetch(
+
+                url,
+
+                {
+
+
+                    method:
+
+                        "GET",
+
+
+
+                    headers:
+
+
+                    {
+
+
+                        "apikey":
+
+                            this.supabaseClient.key,
+
+
+
+                        "Authorization":
+
+                            `Bearer ${this.supabaseClient.key}`
+
+
+                    }
+
+
+                }
+
+            );
+
+
+
+
+
+
+
+        if (
+
+            !response.ok
+
+        ) {
+
+
+            console.error(
+
+                "[PHX PROCESS LOAD FAILED]",
+
+                response.status
+
+            );
+
+
+            return [];
+
+
+        }
+
+
+
+
+
+
+
+        const data =
+
+            await response.json();
+
+
+
+
+
+
+
+        console.log(
+
+            "[PHX PROCESSES RAW]",
+
+            data
+
+        );
+
+
 
 
 

@@ -1,23 +1,14 @@
 export class HeaderController {
 
 
-    constructor(
-
-        state
-
-    ) {
+    constructor(state) {
 
 
-        this.state =
-            state;
+        this.state = state;
 
+        this.element = null;
 
-        this.element =
-            null;
-
-
-        this.unsubscribe =
-            null;
+        this.unsubscribe = null;
 
 
     }
@@ -26,13 +17,12 @@ export class HeaderController {
 
 
 
+
+
     mount(element) {
 
 
-        this.element =
-
-            element;
-
+        this.element = element;
 
 
         this.render();
@@ -58,16 +48,17 @@ export class HeaderController {
 
 
 
-    render() {
 
 
-        if (!this.element) {
+    render(){
 
+
+        if(!this.element){
 
             return;
 
-
         }
+
 
 
 
@@ -78,36 +69,37 @@ export class HeaderController {
 
 
 
+
         const userName =
 
-            state.userName
-            ||
+            state.userName ||
+
             "Loading User";
+
+
 
 
 
         const role =
 
-            state.role
-            ||
+            state.role ||
+
             "User";
 
 
 
 
-        const process =
-
-            state.process
-            ||
-            "Can We Sell";
-
-
 
         const currentView =
 
-            state.currentView
-            ||
-            "Default";
+            state.currentView ||
+
+            "default";
+
+
+
+
+
 
 
 
@@ -116,74 +108,97 @@ export class HeaderController {
 
 
 
-            <div class="phoenix-header">
+<div class="phoenix-header">
 
 
 
-                <div class="phoenix-header-user">
-
-
-                    <span class="header-label">
-                        User
-                    </span>
-
-
-                    <span class="header-value">
-                        ${userName} (${role})
-                    </span>
-
-
-                </div>
+    <div class="header-context-group">
 
 
 
 
-                <div class="phoenix-header-context">
+
+        <div class="header-pill">
 
 
-                    <div class="header-pill">
+            <span class="header-label">
+
+                User
+
+            </span>
 
 
-                        <span class="header-label">
-                            Process
-                        </span>
+            <span class="header-value">
+
+                ${userName} (${role})
+
+            </span>
 
 
-                        <span class="header-value">
-                            ${process}
-                        </span>
-
-
-                    </div>
-
-
-
-
-                    <div class="header-pill">
-
-
-                        <span class="header-label">
-                            Current View
-                        </span>
-
-
-                        <span class="header-value">
-                            ${currentView}
-                        </span>
-
-
-                    </div>
-
-
-                </div>
+        </div>
 
 
 
-            </div>
 
 
 
-        `;
+
+
+
+        <div class="header-pill header-view-pill">
+
+
+            <span class="header-label">
+
+                Current View
+
+            </span>
+
+
+            <select id="phoenix-header-view">
+
+
+                <option>
+
+                    ${currentView}
+
+                </option>
+
+
+            </select>
+
+
+        </div>
+
+
+
+
+
+    </div>
+
+
+
+
+
+
+
+
+    <div class="phoenix-logo">
+
+
+        Opportunity<span>OS</span>
+
+
+    </div>
+
+
+
+</div>
+
+
+
+`;
+
 
 
     }

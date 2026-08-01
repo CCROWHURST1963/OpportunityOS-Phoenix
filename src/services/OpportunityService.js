@@ -7,24 +7,26 @@ export class OpportunityService {
 
         calculationPipeline = null,
 
-        enrichmentPipeline = null
+        packSizeDerivationService = null
 
-    ){
+    ) {
 
 
-        this.repository =
-            repository;
+        this.repository = repository;
 
 
         this.calculationPipeline =
+
             calculationPipeline;
 
 
-        this.enrichmentPipeline =
-            enrichmentPipeline;
+        this.packSizeDerivationService =
+
+            packSizeDerivationService;
 
 
     }
+
 
 
 
@@ -44,11 +46,8 @@ export class OpportunityService {
             "[PHX SERVICE REQUEST]",
 
             {
-
                 view,
-
                 limit
-
             }
 
         );
@@ -59,84 +58,191 @@ export class OpportunityService {
 
         const rows =
 
-            await this.repository
+            await this.repository.getRows(
 
-                .getRows(
+                view,
 
-                    view,
+                limit
 
-                    limit
-
-                );
+            );
 
 
 
 
 
-        return await Promise.all(
+        console.log(
+
+            "[PHX SERVICE ROW COUNT]",
+
+            rows?.length || 0
+
+        );
 
 
-            (rows || []).map(
-
-                async row=>{
 
 
-                    let enrichedRow = {
+
+        return (
+
+            rows || []
+
+        ).map(
+
+            row => {
 
 
-                        ...row
+                let hydratedRow = {
+
+
+                    ...row
+
+                };
+
+
+
+
+
+
+
+                /*
+                    Pack Size Derivation
+
+                    RPC already provides:
+
+                    pack_size
+                    buy_qty
+
+                    Only derive if missing
+
+                */
+
+
+                if(
+
+                    this.packSizeDerivationService
+
+                    &&
+
+                    !hydratedRow.pack_size
+
+                ){
+
+
+                    const derived =
+
+                        this.packSizeDerivationService.derive(
+
+                            hydratedRow
+
+                        );
+
+
+
+                    hydratedRow = {
+
+
+                        ...hydratedRow,
+
+
+                        ...derived
 
 
                     };
 
 
-
-
-
-                    if(this.enrichmentPipeline){
-
-
-                        enrichedRow =
-
-                            await this.enrichmentPipeline.run(
-
-                                enrichedRow
-
-                            );
-
-
-                    }
+                }
 
 
 
 
 
-                    if(this.calculationPipeline){
 
 
-                        enrichedRow =
+                /*
+                    Calculation pipeline
 
-                            this.calculationPipeline.run(
-
-                                enrichedRow
-
-                            );
+                */
 
 
-                    }
+                if(
+
+                    this.calculationPipeline
+
+                ){
 
 
+                    hydratedRow =
 
+                        this.calculationPipeline.run(
 
+                            hydratedRow
 
-                    return enrichedRow;
+                        );
 
 
                 }
 
 
-            )
 
+
+
+
+
+                return {
+
+
+                    ...hydratedRow,
+
+
+                    asin:
+
+                        hydratedRow.asin || "",
+
+
+                    locale:
+
+                        hydratedRow.locale || "",
+
+
+                    brand:
+
+                        hydratedRow.brand || "",
+
+
+                    title:
+
+                        hydratedRow.title || "",
+
+
+                    category:
+
+                        hydratedRow.category || "",
+
+
+                    supplier:
+
+                        hydratedRow.supplier || "",
+
+
+                    supplier_price:
+
+                        hydratedRow.supplier_price ?? 0,
+
+
+                    pack_size:
+
+                        hydratedRow.pack_size ?? 1,
+
+
+                    buy_qty:
+
+                        hydratedRow.buy_qty ?? 1
+
+
+                };
+
+
+            }
 
         );
 

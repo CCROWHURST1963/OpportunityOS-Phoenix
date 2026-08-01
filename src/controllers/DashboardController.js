@@ -1,8 +1,3 @@
-import { ColumnRegistry }
-    from "../services/ColumnRegistry.js";
-
-
-
 export class DashboardController {
 
 
@@ -20,81 +15,30 @@ export class DashboardController {
 
 
         this.opportunityService =
+
             opportunityService;
 
 
         this.viewConfigService =
+
             viewConfigService;
 
 
         this.viewState =
+
             viewState;
 
 
         this.appState =
+
             appState;
 
 
-        this.columnRegistry =
-            new ColumnRegistry();
-
-
         this.element =
+
             null;
 
 
-        this.loading =
-            false;
-
-
-    }
-
-
-
-
-
-    mount(element) {
-
-
-        this.element = element;
-
-
-        console.log(
-
-            "[PHX DASHBOARD MOUNT]"
-
-        );
-
-
-
-        this.renderEmpty();
-
-
-
-
-
-        window.addEventListener(
-
-            "phoenix-dashboard-load",
-
-            () => {
-
-
-                console.log(
-
-                    "[PHX DASHBOARD LOAD EVENT]"
-
-                );
-
-
-                this.render();
-
-
-            }
-
-        );
-
-
     }
 
 
@@ -103,32 +47,22 @@ export class DashboardController {
 
 
 
-    renderEmpty(){
+    mount(element){
 
 
-        this.element.innerHTML = `
+        this.element =
+
+            element;
 
 
-            <div class="phoenix-dashboard-empty">
+        this.render();
 
 
-                Select options then click
-
-
-                <strong>
-
-                    Load Dashboard
-
-                </strong>
-
-
-            </div>
-
-
-        `;
+        this.bind();
 
 
     }
+
 
 
 
@@ -147,7 +81,62 @@ export class DashboardController {
 
 
 
-        if(this.loading){
+
+        this.element.innerHTML = `
+
+
+            <div class="phoenix-grid">
+
+
+                <div class="phoenix-empty">
+
+
+                    <h2>
+
+                        Dashboard Ready
+
+                    </h2>
+
+
+                    <p>
+
+                        Click Load Dashboard to retrieve opportunities
+
+                    </p>
+
+
+                </div>
+
+
+            </div>
+
+
+        `;
+
+
+    }
+
+
+
+
+
+
+
+
+    bind(){
+
+
+        const loadButton =
+
+            document.querySelector(
+
+                "#phoenix-load-dashboard"
+
+            );
+
+
+
+        if(!loadButton){
 
             return;
 
@@ -155,64 +144,44 @@ export class DashboardController {
 
 
 
-        this.loading = true;
 
 
-
-        try{
-
-
-            const state =
-
-                this.appState?.get?.()
-
-                ||
-
-                {};
+        loadButton.onclick = async () => {
 
 
+            await this.loadDashboard();
 
 
+        };
 
-            const mode =
 
-                state.activeView
-
-                ||
-
-                "By View";
+    }
 
 
 
 
 
-            const limit =
-
-                state.rowsLimit
-
-                ??
-
-                null;
 
 
 
+    async loadDashboard(){
 
 
-            console.log(
 
-                "[PHX DASHBOARD REQUEST]",
+        this.appState.update({
 
-                {
+            dashboardStatus:
 
-                    mode,
-
-                    limit
-
-                }
-
-            );
+                "Loading"
 
 
+        });
+
+
+
+
+
+        try {
 
 
 
@@ -220,48 +189,84 @@ export class DashboardController {
 
                 await this.opportunityService
 
-                    .getRows(
+                    .getRows({
 
-                        mode,
+                        process:
 
-                        limit
+                            this.appState
 
-                    );
+                                .getState()
 
-
-
-
-
-            window.__phoenixRows = rows;
+                                .process,
 
 
+                        view:
 
-            console.log(
+                            this.appState
 
-                "[PHX ROW COUNT]",
+                                .getState()
 
-                rows.length
+                                .currentView,
+
+
+                        limit:
+
+                            this.appState
+
+                                .getState()
+
+                                .rowsLimit
+
+                    });
+
+
+
+
+
+
+
+            this.viewState.setRows(
+
+                rows || []
 
             );
 
 
 
-            console.log(
 
-                "[PHX SAMPLE ROW]",
 
-                rows[0]
+
+
+            this.appState.update({
+
+                dashboardStatus:
+
+                    "Ready",
+
+
+                totalRecords:
+
+                    rows?.length || 0
+
+
+            });
+
+
+
+
+
+
+
+            this.renderRows(
+
+                rows || []
 
             );
 
-
-
-
-
-            this.renderGrid(rows);
 
 
         }
+
 
 
         catch(error){
@@ -277,248 +282,113 @@ export class DashboardController {
 
 
 
-            this.element.innerHTML =
+            this.appState.update({
 
-            `
+                dashboardStatus:
 
-                <div>
+                    "Error"
 
-                    Dashboard load failed
+
+            });
+
+
+        }
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+    renderRows(rows){
+
+
+        if(!this.element){
+
+            return;
+
+        }
+
+
+
+
+        if(!rows.length){
+
+
+            this.element.innerHTML = `
+
+
+                <div class="phoenix-grid">
+
+
+                    <div class="phoenix-empty">
+
+
+                        <h2>
+
+                            No Opportunities
+
+                        </h2>
+
+
+                        <p>
+
+                            No records found
+
+                        </p>
+
+
+                    </div>
+
 
                 </div>
+
 
             `;
 
 
-        }
-
-
-        finally{
-
-
-            this.loading = false;
+            return;
 
 
         }
 
 
-    }
 
 
 
 
+        this.element.innerHTML = `
 
 
+            <div class="phoenix-grid">
 
-    getColumnWidth(column){
 
+                <div class="phoenix-grid-header">
 
-        const width =
 
-            Number(
+                    Loaded Records:
 
-                column.width
+                    ${rows.length}
 
-            );
 
+                </div>
 
 
-        if(width > 0){
-
-            return `${width}px`;
-
-        }
-
-
-
-        return "auto";
-
-
-    }
-
-
-
-
-
-
-
-    renderGrid(rows=[]){
-
-
-        const currentView =
-
-            this.viewConfigService.currentView;
-
-
-
-        const columns =
-
-            this.viewConfigService
-
-                .getColumns(
-
-                    currentView
-
-                );
-
-
-
-
-
-        let html = `
-
-
-        <table class="phoenix-grid">
-
-
-            <thead>
-
-                <tr>
-
-        `;
-
-
-
-
-
-        columns.forEach(
-
-            column=>{
-
-
-                const width =
-
-                    this.getColumnWidth(
-
-                        column
-
-                    );
-
-
-
-                html += `
-
-
-                <th
-
-                style="
-
-                width:${width};
-
-                min-width:${width};
-
-                "
-
-                >
-
-                ${column.label || column.key}
-
-                </th>
-
-
-                `;
-
-
-            }
-
-        );
-
-
-
-
-
-        html += `
-
-
-                </tr>
-
-            </thead>
-
-
-            <tbody>
+            </div>
 
 
         `;
 
 
 
-
-
-        rows.forEach(
-
-            row=>{
-
-
-                html += "<tr>";
-
-
-
-                columns.forEach(
-
-                    column=>{
-
-
-                        const value =
-
-                            this.columnRegistry
-
-                            .getValue(
-
-                                column.key,
-
-                                row
-
-                            );
-
-
-
-                        html += `
-
-
-                        <td>
-
-                            ${value ?? ""}
-
-                        </td>
-
-
-                        `;
-
-
-                    }
-
-                );
-
-
-
-                html += "</tr>";
-
-
-            }
-
-        );
-
-
-
-
-
-        html += `
-
-
-            </tbody>
-
-
-        </table>
-
-
-        `;
-
-
-
-        this.element.innerHTML = html;
-
-
     }
+
 
 
 }

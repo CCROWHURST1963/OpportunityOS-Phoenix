@@ -13,18 +13,23 @@ export class App {
 
 
         this.state =
+
             state;
 
 
         this.controllers =
+
             controllers;
 
 
         this.services =
+
             services;
 
 
     }
+
+
 
 
 
@@ -36,8 +41,12 @@ export class App {
         const app =
 
             document.getElementById(
+
                 "app"
+
             );
+
+
 
 
 
@@ -70,6 +79,7 @@ export class App {
 
 
 
+
         /*
             Load current user context
         */
@@ -85,7 +95,10 @@ export class App {
             const userContext =
 
                 await this.services.wixUser
+
                     .loadUserContext();
+
+
 
 
 
@@ -96,6 +109,8 @@ export class App {
                 userContext
 
             );
+
+
 
 
 
@@ -114,13 +129,15 @@ export class App {
 
 
 
+
+
         /*
-            Load saved view configuration
+            Load saved views
 
-            IMPORTANT:
-            This requires user_key.
+            Then load dashboard processes
 
-            Do NOT pass process name.
+            BEFORE toolbar mounts
+
         */
 
 
@@ -141,7 +158,10 @@ export class App {
 
 
 
+
+
             await this.services.viewConfig
+
                 .loadViews(
 
                     "DEFAULT"
@@ -149,7 +169,45 @@ export class App {
                 );
 
 
+
+
+
+
+
+
+
+            const processes =
+
+                await this.services.viewConfig
+
+                    .getProcesses();
+
+
+
+
+
+            console.log(
+
+                "[PHX PROCESSES LOADED]",
+
+                processes
+
+            );
+
+
+
+
+
+            this.state.update({
+
+                processes
+
+            });
+
+
         }
+
+
 
 
 
@@ -173,13 +231,16 @@ export class App {
             this.controllers.header.mount(
 
                 document.getElementById(
+
                     "phoenix-header"
+
                 )
 
             );
 
 
         }
+
 
 
 
@@ -197,13 +258,16 @@ export class App {
             this.controllers.toolbar.mount(
 
                 document.getElementById(
+
                     "phoenix-toolbar"
+
                 )
 
             );
 
 
         }
+
 
 
 
@@ -221,13 +285,16 @@ export class App {
             this.controllers.dashboard.mount(
 
                 document.getElementById(
+
                     "phoenix-dashboard"
+
                 )
 
             );
 
 
         }
+
 
 
 
@@ -245,7 +312,9 @@ export class App {
             this.controllers.status.mount(
 
                 document.getElementById(
+
                     "phoenix-status"
+
                 )
 
             );

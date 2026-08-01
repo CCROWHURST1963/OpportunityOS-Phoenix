@@ -1,10 +1,15 @@
 export class ViewConfigService {
 
 
-    constructor(viewConfigRepository) {
+    constructor(
+
+        viewConfigRepository
+
+    ) {
 
 
         this.viewConfigRepository =
+
             viewConfigRepository;
 
 
@@ -13,12 +18,19 @@ export class ViewConfigService {
         this.currentView = null;
 
 
+
         console.log(
-            "[PHX ViewConfigService] constructed",
+
+            "[PHX VIEW CONFIG SERVICE CONSTRUCTED]",
+
             {
+
                 repository:
+
                     !!viewConfigRepository
+
             }
+
         );
 
 
@@ -28,14 +40,25 @@ export class ViewConfigService {
 
 
 
-    async loadViews(userKey = "DEFAULT") {
+
+
+    async loadViews(
+
+        userKey = "DEFAULT"
+
+    ) {
 
 
         console.log(
+
             "[PHX VIEW LOAD START]",
+
             {
+
                 userKey
+
             }
+
         );
 
 
@@ -46,41 +69,63 @@ export class ViewConfigService {
             const rawViews =
 
                 await this.viewConfigRepository
-                    .getViews(userKey);
+
+                    .getViews(
+
+                        userKey
+
+                    );
+
+
 
 
 
             console.log(
+
                 "[PHX RAW VIEW CONFIG]",
+
                 rawViews
+
             );
 
 
 
-            this.parseViews(rawViews);
+
+
+            this.parseViews(
+
+                rawViews
+
+            );
+
+
 
 
 
             console.log(
+
                 "[PHX PARSED VIEWS]",
+
                 this.views
+
             );
 
 
 
-            console.log(
-                "[PHX VIEW COUNT]",
-                Object.keys(this.views).length
-            );
 
 
+            if (
 
-            if (!this.currentView) {
+                !this.currentView
+
+            ) {
 
 
                 const preferredView =
 
                     "Can We Sell";
+
+
 
 
 
@@ -94,7 +139,11 @@ export class ViewConfigService {
 
                     :
 
-                    Object.keys(this.views)[0]
+                    Object.keys(
+
+                        this.views
+
+                    )[0]
 
                     ||
 
@@ -105,10 +154,17 @@ export class ViewConfigService {
 
 
 
+
+
             console.log(
+
                 "[PHX ACTIVE VIEW]",
+
                 this.currentView
+
             );
+
+
 
 
 
@@ -118,12 +174,15 @@ export class ViewConfigService {
         }
 
 
-        catch(error) {
+        catch(error){
 
 
             console.error(
+
                 "[PHX VIEW LOAD ERROR]",
+
                 error
+
             );
 
 
@@ -141,12 +200,88 @@ export class ViewConfigService {
 
 
 
-    parseViews(raw) {
+
+
+    async getProcesses(){
 
 
         console.log(
+
+            "[PHX PROCESS LOAD START]"
+
+        );
+
+
+
+        try {
+
+
+            const processes =
+
+                await this.viewConfigRepository
+
+                    .getProcesses();
+
+
+
+
+
+            console.log(
+
+                "[PHX PROCESS LOAD RESULT]",
+
+                processes
+
+            );
+
+
+
+
+
+            return processes || [];
+
+
+
+        }
+
+
+        catch(error){
+
+
+            console.error(
+
+                "[PHX PROCESS LOAD ERROR]",
+
+                error
+
+            );
+
+
+            return [];
+
+
+        }
+
+
+    }
+
+
+
+
+
+
+
+
+
+    parseViews(raw){
+
+
+        console.log(
+
             "[PHX PARSE INPUT]",
+
             raw
+
         );
 
 
@@ -155,12 +290,11 @@ export class ViewConfigService {
 
 
 
-        if (!raw) {
+        if(
 
+            !raw
 
-            console.warn(
-                "[PHX PARSE EMPTY]"
-            );
+        ){
 
 
             return;
@@ -172,15 +306,17 @@ export class ViewConfigService {
 
 
 
+
+
         let configs = [];
 
 
 
-        if (
+        if(
 
             Array.isArray(raw)
 
-        ) {
+        ){
 
 
             configs = raw;
@@ -188,12 +324,11 @@ export class ViewConfigService {
 
         }
 
-
-        else if (
+        else if(
 
             Array.isArray(raw.views)
 
-        ) {
+        ){
 
 
             configs = raw.views;
@@ -201,8 +336,7 @@ export class ViewConfigService {
 
         }
 
-
-        else {
+        else{
 
 
             configs = [
@@ -213,6 +347,8 @@ export class ViewConfigService {
 
 
         }
+
+
 
 
 
@@ -239,17 +375,19 @@ export class ViewConfigService {
 
 
 
-                if (
+                if(
 
                     typeof viewConfig === "string"
 
-                ) {
+                ){
 
 
                     viewConfig =
 
                         JSON.parse(
+
                             viewConfig
+
                         );
 
 
@@ -292,6 +430,7 @@ export class ViewConfigService {
 
 
 
+
                 const columns =
 
                     viewConfig.columns
@@ -299,6 +438,8 @@ export class ViewConfigService {
                     ||
 
                     [];
+
+
 
 
 
@@ -317,21 +458,18 @@ export class ViewConfigService {
 
 
 
-                    name:
-
-                        name,
+                    name,
 
 
 
                     columns:
-
 
                         columns.map(
 
                             column=>{
 
 
-                                const mapped = {
+                                return {
 
 
                                     ...column,
@@ -408,22 +546,10 @@ export class ViewConfigService {
 
                                     visible:
 
-                                        column.visible
-
-                                        !==
-
-                                        false
+                                        column.visible !== false
 
 
                                 };
-
-
-
-                            
-
-
-
-                                return mapped;
 
 
                             }
@@ -447,7 +573,13 @@ export class ViewConfigService {
 
 
 
-    getColumns(name=null) {
+
+
+    getColumns(
+
+        name = null
+
+    ){
 
 
         const viewName =
@@ -460,29 +592,49 @@ export class ViewConfigService {
 
 
 
+
+
         const view =
 
             this.views[viewName];
 
 
 
+
+
         console.log(
+
             "[PHX GET COLUMNS]",
+
             {
+
                 viewName,
+
                 count:
+
                     view?.columns?.length
+
             }
+
         );
 
 
 
-        if (!view) {
+
+
+        if(
+
+            !view
+
+        ){
 
 
             console.error(
+
                 "[PHX VIEW NOT FOUND]",
+
                 viewName
+
             );
 
 
@@ -490,6 +642,8 @@ export class ViewConfigService {
 
 
         }
+
+
 
 
 
@@ -510,7 +664,9 @@ export class ViewConfigService {
 
 
 
-    getCurrentView() {
+
+
+    getCurrentView(){
 
 
         return this.views[
@@ -528,21 +684,32 @@ export class ViewConfigService {
 
 
 
-    setCurrentView(name) {
+
+
+    setCurrentView(
+
+        name
+
+    ){
 
 
         console.log(
+
             "[PHX SET VIEW]",
+
             name
+
         );
 
 
 
-        if (
+
+
+        if(
 
             this.views[name]
 
-        ) {
+        ){
 
 
             this.currentView = name;

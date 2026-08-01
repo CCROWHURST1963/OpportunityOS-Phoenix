@@ -40,34 +40,27 @@ export class AppState {
 
 
             /*
-                Dashboard context
+                Dashboard configuration
             */
+
+            processes:
+
+                [],
+
 
             process:
 
                 "Can We Sell",
 
 
-            currentView:
-
-                "default",
-
-
-            activeView:
+            opportunityMode:
 
                 "By View",
 
 
+            currentView:
 
-
-
-            /*
-                Retrieval state
-            */
-
-            rowsLimit:
-
-                null,
+                "default",
 
 
 
@@ -77,7 +70,7 @@ export class AppState {
                 Grid state
             */
 
-            rowsPerPage:
+            rowsLimit:
 
                 100,
 
@@ -85,6 +78,11 @@ export class AppState {
             filterMode:
 
                 "show_all",
+
+
+            totalRecords:
+
+                0,
 
 
             rows:
@@ -97,6 +95,7 @@ export class AppState {
 
             /*
                 Status
+
             */
 
             status:
@@ -118,35 +117,7 @@ export class AppState {
 
 
 
-
-    /*
-        Supports:
-
-        get("key")
-
-        AND
-
-        get()
-        -> returns full state
-
-    */
-
-
-    get(key = null) {
-
-
-        if(key === null){
-
-
-            return {
-
-                ...this.state
-
-            };
-
-
-        }
-
+    get(key){
 
 
         return this.state[key];
@@ -159,33 +130,22 @@ export class AppState {
 
 
 
+    set(
 
-    set(key,value){
+        key,
+
+        value
+
+    ){
 
 
         this.state[key] = value;
-
-
-        console.log(
-
-            "[PHX STATE SET]",
-
-            {
-
-                key,
-
-                value
-
-            }
-
-        );
 
 
         this.notify();
 
 
     }
-
 
 
 
@@ -204,22 +164,10 @@ export class AppState {
         );
 
 
-
-        console.log(
-
-            "[PHX STATE UPDATE]",
-
-            values
-
-        );
-
-
-
         this.notify();
 
 
     }
-
 
 
 
@@ -231,13 +179,14 @@ export class AppState {
 
         return {
 
+
             ...this.state
+
 
         };
 
 
     }
-
 
 
 
@@ -264,7 +213,7 @@ export class AppState {
 
                     listener =>
 
-                    listener !== callback
+                        listener !== callback
 
                 );
 
@@ -279,14 +228,7 @@ export class AppState {
 
 
 
-
     notify(){
-
-
-        const snapshot =
-
-            this.getState();
-
 
 
         for(
@@ -298,7 +240,7 @@ export class AppState {
 
             listener(
 
-                snapshot
+                this.getState()
 
             );
 

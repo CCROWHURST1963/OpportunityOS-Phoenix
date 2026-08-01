@@ -42,28 +42,8 @@ import { PriceValidationCalculator }
     from "./calculations/PriceValidationCalculator.js";
 
 
-import { EnrichmentPipeline }
-    from "./enrichment/EnrichmentPipeline.js";
-
-
-import { StatusTrackerEnricher }
-    from "./enrichment/StatusTrackerEnricher.js";
-
-
-import { AmazonPackInfoEnricher }
-    from "./enrichment/AmazonPackInfoEnricher.js";
-
-
 import { PackSizeDerivationService }
     from "./enrichment/PackSizeDerivationService.js";
-
-
-import { StatusRepository }
-    from "../repositories/StatusRepository.js";
-
-
-import { AmazonPackInfoRepository }
-    from "../repositories/AmazonPackInfoRepository.js";
 
 
 import { HeaderController }
@@ -103,9 +83,11 @@ export class ServiceContainer {
 
 
 
+
         this.config =
 
             new PhoenixConfig();
+
 
 
 
@@ -120,6 +102,7 @@ export class ServiceContainer {
         this.viewState =
 
             viewState;
+
 
 
 
@@ -142,6 +125,14 @@ export class ServiceContainer {
 
 
 
+
+
+
+        /*
+            View Config
+        */
+
+
         const viewConfigRepository =
 
             new ViewConfigRepository(
@@ -149,7 +140,6 @@ export class ServiceContainer {
                 this.supabaseClient
 
             );
-
 
 
 
@@ -164,6 +154,7 @@ export class ServiceContainer {
 
 
 
+
         this.viewEngine =
 
             new ViewEngine(
@@ -171,6 +162,8 @@ export class ServiceContainer {
                 this.viewState
 
             );
+
+
 
 
 
@@ -215,38 +208,18 @@ export class ServiceContainer {
 
 
 
+
+
         /*
-            Repositories
+            Pack Size Derivation
+
+            Only runs when RPC row
+            has no pack_size
+
         */
 
 
-        const statusRepository =
-
-            new StatusRepository(
-
-                this.supabaseClient,
-
-                this.config
-
-            );
-
-
-
-        const packRepository =
-
-            new AmazonPackInfoRepository(
-
-                this.supabaseClient,
-
-                this.config
-
-            );
-
-
-
-
-
-        const packSizeDerivationService =
+        this.packSizeDerivationService =
 
             new PackSizeDerivationService();
 
@@ -254,41 +227,10 @@ export class ServiceContainer {
 
 
 
-        /*
-            Enrichment pipeline
-        */
-
-
-        this.enrichmentPipeline =
-
-            new EnrichmentPipeline([
-
-
-                new StatusTrackerEnricher(
-
-                    statusRepository
-
-                ),
-
-
-
-                new AmazonPackInfoEnricher(
-
-                    packRepository,
-
-                    packSizeDerivationService
-
-                )
-
-
-            ]);
-
-
-
 
 
         /*
-            Calculation pipeline
+            Calculation Pipeline
         */
 
 
@@ -306,12 +248,16 @@ export class ServiceContainer {
 
 
 
+
+
         /*
-            Opportunity repository
+            Opportunity Repository
         */
 
 
         let opportunityRepository;
+
+
 
 
 
@@ -349,8 +295,21 @@ export class ServiceContainer {
 
 
 
+
+
         /*
-            Opportunity service
+            Opportunity Service
+
+            RPC now supplies:
+
+            - status_tracker
+            - master_price_file
+            - amazonpackinfo
+
+            Only remaining enrichment:
+
+            - PackSizeDerivationService
+
         */
 
 
@@ -362,7 +321,7 @@ export class ServiceContainer {
 
                 this.calculationPipeline,
 
-                this.enrichmentPipeline
+                this.packSizeDerivationService
 
             );
 
@@ -370,13 +329,10 @@ export class ServiceContainer {
 
 
 
+
+
         /*
-            Dashboard controller
-
-            Uses:
-            ViewState  = data mode
-            AppState   = current view/layout
-
+            Dashboard Controller
         */
 
 

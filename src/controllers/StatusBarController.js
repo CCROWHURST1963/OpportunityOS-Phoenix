@@ -1,40 +1,103 @@
 export class StatusBarController {
 
-    constructor(state) {
-        this.state = state;
-        this.container = null;
+
+    constructor(
+
+        appState
+
+    ) {
+
+
+        this.appState =
+
+            appState;
+
+
+        this.element =
+
+            null;
+
+
+        this.unsubscribe =
+
+            null;
+
+
     }
 
 
-    mount(container) {
 
-        this.container = container;
+
+
+
+
+    mount(element){
+
+
+        this.element =
+
+            element;
+
 
         this.render();
 
-        this.state.subscribe(() => {
-            this.render();
-        });
+
+
+        this.unsubscribe =
+
+            this.appState.subscribe(
+
+                () => {
+
+
+                    this.render();
+
+
+                }
+
+            );
+
 
     }
 
 
-    render() {
 
-        const status = this.state.get("status");
 
-        this.container.innerHTML = `
 
-            <div class="phoenix-status-pill">
 
-                <span class="status-dot"></span>
 
-                ${status}
 
-            </div>
+    render(){
 
-        `;
+
+        if(!this.element){
+
+            return;
+
+        }
+
+
+
+
+
+        /*
+            Status bar intentionally empty.
+
+            Future versions will use this area
+            for dashboard progress states:
+
+            Dashboard Loading
+            Total Opportunities - N
+            Total Leads - N
+
+        */
+
+
+        this.element.innerHTML = "";
+
 
     }
+
+
 
 }
