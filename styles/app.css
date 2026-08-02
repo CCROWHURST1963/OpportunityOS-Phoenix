@@ -1201,6 +1201,9 @@ body {
 
     align-items:center;
 
+    justify-content:center;
+text-align:center;
+
     padding:10px 14px;
 
     box-sizing:border-box;
@@ -1214,6 +1217,8 @@ body {
     overflow:hidden;
 
     text-overflow:ellipsis;
+      
+    flex-shrink:0;
 
 }
 
@@ -1226,5 +1231,33 @@ body {
     text-align:center;
 
     color:#64748b;
+
+}
+.phoenix-grid-input {
+
+    width:100%;
+
+    border:1px solid #dce5f2;
+
+    border-radius:6px;
+
+    padding:4px 8px;
+
+    text-align:center;
+
+}
+/*
+    Phoenix Row Selection
+*/
+
+
+.phoenix-row-selector,
+.phoenix-select-all {
+
+    width:18px;
+
+    height:18px;
+
+    cursor:pointer;
 
 }

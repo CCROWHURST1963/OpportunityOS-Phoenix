@@ -2,6 +2,10 @@ import { ColumnRegistry }
     from "../services/ColumnRegistry.js";
 
 
+import { EDITABLE_COLUMNS }
+    from "../config/EditableColumns.js";
+
+
 
 export class GridRenderer {
 
@@ -24,6 +28,66 @@ export class GridRenderer {
 
 
 
+
+    isEditable(field){
+
+
+        return EDITABLE_COLUMNS.includes(
+
+            field
+
+        );
+
+
+    }
+
+
+
+
+
+
+
+    getColumnStyle(column){
+
+
+        if(
+
+            !column ||
+
+            !column.width
+
+        ){
+
+            return "";
+
+        }
+
+
+
+        return `
+
+            width:${column.width}px;
+
+            min-width:${column.width}px;
+
+            max-width:${column.width}px;
+
+            flex:0 0 ${column.width}px;
+
+            box-sizing:border-box;
+
+        `;
+
+
+    }
+
+
+
+
+
+
+
+
     render(
 
         container,
@@ -32,10 +96,12 @@ export class GridRenderer {
 
         rows = []
 
-    ) {
+    ){
 
 
         this.container = container;
+
+
 
 
 
@@ -48,13 +114,55 @@ export class GridRenderer {
         );
 
 
+
+
+
         console.log(
 
-            "[PHX GRID ROWS RECEIVED]",
+            "[PHX GRID FIELD LIST]",
 
-            rows
+            columns.map(
+
+                c => c.field
+
+            )
 
         );
+
+
+
+
+
+        console.log(
+
+            "[PHX EDITABLE CONFIG]",
+
+            EDITABLE_COLUMNS
+
+        );
+
+
+
+
+
+        console.log(
+
+            "[PHX EDITABLE MATCHES]",
+
+            columns.filter(
+
+                c =>
+
+                    this.isEditable(
+
+                        c.field
+
+                    )
+
+            )
+
+        );
+
 
 
 
@@ -65,27 +173,59 @@ export class GridRenderer {
         container.innerHTML = `
 
 
+
             <div class="phoenix-grid">
+
+
+
 
 
                 <div class="phoenix-grid-row phoenix-grid-head">
 
 
-                    ${columns.map(column => `
+                    ${
 
-                        <div
+                        columns.map(column => `
 
-                            class="phoenix-grid-cell"
 
-                            style="width:${column.width}px"
+                            <div
 
-                        >
+                                class="phoenix-grid-cell phoenix-grid-header-cell"
 
-                            ${column.label}
+                                style="${
 
-                        </div>
+                                    this.getColumnStyle(
 
-                    `).join("")}
+                                        column
+
+                                    )
+
+                                }"
+
+                            >
+
+                                ${
+
+                                    column.label
+
+                                    ||
+
+                                    column.field
+
+                                    ||
+
+                                    ""
+
+                                }
+
+
+                            </div>
+
+
+                        `).join("")
+
+                    }
+
 
 
                 </div>
@@ -94,10 +234,16 @@ export class GridRenderer {
 
 
 
+
+
+
                 ${
+
                     rows.length === 0
 
+
                     ?
+
 
                     `
 
@@ -109,66 +255,179 @@ export class GridRenderer {
 
                     `
 
+
+
                     :
 
+
+
                     rows.map(row => `
+
 
 
                         <div class="phoenix-grid-row">
 
 
-                            ${columns.map(column => {
-
-
-                                const value =
-
-                                    this.columnRegistry.getValue(
-
-                                        column.field,
-
-                                        row
-
-                                    );
 
 
 
-                                return `
+                            ${
 
 
-                                <div
 
-                                    class="phoenix-grid-cell"
-
-                                    style="width:${column.width}px"
-
-                                >
-
-                                    ${value ?? ""}
-
-                                </div>
+                                columns.map(column => {
 
 
-                                `;
+
+                                    const value =
 
 
-                            }).join("")}
+                                        this.columnRegistry.getValue(
+
+                                            column.field,
+
+                                            row
+
+                                        );
+
+
+
+
+
+
+
+                                    let content =
+
+                                        value ?? "";
+
+
+
+
+
+
+
+                                    if(
+
+                                        this.isEditable(
+
+                                            column.field
+
+                                        )
+
+                                    ){
+
+
+
+                                        content = `
+
+
+
+                                            <input
+
+                                                class="phoenix-grid-input"
+
+                                                value="${
+
+                                                    value ?? ""
+
+                                                }"
+
+                                                data-field="${
+
+                                                    column.field
+
+                                                }"
+
+                                                data-asin="${
+
+                                                    row.asin || ""
+
+                                                }"
+
+                                            >
+
+
+
+                                        `;
+
+
+
+                                    }
+
+
+
+
+
+
+
+
+
+                                    return `
+
+
+
+                                        <div
+
+                                            class="phoenix-grid-cell"
+
+                                            style="${
+
+                                                this.getColumnStyle(
+
+                                                    column
+
+                                                )
+
+                                            }"
+
+                                        >
+
+                                            ${content}
+
+                                        </div>
+
+
+
+                                    `;
+
+
+
+                                }).join("")
+
+
+
+                            }
+
+
+
+
+
 
 
                         </div>
 
 
+
                     `).join("")
 
+
+
                 }
+
+
+
 
 
             </div>
 
 
+
         `;
 
 
+
     }
+
 
 
 }
