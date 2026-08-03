@@ -4,13 +4,6 @@ export class ColumnRegistry {
     constructor(){
 
 
-        console.log(
-
-            "[PHX COLUMN REGISTRY CREATED]"
-
-        );
-
-
         this.aliases = {
 
             "_brand":
@@ -88,11 +81,6 @@ export class ColumnRegistry {
         }
 
 
-        /*
-            Direct match
-        */
-
-
         if(
 
             row[key] !== undefined
@@ -108,11 +96,6 @@ export class ColumnRegistry {
 
 
         }
-
-
-        /*
-            Explicit Phoenix alias
-        */
 
 
         const alias =
@@ -135,40 +118,10 @@ export class ColumnRegistry {
         ){
 
 
-            console.log(
-
-                "[PHX COLUMN ALIAS MATCH]",
-
-                {
-
-                    from:
-
-                        key,
-
-
-                    to:
-
-                        alias,
-
-
-                    value:
-
-                        row[alias]
-
-                }
-
-            );
-
-
             return row[alias];
 
 
         }
-
-
-        /*
-            Generic underscore fallback
-        */
 
 
         if(
@@ -200,31 +153,6 @@ export class ColumnRegistry {
                 row[cleanKey] !== null
 
             ){
-
-
-                console.log(
-
-                    "[PHX COLUMN ALIAS MATCH]",
-
-                    {
-
-                        from:
-
-                            key,
-
-
-                        to:
-
-                            cleanKey,
-
-
-                        value:
-
-                            row[cleanKey]
-
-                    }
-
-                );
 
 
                 return row[cleanKey];

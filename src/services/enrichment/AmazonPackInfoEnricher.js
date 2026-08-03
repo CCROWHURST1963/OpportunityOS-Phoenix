@@ -11,28 +11,89 @@ export class AmazonPackInfoEnricher {
 
 
         this.packRepository =
+
             packRepository;
 
 
         this.packSizeDerivationService =
+
             packSizeDerivationService;
 
 
-
-        console.log(
-
-            "[PHX-038 PACK DEPENDENCY CHECK]",
-
-            {
-
-                packRepository:
-                    !!packRepository,
+    }
 
 
-                packSizeDerivationService:
-                    !!packSizeDerivationService
 
-            }
+
+
+
+    normaliseText(value){
+
+
+        return String(
+
+            value
+
+            ??
+
+            ""
+
+        ).trim();
+
+
+    }
+
+
+
+
+
+
+    normalisePositiveInteger(
+
+        value,
+
+        fallback =
+
+            null
+
+    ){
+
+
+        const parsed =
+
+            Number(
+
+                value
+
+            );
+
+
+        if(
+
+            !Number.isFinite(
+
+                parsed
+
+            )
+
+            ||
+
+            parsed <=
+
+                0
+
+        ){
+
+
+            return fallback;
+
+
+        }
+
+
+        return Math.round(
+
+            parsed
 
         );
 
@@ -44,12 +105,255 @@ export class AmazonPackInfoEnricher {
 
 
 
-
-    async enrich(row){
-
+    getUserKey(row){
 
 
-        if(!row || !row.asin){
+        return this.normaliseText(
+
+            row?.user_id
+
+            ??
+
+            row?.userKey
+
+            ??
+
+            row?.user_key
+
+            ??
+
+            "DEFAULT"
+
+        )
+
+        ||
+
+        "DEFAULT";
+
+
+    }
+
+
+
+
+
+
+    getLocale(row){
+
+
+        return this.normaliseText(
+
+            row?.locale
+
+            ??
+
+            row?.matched_locale
+
+            ??
+
+            "co.uk"
+
+        ).toLowerCase()
+
+        ||
+
+        "co.uk";
+
+
+    }
+
+
+
+
+
+
+    async loadManualPackInfo(row){
+
+
+        if(
+
+            !this.packRepository
+
+            ||
+
+            typeof this.packRepository.getPackInfo !==
+
+                "function"
+
+        ){
+
+
+            return null;
+
+
+        }
+
+
+        const rows =
+
+            await this.packRepository.getPackInfo(
+
+                this.getUserKey(
+
+                    row
+
+                ),
+
+                [
+
+                    row.asin
+
+                ],
+
+                this.getLocale(
+
+                    row
+
+                )
+
+            );
+
+
+        if(
+
+            !Array.isArray(
+
+                rows
+
+            )
+
+            ||
+
+            rows.length ===
+
+                0
+
+        ){
+
+
+            return null;
+
+
+        }
+
+
+        return rows[0]
+
+        ||
+
+        null;
+
+
+    }
+
+
+
+
+
+
+    buildManualResult(
+
+        row,
+
+        packInfo
+
+    ){
+
+
+        const packSize =
+
+            this.normalisePositiveInteger(
+
+                packInfo?.pack_size,
+
+                null
+
+            );
+
+
+        if(packSize === null){
+
+
+            return null;
+
+
+        }
+
+
+        const buyQty =
+
+            this.normalisePositiveInteger(
+
+                packInfo?.buy_qty,
+
+                null
+
+            );
+
+
+        return {
+
+            ...row,
+
+
+            pack_size:
+
+                packSize,
+
+
+            manual_pack_size:
+
+                packSize,
+
+
+            amazonpackinfo_pack_size:
+
+                packSize,
+
+
+            buy_qty:
+
+                buyQty,
+
+
+            amazonpackinfo_buy_qty:
+
+                buyQty,
+
+
+            pack_source:
+
+                "Manual",
+
+
+            amazonpackinfo_pack_source:
+
+                "Manual"
+
+        };
+
+
+    }
+
+
+
+
+
+
+    buildDerivedResult(row){
+
+
+        if(
+
+            !this.packSizeDerivationService
+
+            ||
+
+            typeof this.packSizeDerivationService.derive !==
+
+                "function"
+
+        ){
 
 
             return row;
@@ -58,160 +362,139 @@ export class AmazonPackInfoEnricher {
         }
 
 
+        const derived =
 
+            this.packSizeDerivationService.derive(
 
+                row
 
-        /*
-            Manual pack info lookup only
-            if repository exists.
-        */
+            )
 
+            ||
 
-        let packInfo = null;
+            {};
 
 
+        const packSize =
 
-        if(
+            this.normalisePositiveInteger(
 
-            this.packRepository &&
+                derived.pack_size,
 
-            row.locale
+                1
 
-        ){
+            );
 
 
-            packInfo =
+        const buyQty =
 
-                await this.packRepository
-                    .getPackInfo(
+            this.normalisePositiveInteger(
 
-                        row.asin,
+                derived.buy_qty
 
-                        row.locale
+                ??
 
-                    );
+                row?.buy_qty,
 
+                packSize
 
-        }
+            );
 
 
+        return {
 
+            ...row,
 
 
+            pack_size:
 
+                packSize,
 
 
-        if(
+            buy_qty:
 
-            packInfo &&
+                buyQty,
 
-            Number(packInfo.pack_size) > 0
 
-        ){
+            pack_source:
 
-
-            return {
-
-
-                ...row,
-
-
-                pack_size:
-
-                    Number(packInfo.pack_size),
-
-
-
-                buy_qty:
-
-                    packInfo.buy_qty || null,
-
-
-
-                pack_source:
-
-                    "Manual"
-
-
-
-            };
-
-
-        }
-
-
-
-
-
-
-
-
-
-        /*
-            Derive pack size
-        */
-
-
-        if(
-
-            this.packSizeDerivationService &&
-
-            typeof this.packSizeDerivationService.derive === "function"
-
-        ){
-
-
-            const derived =
-
-                this.packSizeDerivationService
-                    .derive(row);
-
-
-
-
-
-            return {
-
-
-                ...row,
-
-
-                pack_size:
-
-                    derived.pack_size,
-
-
-
-                buy_qty:
-
-                    row.buy_qty || null,
-
-
-
-                pack_source:
+                this.normaliseText(
 
                     derived.pack_source
 
+                )
 
+                ||
 
-            };
+                "derived"
 
-
-        }
-
-
-
-
-
-
-
-
-        return row;
-
+        };
 
 
     }
 
+
+
+
+
+
+    async enrich(row){
+
+
+        if(
+
+            !row
+
+            ||
+
+            !row.asin
+
+        ){
+
+
+            return row;
+
+
+        }
+
+
+        const manualPackInfo =
+
+            await this.loadManualPackInfo(
+
+                row
+
+            );
+
+
+        const manualResult =
+
+            this.buildManualResult(
+
+                row,
+
+                manualPackInfo
+
+            );
+
+
+        if(manualResult){
+
+
+            return manualResult;
+
+
+        }
+
+
+        return this.buildDerivedResult(
+
+            row
+
+        );
+
+
+    }
 
 
 }

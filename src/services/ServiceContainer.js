@@ -30,6 +30,22 @@ import { AttributeRepository }
     from "../repositories/AttributeRepository.js";
 
 
+import { StatusTrackerRepository }
+    from "../repositories/StatusTrackerRepository.js";
+
+
+import { AmazonPackInfoRepository }
+    from "../repositories/AmazonPackInfoRepository.js?v=PHX_PACK_WRITE_003";
+
+
+import { TrackerLookupRepository }
+    from "../repositories/TrackerLookupRepository.js";
+
+
+import { DashboardConstantsRepository }
+    from "../repositories/DashboardConstantsRepository.js";
+
+
 import { ViewConfigService }
     from "./ViewConfigService.js";
 
@@ -40,6 +56,22 @@ import { ViewFilterService }
 
 import { AttributeService }
     from "./AttributeService.js";
+
+
+import { StatusTrackerService }
+    from "./StatusTrackerService.js";
+
+
+import { AmazonPackInfoService }
+    from "./AmazonPackInfoService.js?v=PHX_PACK_WRITE_001";
+
+
+import { TrackerLookupService }
+    from "./TrackerLookupService.js";
+
+
+import { DashboardConstantsService }
+    from "./DashboardConstantsService.js";
 
 
 import { EnrichmentPipeline }
@@ -230,6 +262,46 @@ export class ServiceContainer {
             );
 
 
+        const statusTrackerRepository =
+
+            new StatusTrackerRepository(
+
+                supabaseClient,
+
+                this.appState
+
+            );
+
+
+        const amazonPackInfoRepository =
+
+            new AmazonPackInfoRepository(
+
+                supabaseClient,
+
+                this.appState
+
+            );
+
+
+        const trackerLookupRepository =
+
+            new TrackerLookupRepository(
+
+                supabaseClient
+
+            );
+
+
+        const dashboardConstantsRepository =
+
+            new DashboardConstantsRepository(
+
+                supabaseClient
+
+            );
+
+
         this.services.opportunityRepository =
 
             opportunityRepository;
@@ -265,6 +337,26 @@ export class ServiceContainer {
             attributeRepository;
 
 
+        this.services.statusTrackerRepository =
+
+            statusTrackerRepository;
+
+
+        this.services.amazonPackInfoRepository =
+
+            amazonPackInfoRepository;
+
+
+        this.services.trackerLookupRepository =
+
+            trackerLookupRepository;
+
+
+        this.services.dashboardConstantsRepository =
+
+            dashboardConstantsRepository;
+
+
 
 
 
@@ -288,7 +380,7 @@ export class ServiceContainer {
 
             new AmazonPackInfoEnricher(
 
-                null,
+                amazonPackInfoRepository,
 
                 packSizeDerivationService
 
@@ -302,15 +394,11 @@ export class ServiceContainer {
 
         const enrichmentPipeline =
 
-            new EnrichmentPipeline(
+            new EnrichmentPipeline([
 
-                [
+                amazonPackInfoEnricher
 
-                    amazonPackInfoEnricher
-
-                ]
-
-            );
+            ]);
 
 
         this.services.enrichmentPipeline =
@@ -376,6 +464,46 @@ export class ServiceContainer {
             );
 
 
+        const statusTrackerService =
+
+            new StatusTrackerService(
+
+                statusTrackerRepository,
+
+                this.appState
+
+            );
+
+
+        const amazonPackInfoService =
+
+            new AmazonPackInfoService(
+
+                amazonPackInfoRepository,
+
+                this.appState
+
+            );
+
+
+        const trackerLookupService =
+
+            new TrackerLookupService(
+
+                trackerLookupRepository
+
+            );
+
+
+        const dashboardConstantsService =
+
+            new DashboardConstantsService(
+
+                dashboardConstantsRepository
+
+            );
+
+
         this.services.opportunityService =
 
             opportunityService;
@@ -401,6 +529,26 @@ export class ServiceContainer {
             attributeService;
 
 
+        this.services.statusTrackerService =
+
+            statusTrackerService;
+
+
+        this.services.amazonPackInfoService =
+
+            amazonPackInfoService;
+
+
+        this.services.trackerLookupService =
+
+            trackerLookupService;
+
+
+        this.services.dashboardConstantsService =
+
+            dashboardConstantsService;
+
+
 
 
 
@@ -412,7 +560,15 @@ export class ServiceContainer {
 
         const gridRenderer =
 
-            new GridRenderer();
+            new GridRenderer(
+
+                this.appState,
+
+                statusTrackerService,
+
+                amazonPackInfoService
+
+            );
 
 
         this.services.gridRenderer =
@@ -447,15 +603,6 @@ export class ServiceContainer {
                 supplierRepository
 
             );
-
-
-        /*
-            FilterController currently uses ViewFilterService
-            for Assigned To and Status.
-
-            AttributeService is supplied as the third argument
-            for Brand, Category and Sub Category integration.
-        */
 
 
         const filterController =
@@ -522,19 +669,6 @@ export class ServiceContainer {
         this.services.statusController =
 
             statusController;
-
-
-
-
-
-
-        console.log(
-
-            "[PHX SERVICE CONTAINER READY]",
-
-            this.services
-
-        );
 
 
     }

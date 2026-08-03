@@ -58,22 +58,288 @@ export class App {
         );
 
 
-        console.log(
-
-            "[PHX APP SERVICES]",
-
-            this.services
-
-        );
+        try{
 
 
+            /*
+                LOAD USER
+            */
+
+
+            await this.loadUserContext();
 
 
 
 
-        /*
-            LOAD USER
-        */
+
+
+            /*
+                LOAD PROCESSES + CUSTOM GRID VIEW
+            */
+
+
+            await this.loadDashboardConfiguration();
+
+
+
+
+
+
+            /*
+                LOAD TRACKER LOOKUPS + CONSTANTS
+
+                This happens after user resolution so that
+                dashboard_constants can apply:
+
+                DEFAULT
+                    ↓
+                active user overrides
+            */
+
+
+            await this.loadApplicationConfiguration();
+
+
+
+
+
+
+            /*
+                BUILD APPLICATION SHELL
+            */
+
+
+            this.mountShell();
+
+
+
+
+
+
+            /*
+                HEADER
+            */
+
+
+            if(
+
+                this.controllers.header
+
+            ){
+
+
+                this.controllers.header.mount(
+
+                    document.getElementById(
+
+                        "phoenix-header"
+
+                    )
+
+                );
+
+
+            }
+
+
+
+
+
+
+            /*
+                FILTER CONTROLLER REMOUNT SUPPORT
+
+                ToolbarController rebuilds its HTML whenever
+                the opportunity mode or selection changes.
+
+                Each rebuild creates a new filter host, so the
+                FilterController must mount to the new element.
+            */
+
+
+            this.bindToolbarRenderedEvent();
+
+
+
+
+
+
+            /*
+                TOOLBAR
+            */
+
+
+            if(
+
+                this.controllers.toolbar
+
+            ){
+
+
+                this.controllers.toolbar.mount(
+
+                    document.getElementById(
+
+                        "phoenix-toolbar"
+
+                    )
+
+                );
+
+
+            }
+
+
+
+
+
+
+            /*
+                FILTER CONTROLLER
+            */
+
+
+            this.mountFilterController();
+
+
+
+
+
+
+            /*
+                STATUS
+            */
+
+
+            if(
+
+                this.controllers.status
+
+            ){
+
+
+                this.controllers.status.mount(
+
+                    document.getElementById(
+
+                        "phoenix-status"
+
+                    )
+
+                );
+
+
+            }
+
+
+
+
+
+
+            /*
+                DASHBOARD
+            */
+
+
+            if(
+
+                this.controllers.dashboard
+
+            ){
+
+
+                this.controllers.dashboard.mount(
+
+                    document.getElementById(
+
+                        "phoenix-dashboard"
+
+                    )
+
+                );
+
+
+            }
+
+
+            this.appState.update({
+
+                status:
+
+                    "System Ready"
+
+            });
+
+
+        }
+
+        catch(error){
+
+
+            console.error(
+
+                "[PHX APP START ERROR]",
+
+                error
+
+            );
+
+
+            this.appState.update({
+
+                status:
+
+                    "Application Error",
+
+
+                dashboardStatus:
+
+                    "Error"
+
+            });
+
+
+            /*
+                Still build the shell so the error state can
+                be shown rather than leaving a blank page.
+            */
+
+
+            this.mountShell();
+
+
+            if(
+
+                this.controllers.status
+
+            ){
+
+
+                this.controllers.status.mount(
+
+                    document.getElementById(
+
+                        "phoenix-status"
+
+                    )
+
+                );
+
+
+            }
+
+
+        }
+
+
+    }
+
+
+
+
+
+
+    async loadUserContext(){
 
 
         let user =
@@ -85,21 +351,18 @@ export class App {
 
             this.services.wixUser
 
+            &&
+
+            typeof this.services.wixUser.loadUserContext ===
+
+                "function"
+
         ){
 
 
             user =
 
                 await this.services.wixUser.loadUserContext();
-
-
-            console.log(
-
-                "[PHX USER READY]",
-
-                user
-
-            );
 
 
             this.appState.update({
@@ -109,11 +372,28 @@ export class App {
                     user,
 
 
+                wixUserId:
+
+                    user?.wix_user_id
+
+                    ??
+
+                    user?.wixUserId
+
+                    ??
+
+                    null,
+
+
                 userName:
 
                     user?.user_name
 
-                    ||
+                    ??
+
+                    user?.userName
+
+                    ??
 
                     "User",
 
@@ -122,7 +402,7 @@ export class App {
 
                     user?.role
 
-                    ||
+                    ??
 
                     "User",
 
@@ -131,70 +411,125 @@ export class App {
 
                     user?.user_key
 
+                    ??
+
+                    user?.userKey
+
+                    ??
+
+                    "DEFAULT",
+
+
+                multiUsers:
+
+                    user?.multi_users ===
+
+                        true
+
                     ||
 
-                    "DEFAULT"
+                    user?.multi_users ===
+
+                        "Yes"
+
+                    ||
+
+                    user?.multiUsers ===
+
+                        true
 
             });
 
 
-        }
-
-        else {
-
-
-            console.warn(
-
-                "[PHX NO WIX USER SERVICE] Using DEFAULT"
-
-            );
-
-
-            this.appState.update({
-
-                userName:
-
-                    "User",
-
-
-                role:
-
-                    "User",
-
-
-                userKey:
-
-                    "DEFAULT"
-
-            });
+            return user;
 
 
         }
 
 
+        console.warn(
+
+            "[PHX NO WIX USER SERVICE] Using DEFAULT"
+
+        );
+
+
+        this.appState.update({
+
+            user:
+
+                null,
+
+
+            wixUserId:
+
+                null,
+
+
+            userName:
+
+                "User",
+
+
+            role:
+
+                "User",
+
+
+            userKey:
+
+                "DEFAULT",
+
+
+            multiUsers:
+
+                false
+
+        });
+
+
+        return null;
+
+
+    }
 
 
 
 
-        /*
-            LOAD PROCESSES + CUSTOM GRID VIEW
-        */
+
+
+    async loadDashboardConfiguration(){
 
 
         if(
 
-            this.services.viewConfig
+            !this.services.viewConfig
 
         ){
 
 
-            const userKey =
+            return;
 
-                this.appState.getState().userKey
 
-                ||
+        }
 
-                "DEFAULT";
+
+        const userKey =
+
+            this.appState.getState().userKey
+
+            ||
+
+            "DEFAULT";
+
+
+        if(
+
+            typeof this.services.viewConfig.setUserKey ===
+
+                "function"
+
+        ){
 
 
             this.services.viewConfig.setUserKey(
@@ -204,67 +539,84 @@ export class App {
             );
 
 
-            let processes =
-
-                [];
+        }
 
 
-            if(
+        let processes =
 
-                this.services.processRepository
-
-            ){
+            [];
 
 
-                processes =
+        if(
 
-                    await this.services.processRepository.getProcesses();
+            this.services.processRepository
 
+            &&
 
-            }
+            typeof this.services.processRepository.getProcesses ===
 
-            else {
+                "function"
 
-
-                console.error(
-
-                    "[PHX ERROR] processRepository missing",
-
-                    this.services
-
-                );
+        ){
 
 
-            }
+            processes =
+
+                await this.services.processRepository.getProcesses();
 
 
-            console.log(
+        }
 
-                "[PHX PROCESSES]",
+        else {
 
-                processes
+
+            console.error(
+
+                "[PHX ERROR] processRepository missing"
 
             );
 
 
-            const process =
-
-                this.appState.getState().process
-
-                ||
-
-                processes[0]?.process_name
-
-                ||
-
-                processes[0]?.name
-
-                ||
-
-                "Can We Sell";
+        }
 
 
-            const currentView =
+        const state =
+
+            this.appState.getState();
+
+
+        const process =
+
+            state.process
+
+            ||
+
+            processes[0]?.process_name
+
+            ||
+
+            processes[0]?.name
+
+            ||
+
+            "Can We Sell";
+
+
+        let currentView =
+
+            null;
+
+
+        if(
+
+            typeof this.services.viewConfig.loadCurrentView ===
+
+                "function"
+
+        ){
+
+
+            currentView =
 
                 await this.services.viewConfig.loadCurrentView(
 
@@ -273,142 +625,310 @@ export class App {
                 );
 
 
-            console.log(
-
-                "[PHX SELECTED PROCESS]",
-
-                process
-
-            );
-
-
-            console.log(
-
-                "[PHX SELECTED CUSTOM VIEW]",
-
-                currentView
-
-            );
-
-
-            this.appState.update({
-
-                processes:
-
-                    processes,
-
-
-                process:
-
-                    process,
-
-
-                currentView:
-
-                    currentView?.active_view
-
-                    ||
-
-                    "",
-
-
-                currentViewConfig:
-
-                    currentView?.view_config
-
-                    ||
-
-                    {}
-
-            });
-
-
         }
 
 
+        this.appState.update({
+
+            processes:
+
+                Array.isArray(
+
+                    processes
+
+                )
+
+                    ? processes
+
+                    : [],
+
+
+            process:
+
+                process,
+
+
+            currentView:
+
+                currentView?.active_view
+
+                ??
+
+                currentView?.activeView
+
+                ??
+
+                "",
+
+
+            currentViewConfig:
+
+                currentView?.view_config
+
+                ??
+
+                currentView?.viewConfig
+
+                ??
+
+                {}
+
+        });
+
+
+    }
 
 
 
 
-        /*
-            BUILD APPLICATION SHELL
-        */
 
 
-        this.mountShell();
+    async loadApplicationConfiguration(){
 
 
+        const state =
+
+            this.appState.getState();
 
 
+        const userKey =
+
+            state.userKey
+
+            ||
+
+            "DEFAULT";
 
 
-        /*
-            HEADER
-        */
+        this.appState.update({
+
+            configurationLoading:
+
+                true,
+
+
+            configurationLoaded:
+
+                false,
+
+
+            configurationError:
+
+                "",
+
+
+            status:
+
+                "Loading Configuration"
+
+        });
+
+
+        const trackerLookupService =
+
+            this.services.trackerLookupService;
+
+
+        const dashboardConstantsService =
+
+            this.services.dashboardConstantsService;
+
+
+        const trackerLookupPromise =
+
+            trackerLookupService
+
+            &&
+
+            typeof trackerLookupService.load ===
+
+                "function"
+
+                ? trackerLookupService.load()
+
+                : Promise.resolve({
+
+                    eligible_to_sell:
+
+                        [],
+
+
+                    product_type:
+
+                        [],
+
+
+                    hazmat_status:
+
+                        [],
+
+
+                    override:
+
+                        []
+
+                });
+
+
+        const dashboardConstantsPromise =
+
+            dashboardConstantsService
+
+            &&
+
+            typeof dashboardConstantsService.load ===
+
+                "function"
+
+                ? dashboardConstantsService.load(
+
+                    userKey
+
+                )
+
+                : Promise.resolve({});
+
+
+        const results =
+
+            await Promise.allSettled([
+
+                trackerLookupPromise,
+
+                dashboardConstantsPromise
+
+            ]);
+
+
+        const trackerResult =
+
+            results[0];
+
+
+        const constantsResult =
+
+            results[1];
+
+
+        const errors =
+
+            [];
+
+
+        let trackerLookups = {
+
+            eligible_to_sell:
+
+                [],
+
+
+            product_type:
+
+                [],
+
+
+            hazmat_status:
+
+                [],
+
+
+            override:
+
+                []
+
+        };
+
+
+        let dashboardConstants =
+
+            {};
 
 
         if(
 
-            this.controllers.header
+            trackerResult.status ===
+
+                "fulfilled"
 
         ){
 
 
-            this.controllers.header.mount(
+            trackerLookups =
 
-                document.getElementById(
+                trackerResult.value
 
-                    "phoenix-header"
+                ||
 
-                )
+                trackerLookups;
+
+
+        }
+
+        else {
+
+
+            errors.push(
+
+                trackerResult.reason?.message
+
+                ||
+
+                "Tracker lookups failed to load"
+
+            );
+
+
+            console.error(
+
+                "[PHX TRACKER LOOKUP LOAD ERROR]",
+
+                trackerResult.reason
 
             );
 
 
         }
-
-
-
-
-
-
-        /*
-            FILTER CONTROLLER REMOUNT SUPPORT
-
-            ToolbarController rebuilds its HTML whenever
-            the opportunity mode or selection changes.
-
-            Each rebuild creates a new filter host, so the
-            FilterController must mount to the new element.
-        */
-
-
-        this.bindToolbarRenderedEvent();
-
-
-
-
-
-
-        /*
-            TOOLBAR
-        */
 
 
         if(
 
-            this.controllers.toolbar
+            constantsResult.status ===
+
+                "fulfilled"
 
         ){
 
 
-            this.controllers.toolbar.mount(
+            dashboardConstants =
 
-                document.getElementById(
+                constantsResult.value
 
-                    "phoenix-toolbar"
+                ||
 
-                )
+                {};
+
+
+        }
+
+        else {
+
+
+            errors.push(
+
+                constantsResult.reason?.message
+
+                ||
+
+                "Dashboard constants failed to load"
+
+            );
+
+
+            console.error(
+
+                "[PHX DASHBOARD CONSTANTS LOAD ERROR]",
+
+                constantsResult.reason
 
             );
 
@@ -416,76 +936,117 @@ export class App {
         }
 
 
+        this.appState.update({
+
+            trackerLookups:{
+
+                eligible_to_sell:
+
+                    Array.isArray(
+
+                        trackerLookups.eligible_to_sell
+
+                    )
+
+                        ? [
+
+                            ...trackerLookups.eligible_to_sell
+
+                        ]
+
+                        : [],
 
 
+                product_type:
+
+                    Array.isArray(
+
+                        trackerLookups.product_type
+
+                    )
+
+                        ? [
+
+                            ...trackerLookups.product_type
+
+                        ]
+
+                        : [],
 
 
-        /*
-            FILTER CONTROLLER
-        */
+                hazmat_status:
+
+                    Array.isArray(
+
+                        trackerLookups.hazmat_status
+
+                    )
+
+                        ? [
+
+                            ...trackerLookups.hazmat_status
+
+                        ]
+
+                        : [],
 
 
-        this.mountFilterController();
+                override:
+
+                    Array.isArray(
+
+                        trackerLookups.override
+
+                    )
+
+                        ? [
+
+                            ...trackerLookups.override
+
+                        ]
+
+                        : []
+
+            },
 
 
+            dashboardConstants:{
+
+                ...dashboardConstants
+
+            },
 
 
+            configurationLoading:
+
+                false,
 
 
-        /*
-            STATUS
-        */
+            configurationLoaded:
+
+                errors.length ===
+
+                    0,
 
 
-        if(
+            configurationError:
 
-            this.controllers.status
+                errors.join(
 
-        ){
+                    " | "
 
-
-            this.controllers.status.mount(
-
-                document.getElementById(
-
-                    "phoenix-status"
-
-                )
-
-            );
+                ),
 
 
-        }
+            status:
 
+                errors.length > 0
 
+                    ? "Configuration Warning"
 
+                    : "Configuration Ready"
 
-
-
-        /*
-            DASHBOARD
-        */
-
-
-        if(
-
-            this.controllers.dashboard
-
-        ){
-
-
-            this.controllers.dashboard.mount(
-
-                document.getElementById(
-
-                    "phoenix-dashboard"
-
-                )
-
-            );
-
-
-        }
+        });
 
 
     }
@@ -618,40 +1179,38 @@ export class App {
 
         app.innerHTML = `
 
-
-        <div class="phoenix-shell">
-
-
-            <header
-
-                id="phoenix-header">
-
-            </header>
+            <div class="phoenix-shell">
 
 
-            <nav
+                <header
 
-                id="phoenix-toolbar">
+                    id="phoenix-header">
 
-            </nav>
-
-
-            <main
-
-                id="phoenix-dashboard">
-
-            </main>
+                </header>
 
 
-            <footer
+                <nav
 
-                id="phoenix-status">
+                    id="phoenix-toolbar">
 
-            </footer>
+                </nav>
 
 
-        </div>
+                <main
 
+                    id="phoenix-dashboard">
+
+                </main>
+
+
+                <footer
+
+                    id="phoenix-status">
+
+                </footer>
+
+
+            </div>
 
         `;
 

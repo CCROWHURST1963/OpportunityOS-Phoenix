@@ -1224,11 +1224,7 @@ export class DashboardController {
 
             >
 
-                <div class="phoenix-dashboard-message">
-
-                    Select dashboard options and click Load Dashboard.
-
-                </div>
+                
 
             </div>
 

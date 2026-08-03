@@ -1869,3 +1869,428 @@ text-align:center;
     }
 
 }
+/* =========================================
+   TRACKER GRID DROPDOWNS
+========================================= */
+
+
+.phoenix-grid-select {
+
+    width:100%;
+
+    min-width:0;
+
+    height:34px;
+
+    padding:0 30px 0 10px;
+
+    border:1px solid #cbd5e1;
+
+    border-radius:8px;
+
+    background:#f1f5f9;
+
+    color:#475569;
+
+    font-family:
+        Inter,
+        Arial,
+        sans-serif;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    outline:none;
+
+    cursor:pointer;
+
+    box-sizing:border-box;
+
+}
+
+
+
+.phoenix-grid-select.has-value {
+
+    border-color:#86c5a3;
+
+    background:#e9f8ef;
+
+    color:#16713b;
+
+}
+
+
+
+.phoenix-grid-select.is-blank {
+
+    background:#f1f5f9;
+
+    color:#64748b;
+
+}
+
+
+
+.phoenix-grid-select:focus {
+
+    border-color:#2563eb;
+
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.12);
+
+}
+
+
+
+.phoenix-grid-select.is-saving {
+
+    opacity:0.65;
+
+    cursor:wait;
+
+}
+
+
+
+.phoenix-grid-select.is-saved {
+
+    border-color:#16a34a;
+
+    box-shadow:
+        0 0 0 3px rgba(22, 163, 74, 0.12);
+
+}
+
+
+
+.phoenix-grid-select.is-error {
+
+    border-color:#dc2626;
+
+    background:#fff1f2;
+
+    color:#b91c1c;
+
+}
+/* =========================================
+   TRACKER INPUTS
+========================================= */
+
+
+.phoenix-tracker-input {
+
+    min-width:0;
+
+    height:34px;
+
+    font-weight:700;
+
+}
+
+
+
+.phoenix-tracker-input.is-saving {
+
+    opacity:.65;
+
+    cursor:wait;
+
+}
+
+
+
+.phoenix-tracker-input.is-saved {
+
+    border-color:#16a34a;
+
+    box-shadow:
+        0 0 0 3px rgba(22,163,74,.12);
+
+}
+
+
+
+.phoenix-tracker-input.is-error {
+
+    border-color:#dc2626;
+
+    background:#fff1f2;
+
+    color:#b91c1c;
+
+}
+
+
+
+
+
+/* =========================================
+   COMMENT CELL
+========================================= */
+
+
+.phoenix-comment-cell {
+
+    width:100%;
+
+    min-width:0;
+
+    height:34px;
+
+    padding:0 10px;
+
+    border:1px solid #cbd5e1;
+
+    border-radius:8px;
+
+    background:#f8fafc;
+
+    color:#334155;
+
+    font-family:inherit;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    text-align:left;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    cursor:pointer;
+
+}
+
+
+
+.phoenix-comment-cell:hover {
+
+    border-color:#2563eb;
+
+    background:#eff6ff;
+
+}
+
+
+
+.phoenix-comment-cell.is-empty {
+
+    color:#64748b;
+
+    font-style:italic;
+
+}
+
+
+
+.phoenix-comment-cell.has-comment {
+
+    border-color:#86c5a3;
+
+    background:#e9f8ef;
+
+    color:#16713b;
+
+}
+/* =========================================
+   COMMENT WINDOW
+========================================= */
+
+
+.phoenix-comment-backdrop {
+
+    position:fixed;
+
+    inset:0;
+
+    z-index:20000;
+
+    display:none;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:20px;
+
+    background:rgba(15,23,42,.34);
+
+}
+
+
+
+.phoenix-comment-backdrop.open {
+
+    display:flex;
+
+}
+
+
+
+.phoenix-comment-modal {
+
+    width:min(520px, 92vw);
+
+    background:#f8fafc;
+
+    border:1px solid #cbd5e1;
+
+    border-radius:16px;
+
+    box-shadow:
+        0 18px 45px rgba(15,23,42,.28);
+
+    overflow:hidden;
+
+}
+
+
+
+.phoenix-comment-modal-header {
+
+    padding:14px 16px;
+
+    border-bottom:1px solid #dbe3ec;
+
+    background:#f8fafc;
+
+    color:#17233d;
+
+    font-size:15px;
+
+    font-weight:800;
+
+}
+
+
+
+.phoenix-comment-modal-body {
+
+    padding:14px;
+
+    background:white;
+
+}
+
+
+
+.phoenix-comment-modal-body textarea {
+
+    width:100%;
+
+    min-height:150px;
+
+    resize:vertical;
+
+    padding:10px 12px;
+
+    border:1px solid #2563eb;
+
+    border-radius:12px;
+
+    background:white;
+
+    font-family:inherit;
+
+    font-size:14px;
+
+    line-height:1.4;
+
+    color:#17233d;
+
+    outline:none;
+
+    box-sizing:border-box;
+
+}
+
+
+
+.phoenix-comment-modal-body textarea:focus {
+
+    border-color:#2563eb;
+
+    box-shadow:
+        0 0 0 3px rgba(37,99,235,.14);
+
+}
+
+
+
+.phoenix-comment-modal-body textarea[aria-invalid="true"] {
+
+    border-color:#dc2626;
+
+    background:#fff1f2;
+
+}
+
+
+
+.phoenix-comment-modal-actions {
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:10px;
+
+    padding:12px 14px;
+
+    border-top:1px solid #dbe3ec;
+
+    background:#f8fafc;
+
+}
+
+
+
+.phoenix-comment-modal-actions .toolbar-button {
+
+    height:30px;
+
+    min-width:68px;
+
+    padding:0 14px;
+
+    border-radius:999px;
+
+    font-size:13px;
+
+    font-weight:800;
+
+}
+
+
+
+.phoenix-comment-modal-actions .toolbar-button.tools {
+
+    background:white;
+
+    border:1px solid #cbd5e1;
+
+    color:#17233d;
+
+}
+
+
+
+.phoenix-comment-modal-actions .toolbar-button.blue {
+
+    background:#2563eb;
+
+    border:1px solid #2563eb;
+
+    color:white;
+
+}
+
+
+
+

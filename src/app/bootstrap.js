@@ -157,7 +157,6 @@ document.addEventListener(
 
                     wixUser:
 
-
                         wixUser,
 
 
@@ -176,6 +175,42 @@ document.addEventListener(
 
                             "processRepository"
 
+                        ),
+
+
+                    trackerLookupService:
+
+                        container.get(
+
+                            "trackerLookupService"
+
+                        ),
+
+
+                    dashboardConstantsService:
+
+                        container.get(
+
+                            "dashboardConstantsService"
+
+                        ),
+
+
+                    statusTrackerService:
+
+                        container.get(
+
+                            "statusTrackerService"
+
+                        ),
+
+
+                    amazonPackInfoService:
+
+                        container.get(
+
+                            "amazonPackInfoService"
+
                         )
 
                 }
@@ -187,7 +222,8 @@ document.addEventListener(
 
 
         await app.start();
-
+window.phoenixState = state;
+window.phoenixContainer = container;
 
     }
 

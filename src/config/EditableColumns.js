@@ -27,7 +27,7 @@ export const EDITABLE_COLUMNS = [
 
     "pack_size",
 
-
+"product_type",
 
 
 ];

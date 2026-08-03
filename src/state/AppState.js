@@ -1,7 +1,7 @@
 export class AppState {
 
 
-    constructor() {
+    constructor(){
 
 
         this.state = {
@@ -10,6 +10,7 @@ export class AppState {
             /*
                 User context
             */
+
 
             wixUserId:
 
@@ -43,6 +44,7 @@ export class AppState {
                 Dashboard configuration
             */
 
+
             processes:
 
                 [],
@@ -63,12 +65,36 @@ export class AppState {
                 "",
 
 
+            currentViewConfig:
+
+                null,
+
+
+            views:
+
+                [],
+
+
+
+
+
+            /*
+                By View selection
+            */
+
+
+            opportunityView:
+
+                "",
+
+
 
 
 
             /*
                 By View filter state
             */
+
 
             viewFilterType:
 
@@ -78,6 +104,11 @@ export class AppState {
             viewFilterValue:
 
                 "",
+
+
+            viewFilterValues:
+
+                [],
 
 
             viewFilterLabel:
@@ -114,8 +145,70 @@ export class AppState {
 
 
             /*
+                Attribute filter state
+            */
+
+
+            attributeSelectionType:
+
+                "",
+
+
+            attributeTopCount:
+
+                100,
+
+
+            attributeOptions:
+
+                [],
+
+
+            selectedAttributeValues:
+
+                [],
+
+
+            attributeOptionsLoading:
+
+                false,
+
+
+            attributeOptionsLoaded:
+
+                false,
+
+
+            attributeOptionsError:
+
+                "",
+
+
+
+
+
+            /*
+                Sub Category dependency
+            */
+
+
+            selectedCategory:
+
+                "",
+
+
+            selectedSubCategory:
+
+                "",
+
+
+
+
+
+            /*
                 Supplier selection
             */
+
 
             suppliers:
 
@@ -146,17 +239,60 @@ export class AppState {
 
 
             /*
-                Custom View configuration
+                Tracker lookup configuration
             */
 
-            views:
 
-                [],
+            trackerLookups:{
+
+                eligible_to_sell:
+
+                    [],
 
 
-            currentViewConfig:
+                product_type:
 
-                null,
+                    [],
+
+
+                hazmat_status:
+
+                    [],
+
+
+                override:
+
+                    []
+
+            },
+
+
+
+
+
+            /*
+                Dashboard calculation constants
+            */
+
+
+            dashboardConstants:
+
+                {},
+
+
+            configurationLoading:
+
+                false,
+
+
+            configurationLoaded:
+
+                false,
+
+
+            configurationError:
+
+                "",
 
 
 
@@ -165,6 +301,7 @@ export class AppState {
             /*
                 Grid state
             */
+
 
             rowsLimit:
 
@@ -203,6 +340,7 @@ export class AppState {
                 Status
             */
 
+
             status:
 
                 "System Ready",
@@ -216,8 +354,118 @@ export class AppState {
         };
 
 
+        this.listeners =
 
-        this.listeners = [];
+            [];
+
+
+    }
+
+
+
+
+
+
+    normaliseText(value){
+
+
+        return String(
+
+            value
+
+            ??
+
+            ""
+
+        ).trim();
+
+
+    }
+
+
+
+
+
+
+    normaliseAsin(value){
+
+
+        return this.normaliseText(
+
+            value
+
+        ).toUpperCase();
+
+
+    }
+
+
+
+
+
+
+    normaliseLocale(value){
+
+
+        return this.normaliseText(
+
+            value
+
+        ).toLowerCase()
+
+        ||
+
+        "co.uk";
+
+
+    }
+
+
+
+
+
+
+    getRowAsin(row){
+
+
+        return this.normaliseAsin(
+
+            row?.asin
+
+            ??
+
+            row?.ASIN
+
+            ??
+
+            row?.matched_asin
+
+        );
+
+
+    }
+
+
+
+
+
+
+    getRowLocale(row){
+
+
+        return this.normaliseLocale(
+
+            row?.locale
+
+            ??
+
+            row?.Locale
+
+            ??
+
+            row?.matched_locale
+
+        );
 
 
     }
@@ -249,7 +497,9 @@ export class AppState {
     ){
 
 
-        this.state[key] = value;
+        this.state[key] =
+
+            value;
 
 
         this.notify();
@@ -263,6 +513,25 @@ export class AppState {
 
 
     update(values){
+
+
+        if(
+
+            !values
+
+            ||
+
+            typeof values !==
+
+                "object"
+
+        ){
+
+
+            return;
+
+
+        }
 
 
         Object.assign(
@@ -284,6 +553,298 @@ export class AppState {
 
 
 
+    updateRow(
+
+        source,
+
+        changes
+
+    ){
+
+
+        if(
+
+            !source
+
+            ||
+
+            !changes
+
+            ||
+
+            typeof changes !==
+
+                "object"
+
+        ){
+
+
+            return null;
+
+
+        }
+
+
+        const asin =
+
+            this.getRowAsin(
+
+                source
+
+            );
+
+
+        const locale =
+
+            this.getRowLocale(
+
+                source
+
+            );
+
+
+        if(!asin){
+
+
+            return null;
+
+
+        }
+
+
+        const rows =
+
+            Array.isArray(
+
+                this.state.rows
+
+            )
+
+                ? this.state.rows
+
+                : [];
+
+
+        let updatedRow =
+
+            null;
+
+
+        let changed =
+
+            false;
+
+
+        const updatedRows =
+
+            rows.map(row => {
+
+
+                if(
+
+                    this.getRowAsin(
+
+                        row
+
+                    ) !==
+
+                        asin
+
+                    ||
+
+                    this.getRowLocale(
+
+                        row
+
+                    ) !==
+
+                        locale
+
+                ){
+
+
+                    return row;
+
+
+                }
+
+
+                changed =
+
+                    true;
+
+
+                updatedRow = {
+
+                    ...row,
+
+                    ...changes
+
+                };
+
+
+                return updatedRow;
+
+
+            });
+
+
+        if(!changed){
+
+
+            return null;
+
+
+        }
+
+
+        this.state.rows =
+
+            updatedRows;
+
+
+        this.notify();
+
+
+        return updatedRow;
+
+
+    }
+
+
+
+
+
+
+    updateRowByIdentity({
+
+        asin,
+
+        locale = "co.uk",
+
+        changes
+
+    } = {}){
+
+
+        return this.updateRow(
+
+            {
+
+                asin:
+
+                    asin,
+
+
+                locale:
+
+                    locale
+
+            },
+
+            changes
+
+        );
+
+
+    }
+
+
+
+
+
+
+    cloneTrackerLookups(){
+
+
+        const source =
+
+            this.state.trackerLookups
+
+            ||
+
+            {};
+
+
+        return {
+
+            eligible_to_sell:
+
+                Array.isArray(
+
+                    source.eligible_to_sell
+
+                )
+
+                    ? [
+
+                        ...source.eligible_to_sell
+
+                    ]
+
+                    : [],
+
+
+            product_type:
+
+                Array.isArray(
+
+                    source.product_type
+
+                )
+
+                    ? [
+
+                        ...source.product_type
+
+                    ]
+
+                    : [],
+
+
+            hazmat_status:
+
+                Array.isArray(
+
+                    source.hazmat_status
+
+                )
+
+                    ? [
+
+                        ...source.hazmat_status
+
+                    ]
+
+                    : [],
+
+
+            override:
+
+                Array.isArray(
+
+                    source.override
+
+                )
+
+                    ? [
+
+                        ...source.override
+
+                    ]
+
+                    : []
+
+        };
+
+
+    }
+
+
+
+
+
+
     getState(){
 
 
@@ -295,47 +856,160 @@ export class AppState {
 
             suppliers:
 
-                [
+                Array.isArray(
 
-                    ...this.state.suppliers
+                    this.state.suppliers
 
-                ],
+                )
+
+                    ? [
+
+                        ...this.state.suppliers
+
+                    ]
+
+                    : [],
 
 
             processes:
 
-                [
+                Array.isArray(
 
-                    ...this.state.processes
+                    this.state.processes
 
-                ],
+                )
+
+                    ? [
+
+                        ...this.state.processes
+
+                    ]
+
+                    : [],
 
 
             views:
 
-                [
+                Array.isArray(
 
-                    ...this.state.views
+                    this.state.views
 
-                ],
+                )
+
+                    ? [
+
+                        ...this.state.views
+
+                    ]
+
+                    : [],
 
 
             viewFilterOptions:
 
-                [
+                Array.isArray(
 
-                    ...this.state.viewFilterOptions
+                    this.state.viewFilterOptions
 
-                ],
+                )
+
+                    ? [
+
+                        ...this.state.viewFilterOptions
+
+                    ]
+
+                    : [],
+
+
+            viewFilterValues:
+
+                Array.isArray(
+
+                    this.state.viewFilterValues
+
+                )
+
+                    ? [
+
+                        ...this.state.viewFilterValues
+
+                    ]
+
+                    : [],
+
+
+            attributeOptions:
+
+                Array.isArray(
+
+                    this.state.attributeOptions
+
+                )
+
+                    ? [
+
+                        ...this.state.attributeOptions
+
+                    ]
+
+                    : [],
+
+
+            selectedAttributeValues:
+
+                Array.isArray(
+
+                    this.state.selectedAttributeValues
+
+                )
+
+                    ? [
+
+                        ...this.state.selectedAttributeValues
+
+                    ]
+
+                    : [],
+
+
+            trackerLookups:
+
+                this.cloneTrackerLookups(),
+
+
+            dashboardConstants:
+
+                {
+
+                    ...(
+
+                        this.state.dashboardConstants
+
+                        ||
+
+                        {}
+
+                    )
+
+                },
 
 
             rows:
 
-                [
+                Array.isArray(
 
-                    ...this.state.rows
+                    this.state.rows
 
-                ]
+                )
+
+                    ? this.state.rows.map(row => ({
+
+                        ...row
+
+                    }))
+
+                    : []
 
 
         };
@@ -351,12 +1025,26 @@ export class AppState {
     subscribe(callback){
 
 
+        if(
+
+            typeof callback !==
+
+            "function"
+
+        ){
+
+
+            return () => {};
+
+
+        }
+
+
         this.listeners.push(
 
             callback
 
         );
-
 
 
         return () => {
@@ -386,6 +1074,11 @@ export class AppState {
     notify(){
 
 
+        const snapshot =
+
+            this.getState();
+
+
         for(
 
             const listener of this.listeners
@@ -393,11 +1086,31 @@ export class AppState {
         ){
 
 
-            listener(
+            try{
 
-                this.getState()
 
-            );
+                listener(
+
+                    snapshot
+
+                );
+
+
+            }
+
+            catch(error){
+
+
+                console.error(
+
+                    "[PHX APP STATE LISTENER ERROR]",
+
+                    error
+
+                );
+
+
+            }
 
 
         }
