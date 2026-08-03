@@ -60,7 +60,89 @@ export class AppState {
 
             currentView:
 
-                "default",
+                "",
+
+
+
+
+
+            /*
+                By View filter state
+            */
+
+            viewFilterType:
+
+                "",
+
+
+            viewFilterValue:
+
+                "",
+
+
+            viewFilterLabel:
+
+                "",
+
+
+            viewFilterOptions:
+
+                [],
+
+
+            viewFilterLoading:
+
+                false,
+
+
+            viewFilterLoaded:
+
+                false,
+
+
+            viewFilterError:
+
+                "",
+
+
+            viewDateValue:
+
+                "",
+
+
+
+
+
+            /*
+                Supplier selection
+            */
+
+            suppliers:
+
+                [],
+
+
+            selectedSupplier:
+
+                "",
+
+
+            suppliersLoading:
+
+                false,
+
+
+            suppliersLoaded:
+
+                false,
+
+
+            supplierLoadError:
+
+                "",
+
+
+
 
 
             /*
@@ -104,12 +186,21 @@ export class AppState {
                 [],
 
 
+            gridLoaded:
+
+                false,
+
+
+            totalOpportunities:
+
+                0,
+
+
 
 
 
             /*
                 Status
-
             */
 
             status:
@@ -199,7 +290,52 @@ export class AppState {
         return {
 
 
-            ...this.state
+            ...this.state,
+
+
+            suppliers:
+
+                [
+
+                    ...this.state.suppliers
+
+                ],
+
+
+            processes:
+
+                [
+
+                    ...this.state.processes
+
+                ],
+
+
+            views:
+
+                [
+
+                    ...this.state.views
+
+                ],
+
+
+            viewFilterOptions:
+
+                [
+
+                    ...this.state.viewFilterOptions
+
+                ],
+
+
+            rows:
+
+                [
+
+                    ...this.state.rows
+
+                ]
 
 
         };

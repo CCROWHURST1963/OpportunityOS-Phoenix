@@ -1,10 +1,11 @@
 export class DashboardController {
 
 
-
     constructor(
 
         opportunityService,
+
+        supplierOpportunityService,
 
         viewConfig,
 
@@ -20,6 +21,11 @@ export class DashboardController {
         this.opportunityService =
 
             opportunityService;
+
+
+        this.supplierOpportunityService =
+
+            supplierOpportunityService;
 
 
         this.viewConfig =
@@ -42,17 +48,22 @@ export class DashboardController {
             gridRenderer;
 
 
+        this.container =
 
-        this.container = null;
+            null;
 
 
-        this.gridContainer = null;
+        this.gridContainer =
+
+            null;
+
+
+        this.loadEventHandler =
+
+            null;
 
 
     }
-
-
-
 
 
 
@@ -62,23 +73,18 @@ export class DashboardController {
     mount(container){
 
 
+        this.container =
 
-        this.container = container;
-
+            container;
 
 
         this.render();
 
 
-
         this.bind();
 
 
-
     }
-
-
-
 
 
 
@@ -88,10 +94,22 @@ export class DashboardController {
     bind(){
 
 
+        if(this.loadEventHandler){
 
-        document.addEventListener(
 
-            "phoenix-load-dashboard",
+            document.removeEventListener(
+
+                "phoenix-load-dashboard",
+
+                this.loadEventHandler
+
+            );
+
+
+        }
+
+
+        this.loadEventHandler =
 
             async () => {
 
@@ -99,10 +117,16 @@ export class DashboardController {
                 await this.loadDashboard();
 
 
-            }
+            };
+
+
+        document.addEventListener(
+
+            "phoenix-load-dashboard",
+
+            this.loadEventHandler
 
         );
-
 
 
     }
@@ -112,15 +136,761 @@ export class DashboardController {
 
 
 
+    normaliseText(value){
+
+
+        return String(
+
+            value
+
+            ??
+
+            ""
+
+        ).trim();
+
+
+    }
+
+
+
+
+
+
+    normaliseMode(value){
+
+
+        return this.normaliseText(
+
+            value
+
+        ) ===
+
+            "By Supplier"
+
+            ? "By Supplier"
+
+            : "By View";
+
+
+    }
+
+
+
+
+
+
+    normaliseRows(rows){
+
+
+        return Array.isArray(rows)
+
+            ? rows
+
+            : [];
+
+
+    }
+
+
+
+
+
+
+    normaliseStringArray(values){
+
+
+        if(!Array.isArray(values)){
+
+
+            return [];
+
+
+        }
+
+
+        const seen =
+
+            new Set();
+
+
+        const result =
+
+            [];
+
+
+        for(
+
+            const source of values
+
+        ){
+
+
+            const value =
+
+                this.normaliseText(
+
+                    source
+
+                );
+
+
+            if(!value){
+
+
+                continue;
+
+
+            }
+
+
+            const key =
+
+                value.toLocaleLowerCase();
+
+
+            if(seen.has(key)){
+
+
+                continue;
+
+
+            }
+
+
+            seen.add(key);
+
+
+            result.push(
+
+                value
+
+            );
+
+
+        }
+
+
+        return result;
+
+
+    }
+
+
+
+
+
+
+    isAttributeView(value){
+
+
+        return [
+
+            "By Brand",
+
+            "By Category",
+
+            "By Sub Category"
+
+        ].includes(
+
+            this.normaliseText(
+
+                value
+
+            )
+
+        );
+
+
+    }
+
+
+
+
+
+
+    getAttributeField(state){
+
+
+        const stateField =
+
+            this.normaliseText(
+
+                state.viewFilterType
+
+            );
+
+
+        if(
+
+            [
+
+                "brand",
+
+                "categories_root",
+
+                "sub_category"
+
+            ].includes(
+
+                stateField
+
+            )
+
+        ){
+
+
+            return stateField;
+
+
+        }
+
+
+        switch(
+
+            this.normaliseText(
+
+                state.opportunityView
+
+            )
+
+        ){
+
+
+            case "By Brand":
+
+
+                return "brand";
+
+
+            case "By Category":
+
+
+                return "categories_root";
+
+
+            case "By Sub Category":
+
+
+                return "sub_category";
+
+
+            default:
+
+
+                return "";
+
+
+        }
+
+
+    }
+
+
+
+
+
+
+    buildDashboardRequest(state){
+
+
+        const opportunityMode =
+
+            this.normaliseMode(
+
+                state.opportunityMode
+
+            );
+
+
+        const opportunityView =
+
+            this.normaliseText(
+
+                state.opportunityView
+
+            );
+
+
+        const selectedAttributeValues =
+
+            this.normaliseStringArray(
+
+                state.selectedAttributeValues
+
+            );
+
+
+        const viewFilterValues =
+
+            this.normaliseStringArray(
+
+                state.viewFilterValues
+
+            );
+
+
+        return {
+
+            /*
+                Workflow process
+            */
+
+            process:
+
+                this.normaliseText(
+
+                    state.process
+
+                )
+
+                ||
+
+                "Can We Sell",
+
+
+
+            /*
+                Saved Custom View.
+
+                This controls grid columns only.
+            */
+
+            currentView:
+
+                this.normaliseText(
+
+                    state.currentView
+
+                ),
+
+
+            currentViewConfig:
+
+                state.currentViewConfig
+
+                ||
+
+                {},
+
+
+
+            /*
+                Dashboard data mode
+            */
+
+            opportunityMode:
+
+                opportunityMode,
+
+
+            opportunityView:
+
+                opportunityView,
+
+
+
+            /*
+                Attribute filters
+            */
+
+            attributeField:
+
+                this.getAttributeField(
+
+                    state
+
+                ),
+
+
+            attributeSelectionType:
+
+                this.normaliseText(
+
+                    state.attributeSelectionType
+
+                ),
+
+
+            attributeTopCount:
+
+                Number(
+
+                    state.attributeTopCount
+
+                    ??
+
+                    10
+
+                ),
+
+
+            selectedAttributeValues:
+
+                selectedAttributeValues,
+
+
+
+            /*
+                Lookup/date filters
+            */
+
+            viewFilterType:
+
+                this.normaliseText(
+
+                    state.viewFilterType
+
+                ),
+
+
+            viewFilterValue:
+
+                this.normaliseText(
+
+                    state.viewFilterValue
+
+                ),
+
+
+            viewFilterValues:
+
+                viewFilterValues,
+
+
+            viewDateValue:
+
+                this.normaliseText(
+
+                    state.viewDateValue
+
+                ),
+
+
+
+            /*
+                Supplier mode
+            */
+
+            selectedSupplier:
+
+                this.normaliseText(
+
+                    state.selectedSupplier
+
+                ),
+
+
+
+            /*
+                Request context
+            */
+
+            rowsLimit:
+
+                Number(
+
+                    state.rowsLimit
+
+                    ??
+
+                    100
+
+                ),
+
+
+            filterMode:
+
+                this.normaliseText(
+
+                    state.filterMode
+
+                )
+
+                ||
+
+                "show_all",
+
+
+            userKey:
+
+                this.normaliseText(
+
+                    state.userKey
+
+                )
+
+                ||
+
+                "DEFAULT",
+
+
+            locale:
+
+                this.normaliseText(
+
+                    state.locale
+
+                )
+
+                ||
+
+                "co.uk",
+
+
+            restrictAssigned:
+
+                state.restrictAssigned ===
+
+                true
+
+        };
+
+
+    }
+
+
+
+
+
+
+    validateByViewRequest(request){
+
+
+        if(
+
+            !this.normaliseText(
+
+                request.opportunityView
+
+            )
+
+        ){
+
+
+            throw new Error(
+
+                "Select a View before loading the dashboard"
+
+            );
+
+
+        }
+
+
+        if(
+
+            this.isAttributeView(
+
+                request.opportunityView
+
+            )
+
+            &&
+
+            request.selectedAttributeValues.length ===
+
+                0
+
+        ){
+
+
+            throw new Error(
+
+                "Choose at least one filter value before loading the dashboard"
+
+            );
+
+
+        }
+
+
+    }
+
+
+
+
+
+
+    async loadByView(request){
+
+
+        if(
+
+            !this.opportunityService
+
+            ||
+
+            typeof this.opportunityService.getRows !==
+
+                "function"
+
+        ){
+
+
+            throw new Error(
+
+                "Opportunity service is not available"
+
+            );
+
+
+        }
+
+
+        this.validateByViewRequest(
+
+            request
+
+        );
+
+
+        const rows =
+
+            await this.opportunityService.getRows(
+
+                request
+
+            );
+
+
+        return this.normaliseRows(
+
+            rows
+
+        );
+
+
+    }
+
+
+
+
+
+
+    async loadBySupplier(request){
+
+
+        if(!request.selectedSupplier){
+
+
+            throw new Error(
+
+                "Select a supplier before loading the dashboard"
+
+            );
+
+
+        }
+
+
+        if(
+
+            !this.supplierOpportunityService
+
+            ||
+
+            typeof this.supplierOpportunityService.getRows !==
+
+                "function"
+
+        ){
+
+
+            throw new Error(
+
+                "Supplier opportunity service is not available"
+
+            );
+
+
+        }
+
+
+        const rows =
+
+            await this.supplierOpportunityService.getRows({
+
+                supplier:
+
+                    request.selectedSupplier,
+
+
+                process:
+
+                    request.process,
+
+
+                currentView:
+
+                    request.currentView,
+
+
+                limit:
+
+                    request.rowsLimit,
+
+
+                userKey:
+
+                    request.userKey,
+
+
+                locale:
+
+                    request.locale
+
+            });
+
+
+        return this.normaliseRows(
+
+            rows
+
+        );
+
+
+    }
+
+
+
 
 
 
     async loadDashboard(){
 
 
+        try{
 
-        try {
 
+            if(
+
+                !this.appState
+
+                ||
+
+                typeof this.appState.getState !==
+
+                    "function"
+
+                ||
+
+                typeof this.appState.update !==
+
+                    "function"
+
+            ){
+
+
+                throw new Error(
+
+                    "DashboardController did not receive a valid AppState instance"
+
+                );
+
+
+            }
 
 
             const state =
@@ -128,66 +898,82 @@ export class DashboardController {
                 this.appState.getState();
 
 
+            const request =
 
+                this.buildDashboardRequest(
 
+                    state
+
+                );
 
 
             console.log(
 
-                "[PHX DASHBOARD LOAD STATE]",
+                "[PHX DASHBOARD REQUEST]",
 
-                state
+                request
 
             );
 
 
+            this.appState.update({
+
+                status:
+
+                    "Dashboard Loading",
 
 
+                dashboardStatus:
+
+                    "Loading",
 
 
+                gridLoaded:
 
+                    false,
+
+
+                totalOpportunities:
+
+                    0
+
+            });
+
+
+            if(this.gridContainer){
+
+
+                this.gridContainer.innerHTML = `
+
+                    <div class="phoenix-dashboard-message">
+
+                        Dashboard Loading...
+
+                    </div>
+
+                `;
+
+
+            }
 
 
             const rows =
 
-                await this.opportunityService.getRows({
+                request.opportunityMode ===
 
-                    process:
+                    "By Supplier"
 
-                        state.process,
+                    ? await this.loadBySupplier(
 
+                        request
 
-                    view:
+                    )
 
-                        state.currentView,
+                    : await this.loadByView(
 
+                        request
 
-                    limit:
-
-                        state.rowsLimit || 100
-
-
-                });
-
-
-
-
-
-
-
-
-            console.log(
-
-                "[PHX DASHBOARD ROWS]",
-
-                rows
-
-            );
-
-
-
-
-
+                    );
 
 
             console.log(
@@ -199,36 +985,24 @@ export class DashboardController {
             );
 
 
-
-
-
-
-
             console.log(
 
-                "[PHX DASHBOARD FIRST ROW KEYS]",
+                "[PHX DASHBOARD FIRST ROW]",
 
-                Object.keys(
+                rows[0]
 
-                    rows[0] || {}
+                ||
 
-                )
+                null
 
             );
 
 
-
-
-
-
-
-
             this.appState.update({
 
+                rows:
 
-
-                rows,
-
+                    rows,
 
 
                 totalRecords:
@@ -236,29 +1010,101 @@ export class DashboardController {
                     rows.length,
 
 
-
                 status:
 
-                    "Dashboard Ready"
+                    "Dashboard Rendering",
 
 
+                dashboardStatus:
+
+                    "Rendering",
+
+
+                gridLoaded:
+
+                    false,
+
+
+                totalOpportunities:
+
+                    0
 
             });
 
 
+            const renderSucceeded =
+
+                this.renderRows(
+
+                    rows
+
+                );
 
 
+            if(!renderSucceeded){
 
 
+                throw new Error(
 
-            this.renderRows(rows);
+                    "Grid rendering did not complete successfully"
 
+                );
+
+
+            }
+
+
+            this.appState.update({
+
+                status:
+
+                    rows.length > 0
+
+                        ? `Total Opportunities - ${rows.length}`
+
+                        : "No Opportunities Found",
+
+
+                dashboardStatus:
+
+                    "Ready",
+
+
+                gridLoaded:
+
+                    true,
+
+
+                totalOpportunities:
+
+                    rows.length
+
+            });
+
+
+            console.log(
+
+                "[PHX GRID LOAD COMPLETE]",
+
+                {
+
+                    rowsRendered:
+
+                        rows.length,
+
+
+                    request:
+
+                        request
+
+                }
+
+            );
 
 
         }
 
         catch(error){
-
 
 
             console.error(
@@ -270,29 +1116,86 @@ export class DashboardController {
             );
 
 
+            const errorMessage =
 
-            this.appState.update({
+                error?.message
 
+                ||
 
-
-                status:
-
-                    "Dashboard Error"
-
+                "Dashboard load failed";
 
 
-            });
+            if(
 
+                this.appState
+
+                &&
+
+                typeof this.appState.update ===
+
+                    "function"
+
+            ){
+
+
+                this.appState.update({
+
+                    rows:
+
+                        [],
+
+
+                    totalRecords:
+
+                        0,
+
+
+                    status:
+
+                        "Dashboard Error",
+
+
+                    dashboardStatus:
+
+                        "Error",
+
+
+                    gridLoaded:
+
+                        false,
+
+
+                    totalOpportunities:
+
+                        0
+
+                });
+
+
+            }
+
+
+            if(this.gridContainer){
+
+
+                this.gridContainer.innerHTML = `
+
+                    <div class="phoenix-dashboard-message phoenix-dashboard-error">
+
+                        ${this.escapeHtml(errorMessage)}
+
+                    </div>
+
+                `;
+
+
+            }
 
 
         }
 
 
-
     }
-
-
-
 
 
 
@@ -302,19 +1205,16 @@ export class DashboardController {
     render(){
 
 
+        if(!this.container){
 
-        if(!this.container)
 
             return;
 
 
-
-
+        }
 
 
         this.container.innerHTML = `
-
-
 
             <div
 
@@ -324,27 +1224,24 @@ export class DashboardController {
 
             >
 
-                Loading dashboard...
+                <div class="phoenix-dashboard-message">
+
+                    Select dashboard options and click Load Dashboard.
+
+                </div>
 
             </div>
-
-
 
         `;
 
 
-
-
-
-
         this.gridContainer =
 
-            document.getElementById(
+            this.container.querySelector(
 
-                "phoenix-grid-container"
+                "#phoenix-grid-container"
 
             );
-
 
 
     }
@@ -354,33 +1251,78 @@ export class DashboardController {
 
 
 
+    getVisibleColumns(state){
 
 
+        const config =
 
-    renderRows(rows){
+            state.currentViewConfig
+
+            ||
+
+            {};
 
 
+        const visibleKeys =
 
-        console.log(
+            Array.isArray(
 
-            "[PHX RENDER ROWS]",
+                config.visibleColumns
 
-            rows
+            )
+
+                ? config.visibleColumns
+
+                : [];
+
+
+        const configuredColumns =
+
+            Array.isArray(
+
+                config.columns
+
+            )
+
+                ? config.columns
+
+                : [];
+
+
+        return configuredColumns.filter(
+
+            column => {
+
+
+                const columnKey =
+
+                    column?.key
+
+                    ??
+
+                    column?.field;
+
+
+                return visibleKeys.includes(
+
+                    columnKey
+
+                );
+
+
+            }
 
         );
 
 
+    }
 
 
 
 
 
-        /*
-            CURRENT VIEW CONFIG
-            Comes from AppState.
-            ViewConfigService only loads it.
-        */
 
+    renderRows(rows){
 
 
         const state =
@@ -388,72 +1330,13 @@ export class DashboardController {
             this.appState.getState();
 
 
-
-
-
-
-
-        const config =
-
-            state.currentViewConfig || {};
-
-
-
-
-
-
-
-        console.log(
-
-            "[PHX RENDER CONFIG]",
-
-            config
-
-        );
-
-
-
-
-
-
-
-
-        const visibleKeys =
-
-            config.visibleColumns || [];
-
-
-
-
-
-
-
-
         const columns =
 
+            this.getVisibleColumns(
 
-            (config.columns || [])
+                state
 
-                .filter(
-
-
-                    column =>
-
-
-                        visibleKeys.includes(
-
-                            column.key
-
-                        )
-
-
-                );
-
-
-
-
-
-
+            );
 
 
         console.log(
@@ -465,49 +1348,151 @@ export class DashboardController {
         );
 
 
-
-
-
-
-
-
-
-        if(!this.gridRenderer){
+        if(!this.gridContainer){
 
 
             console.error(
 
-                "[PHX GRID RENDERER MISSING]"
+                "[PHX GRID CONTAINER MISSING]"
 
             );
 
 
-            return;
+            return false;
 
 
         }
 
 
+        if(
+
+            !this.gridRenderer
+
+            ||
+
+            typeof this.gridRenderer.render !==
+
+                "function"
+
+        ){
 
 
+            this.gridContainer.innerHTML = `
+
+                <div class="phoenix-dashboard-message phoenix-dashboard-error">
+
+                    Grid renderer is not available.
+
+                </div>
+
+            `;
 
 
+            return false;
 
 
-        this.gridRenderer.render(
+        }
 
-            this.gridContainer,
 
-            columns,
+        try{
 
-            rows
 
-        );
+            this.gridRenderer.render(
 
+                this.gridContainer,
+
+                columns,
+
+                rows
+
+            );
+
+
+            return true;
+
+
+        }
+
+        catch(error){
+
+
+            console.error(
+
+                "[PHX GRID RENDER ERROR]",
+
+                error
+
+            );
+
+
+            return false;
+
+
+        }
 
 
     }
 
+
+
+
+
+
+    escapeHtml(value){
+
+
+        return String(
+
+            value
+
+            ??
+
+            ""
+
+        )
+
+            .replaceAll(
+
+                "&",
+
+                "&amp;"
+
+            )
+
+            .replaceAll(
+
+                "<",
+
+                "&lt;"
+
+            )
+
+            .replaceAll(
+
+                ">",
+
+                "&gt;"
+
+            )
+
+            .replaceAll(
+
+                "\"",
+
+                "&quot;"
+
+            )
+
+            .replaceAll(
+
+                "'",
+
+                "&#039;"
+
+            );
+
+
+    }
 
 
 }

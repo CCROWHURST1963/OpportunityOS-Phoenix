@@ -6,6 +6,14 @@ import { SupabaseOpportunityRepository }
     from "../repositories/SupabaseOpportunityRepository.js";
 
 
+import { SupplierOpportunityRepository }
+    from "../repositories/SupplierOpportunityRepository.js";
+
+
+import { SupplierRepository }
+    from "../repositories/SupplierRepository.js";
+
+
 import { ViewConfigRepository }
     from "../repositories/ViewConfigRepository.js";
 
@@ -14,8 +22,24 @@ import { DashboardProcessRepository }
     from "../repositories/DashboardProcessRepository.js";
 
 
+import { ViewFilterRepository }
+    from "../repositories/ViewFilterRepository.js";
+
+
+import { AttributeRepository }
+    from "../repositories/AttributeRepository.js";
+
+
 import { ViewConfigService }
     from "./ViewConfigService.js";
+
+
+import { ViewFilterService }
+    from "./ViewFilterService.js";
+
+
+import { AttributeService }
+    from "./AttributeService.js";
 
 
 import { EnrichmentPipeline }
@@ -34,12 +58,20 @@ import { OpportunityService }
     from "./OpportunityService.js";
 
 
+import { SupplierOpportunityService }
+    from "./SupplierOpportunityService.js";
+
+
 import { HeaderController }
     from "../controllers/HeaderController.js";
 
 
 import { ToolbarController }
     from "../controllers/ToolbarController.js";
+
+
+import { FilterController }
+    from "../controllers/FilterController.js";
 
 
 import { DashboardController }
@@ -60,7 +92,6 @@ import { GridRenderer }
 export class ServiceContainer {
 
 
-
     constructor(
 
         appState,
@@ -70,13 +101,19 @@ export class ServiceContainer {
     ){
 
 
-        this.appState = appState;
+        this.appState =
+
+            appState;
 
 
-        this.viewState = viewState;
+        this.viewState =
+
+            viewState;
 
 
-        this.services = {};
+        this.services =
+
+            {};
 
 
     }
@@ -86,11 +123,12 @@ export class ServiceContainer {
 
 
 
-
-
-
     async build(){
 
+
+        /*
+            SUPABASE CLIENT
+        */
 
 
         const supabaseClient =
@@ -106,19 +144,12 @@ export class ServiceContainer {
 
                     window.PHOENIX_CONFIG?.supabaseKey
 
-
             });
-
-
-
 
 
         this.services.supabaseClient =
 
             supabaseClient;
-
-
-
 
 
 
@@ -141,7 +172,24 @@ export class ServiceContainer {
             );
 
 
+        const supplierOpportunityRepository =
 
+            new SupplierOpportunityRepository(
+
+                supabaseClient,
+
+                this.appState
+
+            );
+
+
+        const supplierRepository =
+
+            new SupplierRepository(
+
+                supabaseClient
+
+            );
 
 
         const viewConfigRepository =
@@ -153,9 +201,6 @@ export class ServiceContainer {
             );
 
 
-
-
-
         const processRepository =
 
             new DashboardProcessRepository(
@@ -165,7 +210,24 @@ export class ServiceContainer {
             );
 
 
+        const viewFilterRepository =
 
+            new ViewFilterRepository(
+
+                supabaseClient
+
+            );
+
+
+        const attributeRepository =
+
+            new AttributeRepository(
+
+                supabaseClient,
+
+                this.appState
+
+            );
 
 
         this.services.opportunityRepository =
@@ -173,11 +235,19 @@ export class ServiceContainer {
             opportunityRepository;
 
 
+        this.services.supplierOpportunityRepository =
+
+            supplierOpportunityRepository;
+
+
+        this.services.supplierRepository =
+
+            supplierRepository;
+
 
         this.services.viewConfigRepository =
 
             viewConfigRepository;
-
 
 
         this.services.processRepository =
@@ -185,7 +255,14 @@ export class ServiceContainer {
             processRepository;
 
 
+        this.services.viewFilterRepository =
 
+            viewFilterRepository;
+
+
+        this.services.attributeRepository =
+
+            attributeRepository;
 
 
 
@@ -193,10 +270,7 @@ export class ServiceContainer {
 
 
         /*
-            PACK SIZE ENRICHMENT
-
-            No PackRepository yet.
-            Uses derivation only.
+            ENRICHMENT
         */
 
 
@@ -205,15 +279,9 @@ export class ServiceContainer {
             new PackSizeDerivationService();
 
 
-
-
-
         this.services.packSizeDerivationService =
 
             packSizeDerivationService;
-
-
-
 
 
         const amazonPackInfoEnricher =
@@ -227,19 +295,9 @@ export class ServiceContainer {
             );
 
 
-
-
-
         this.services.amazonPackInfoEnricher =
 
             amazonPackInfoEnricher;
-
-
-
-
-
-
-
 
 
         const enrichmentPipeline =
@@ -255,9 +313,6 @@ export class ServiceContainer {
             );
 
 
-
-
-
         this.services.enrichmentPipeline =
 
             enrichmentPipeline;
@@ -267,11 +322,8 @@ export class ServiceContainer {
 
 
 
-
-
-
         /*
-            SERVICES
+            APPLICATION SERVICES
         */
 
 
@@ -286,19 +338,15 @@ export class ServiceContainer {
             );
 
 
+        const supplierOpportunityService =
 
+            new SupplierOpportunityService(
 
+                supplierOpportunityRepository,
 
-        this.services.opportunityService =
+                enrichmentPipeline
 
-            opportunityService;
-
-
-
-
-
-
-
+            );
 
 
         const viewConfigService =
@@ -310,7 +358,32 @@ export class ServiceContainer {
             );
 
 
+        const viewFilterService =
 
+            new ViewFilterService(
+
+                viewFilterRepository
+
+            );
+
+
+        const attributeService =
+
+            new AttributeService(
+
+                attributeRepository
+
+            );
+
+
+        this.services.opportunityService =
+
+            opportunityService;
+
+
+        this.services.supplierOpportunityService =
+
+            supplierOpportunityService;
 
 
         this.services.viewConfig =
@@ -318,7 +391,14 @@ export class ServiceContainer {
             viewConfigService;
 
 
+        this.services.viewFilterService =
 
+            viewFilterService;
+
+
+        this.services.attributeService =
+
+            attributeService;
 
 
 
@@ -335,15 +415,9 @@ export class ServiceContainer {
             new GridRenderer();
 
 
-
-
-
         this.services.gridRenderer =
 
             gridRenderer;
-
-
-
 
 
 
@@ -355,7 +429,7 @@ export class ServiceContainer {
         */
 
 
-        this.services.headerController =
+        const headerController =
 
             new HeaderController(
 
@@ -364,26 +438,46 @@ export class ServiceContainer {
             );
 
 
-
-
-
-        this.services.toolbarController =
+        const toolbarController =
 
             new ToolbarController(
 
-                this.appState
+                this.appState,
+
+                supplierRepository
 
             );
 
 
+        /*
+            FilterController currently uses ViewFilterService
+            for Assigned To and Status.
+
+            AttributeService is supplied as the third argument
+            for Brand, Category and Sub Category integration.
+        */
 
 
+        const filterController =
 
-        this.services.dashboardController =
+            new FilterController(
+
+                this.appState,
+
+                viewFilterService,
+
+                attributeService
+
+            );
+
+
+        const dashboardController =
 
             new DashboardController(
 
                 opportunityService,
+
+                supplierOpportunityService,
 
                 viewConfigService,
 
@@ -396,10 +490,7 @@ export class ServiceContainer {
             );
 
 
-
-
-
-        this.services.statusController =
+        const statusController =
 
             new StatusBarController(
 
@@ -408,7 +499,29 @@ export class ServiceContainer {
             );
 
 
+        this.services.headerController =
 
+            headerController;
+
+
+        this.services.toolbarController =
+
+            toolbarController;
+
+
+        this.services.filterController =
+
+            filterController;
+
+
+        this.services.dashboardController =
+
+            dashboardController;
+
+
+        this.services.statusController =
+
+            statusController;
 
 
 
@@ -424,11 +537,7 @@ export class ServiceContainer {
         );
 
 
-
     }
-
-
-
 
 
 
@@ -442,7 +551,6 @@ export class ServiceContainer {
 
 
     }
-
 
 
 }

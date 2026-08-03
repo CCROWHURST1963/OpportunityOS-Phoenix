@@ -1,20 +1,23 @@
 export class OpportunityService {
 
 
-
     constructor(
 
-        repository,
+        opportunityRepository,
 
         enrichmentPipeline
 
     ){
 
 
-        this.repository = repository;
+        this.opportunityRepository =
+
+            opportunityRepository;
 
 
-        this.enrichmentPipeline = enrichmentPipeline;
+        this.enrichmentPipeline =
+
+            enrichmentPipeline;
 
 
     }
@@ -24,267 +27,582 @@ export class OpportunityService {
 
 
 
+    normaliseText(value){
+
+
+        return String(
+
+            value
+
+            ??
+
+            ""
+
+        ).trim();
+
+
+    }
 
 
 
-    async getRows(params){
 
 
 
-        console.log(
-
-            "[PHX SERVICE REQUEST]",
-
-            params
-
-        );
+    normaliseStringArray(values){
 
 
+        if(!Array.isArray(values)){
 
 
+            return [];
 
 
+        }
 
 
-        /*
-            DashboardController sends:
+        return values
 
-            {
-                process,
-                view,
-                limit
-            }
+            .map(value =>
 
-            Repository expects:
+                this.normaliseText(
 
-            getRows(
-                view,
-                limit
+                    value
+
+                )
+
             )
 
-            IMPORTANT:
-            Only pass the view string.
-        */
+            .filter(Boolean);
+
+
+    }
 
 
 
 
 
 
-
-        const view =
-
-            typeof params.view === "string"
-
-            ?
-
-            params.view
-
-            :
-
-            params.view?.active_view
-
-            ||
-
-            params.view?.process_view
-
-            ||
-
-            "";
+    normaliseLimit(value){
 
 
+        const parsed =
 
+            Number(
 
-
-
-
-        const limit =
-
-            params.limit
-
-            ||
-
-            100;
-
-
-
-
-
-
-
-        console.log(
-
-            "[PHX SERVICE NORMALISED]",
-
-            {
-
-                view,
-
-                limit
-
-            }
-
-        );
-
-
-
-
-
-
-
-
-
-        const rows =
-
-            await this.repository.getRows(
-
-                view,
-
-                limit
+                value
 
             );
 
 
+        if(
+
+            !Number.isFinite(parsed)
+
+            ||
+
+            parsed <= 0
+
+        ){
+
+
+            return 100;
+
+
+        }
+
+
+        return Math.floor(
+
+            parsed
+
+        );
+
+
+    }
 
 
 
+
+
+
+    normaliseRequest(source){
+
+
+        const request =
+
+            source
+
+            &&
+
+            typeof source ===
+
+                "object"
+
+                ? source
+
+                : {};
+
+
+        return {
+
+            process:
+
+                this.normaliseText(
+
+                    request.process
+
+                )
+
+                ||
+
+                "Can We Sell",
+
+
+            currentView:
+
+                this.normaliseText(
+
+                    request.currentView
+
+                    ??
+
+                    request.view
+
+                ),
+
+
+            opportunityMode:
+
+                this.normaliseText(
+
+                    request.opportunityMode
+
+                )
+
+                ||
+
+                "By View",
+
+
+            opportunityView:
+
+                this.normaliseText(
+
+                    request.opportunityView
+
+                ),
+
+
+            attributeField:
+
+                this.normaliseText(
+
+                    request.attributeField
+
+                    ??
+
+                    request.viewFilterType
+
+                ),
+
+
+            selectedAttributeValues:
+
+                this.normaliseStringArray(
+
+                    request.selectedAttributeValues
+
+                    ??
+
+                    request.viewFilterValues
+
+                ),
+
+
+            viewFilterType:
+
+                this.normaliseText(
+
+                    request.viewFilterType
+
+                ),
+
+
+            viewFilterValue:
+
+                this.normaliseText(
+
+                    request.viewFilterValue
+
+                ),
+
+
+            viewFilterValues:
+
+                this.normaliseStringArray(
+
+                    request.viewFilterValues
+
+                ),
+
+
+            viewDateValue:
+
+                this.normaliseText(
+
+                    request.viewDateValue
+
+                ),
+
+
+            rowsLimit:
+
+                this.normaliseLimit(
+
+                    request.rowsLimit
+
+                    ??
+
+                    request.limit
+
+                ),
+
+
+            filterMode:
+
+                this.normaliseText(
+
+                    request.filterMode
+
+                )
+
+                ||
+
+                "show_all",
+
+
+            userKey:
+
+                this.normaliseText(
+
+                    request.userKey
+
+                )
+
+                ||
+
+                "DEFAULT",
+
+
+            locale:
+
+                this.normaliseText(
+
+                    request.locale
+
+                )
+
+                ||
+
+                "co.uk",
+
+
+            restrictAssigned:
+
+                request.restrictAssigned ===
+
+                true
+
+        };
+
+
+    }
+
+
+
+
+
+
+    async enrichRows(rows){
+
+
+        const sourceRows =
+
+            Array.isArray(rows)
+
+                ? rows
+
+                : [];
+
+
+        if(
+
+            !this.enrichmentPipeline
+
+            ||
+
+            sourceRows.length ===
+
+                0
+
+        ){
+
+
+            return sourceRows;
+
+
+        }
+
+
+        /*
+            Support the current pipeline and preserve
+            compatibility if its batch method is renamed.
+        */
+
+
+        if(
+
+            typeof this.enrichmentPipeline.enrichRows ===
+
+            "function"
+
+        ){
+
+
+            const result =
+
+                await this.enrichmentPipeline.enrichRows(
+
+                    sourceRows
+
+                );
+
+
+            return Array.isArray(result)
+
+                ? result
+
+                : sourceRows;
+
+
+        }
+
+
+        if(
+
+            typeof this.enrichmentPipeline.processRows ===
+
+            "function"
+
+        ){
+
+
+            const result =
+
+                await this.enrichmentPipeline.processRows(
+
+                    sourceRows
+
+                );
+
+
+            return Array.isArray(result)
+
+                ? result
+
+                : sourceRows;
+
+
+        }
+
+
+        if(
+
+            typeof this.enrichmentPipeline.run ===
+
+            "function"
+
+        ){
+
+
+            const result =
+
+                await this.enrichmentPipeline.run(
+
+                    sourceRows
+
+                );
+
+
+            return Array.isArray(result)
+
+                ? result
+
+                : sourceRows;
+
+
+        }
+
+
+        if(
+
+            typeof this.enrichmentPipeline.enrich ===
+
+            "function"
+
+        ){
+
+
+            const enrichedRows =
+
+                [];
+
+
+            for(
+
+                const row of sourceRows
+
+            ){
+
+
+                const result =
+
+                    await this.enrichmentPipeline.enrich(
+
+                        row
+
+                    );
+
+
+                enrichedRows.push(
+
+                    result
+
+                    &&
+
+                    typeof result ===
+
+                        "object"
+
+                        ? result
+
+                        : row
+
+                );
+
+
+            }
+
+
+            return enrichedRows;
+
+
+        }
+
+
+        return sourceRows;
+
+
+    }
+
+
+
+
+
+
+    async getRows(request){
+
+
+        if(
+
+            !this.opportunityRepository
+
+            ||
+
+            typeof this.opportunityRepository.getRows !==
+
+                "function"
+
+        ){
+
+
+            throw new Error(
+
+                "Opportunity repository is not available"
+
+            );
+
+
+        }
+
+
+        const resolvedRequest =
+
+            this.normaliseRequest(
+
+                request
+
+            );
+
+
+        console.log(
+
+            "[PHX OPPORTUNITY SERVICE REQUEST]",
+
+            resolvedRequest
+
+        );
+
+
+        const rawRows =
+
+            await this.opportunityRepository.getRows(
+
+                resolvedRequest
+
+            );
+
+
+        const normalisedRows =
+
+            Array.isArray(rawRows)
+
+                ? rawRows
+
+                : [];
 
 
         console.log(
 
             "[PHX RAW ROW COUNT]",
 
-            rows.length
+            normalisedRows.length
 
         );
 
 
+        const enrichedRows =
 
+            await this.enrichRows(
 
-
-
-
-
-        console.log(
-
-            "[PHX FIRST RAW ROW]",
-
-            rows[0]
-
-        );
-
-
-
-
-
-
-
-
-        /*
-            Run enrichment.
-
-            Must use Promise.all.
-            Do NOT return Promise[].
-        */
-
-
-
-
-
-        const processedRows =
-
-            await Promise.all(
-
-
-
-                rows.map(
-
-                    async row => {
-
-
-
-                        if(
-
-
-                            this.enrichmentPipeline &&
-
-
-                            typeof this.enrichmentPipeline.run === "function"
-
-
-                        ){
-
-
-
-                            return await this.enrichmentPipeline.run(
-
-                                row
-
-                            );
-
-
-
-                        }
-
-
-
-
-
-                        return row;
-
-
-
-                    }
-
-                )
-
-
+                normalisedRows
 
             );
-
-
-
-
-
-
 
 
         console.log(
 
             "[PHX PROCESSED ROW COUNT]",
 
-            processedRows.length
+            enrichedRows.length
 
         );
 
 
-
-
-
-
-
-
-        console.log(
-
-            "[PHX FIRST PROCESSED ROW]",
-
-            processedRows[0]
-
-        );
-
-
-
-
-
-
-
-
-        return processedRows;
-
+        return enrichedRows;
 
 
     }
-
 
 
 }

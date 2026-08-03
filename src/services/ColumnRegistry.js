@@ -1,12 +1,58 @@
 export class ColumnRegistry {
 
 
-    constructor() {
+    constructor(){
 
 
         console.log(
+
             "[PHX COLUMN REGISTRY CREATED]"
+
         );
+
+
+        this.aliases = {
+
+            "_brand":
+
+                "brand",
+
+
+            "_category":
+
+                "categories_root",
+
+
+            "_sub_category":
+
+                "sub_category",
+
+
+            "_title":
+
+                "title",
+
+
+            "_buy_qty":
+
+                "buy_qty",
+
+
+            "_pack_size":
+
+                "pack_size",
+
+
+            "_supplier":
+
+                "supplier",
+
+
+            "_price":
+
+                "supplier_price"
+
+        };
 
 
     }
@@ -15,33 +61,25 @@ export class ColumnRegistry {
 
 
 
-    getValue(key, row) {
+
+    getValue(
+
+        key,
+
+        row
+
+    ){
 
 
-        console.log(
+        if(
 
-            "[PHX COLUMN VALUE LOOKUP]",
+            !row
 
-            {
-                key,
-                hasKey:
-                    row
-                    &&
-                    Object.prototype.hasOwnProperty.call(
-                        row,
-                        key
-                    ),
+            ||
 
-                sample:
-                    row
+            !key
 
-            }
-
-        );
-
-
-
-        if (!row || !key) {
+        ){
 
 
             return "";
@@ -50,15 +88,12 @@ export class ColumnRegistry {
         }
 
 
-
-
-
         /*
-            Direct match first
+            Direct match
         */
 
 
-        if (
+        if(
 
             row[key] !== undefined
 
@@ -66,7 +101,7 @@ export class ColumnRegistry {
 
             row[key] !== null
 
-        ) {
+        ){
 
 
             return row[key];
@@ -75,34 +110,88 @@ export class ColumnRegistry {
         }
 
 
-
-
-
         /*
-            Underscore fallback
-
-            _category -> category
-            _title    -> title
-            _brand    -> brand
-
+            Explicit Phoenix alias
         */
 
 
-        if (
+        const alias =
 
-            key.startsWith("_")
+            this.aliases[key];
 
-        ) {
+
+        if(
+
+            alias
+
+            &&
+
+            row[alias] !== undefined
+
+            &&
+
+            row[alias] !== null
+
+        ){
+
+
+            console.log(
+
+                "[PHX COLUMN ALIAS MATCH]",
+
+                {
+
+                    from:
+
+                        key,
+
+
+                    to:
+
+                        alias,
+
+
+                    value:
+
+                        row[alias]
+
+                }
+
+            );
+
+
+            return row[alias];
+
+
+        }
+
+
+        /*
+            Generic underscore fallback
+        */
+
+
+        if(
+
+            key.startsWith(
+
+                "_"
+
+            )
+
+        ){
 
 
             const cleanKey =
 
-                key.substring(1);
+                key.substring(
+
+                    1
+
+                );
 
 
-
-
-            if (
+            if(
 
                 row[cleanKey] !== undefined
 
@@ -110,7 +199,7 @@ export class ColumnRegistry {
 
                 row[cleanKey] !== null
 
-            ) {
+            ){
 
 
                 console.log(
@@ -118,10 +207,21 @@ export class ColumnRegistry {
                     "[PHX COLUMN ALIAS MATCH]",
 
                     {
-                        from:key,
-                        to:cleanKey,
+
+                        from:
+
+                            key,
+
+
+                        to:
+
+                            cleanKey,
+
+
                         value:
+
                             row[cleanKey]
+
                     }
 
                 );
@@ -134,27 +234,6 @@ export class ColumnRegistry {
 
 
         }
-
-
-
-
-
-        console.warn(
-
-            "[PHX COLUMN VALUE NOT FOUND]",
-
-            {
-
-                key,
-
-                availableKeys:
-
-                    Object.keys(row)
-
-            }
-
-        );
-
 
 
         return "";

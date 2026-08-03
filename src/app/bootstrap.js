@@ -32,10 +32,10 @@ document.addEventListener(
     async () => {
 
 
-
         const state =
 
             new AppState();
+
 
 
 
@@ -57,6 +57,7 @@ document.addEventListener(
                 viewState
 
             );
+
 
 
 
@@ -106,7 +107,6 @@ document.addEventListener(
 
                 {
 
-
                     header:
 
                         container.get(
@@ -114,7 +114,6 @@ document.addEventListener(
                             "headerController"
 
                         ),
-
 
 
                     toolbar:
@@ -126,6 +125,14 @@ document.addEventListener(
                         ),
 
 
+                    filter:
+
+                        container.get(
+
+                            "filterController"
+
+                        ),
+
 
                     dashboard:
 
@@ -134,7 +141,6 @@ document.addEventListener(
                             "dashboardController"
 
                         ),
-
 
 
                     status:
@@ -147,11 +153,12 @@ document.addEventListener(
 
                 },
 
-
                 {
 
+                    wixUser:
 
-                    wixUser,
+
+                        wixUser,
 
 
                     viewConfig:
@@ -163,7 +170,6 @@ document.addEventListener(
                         ),
 
 
-
                     processRepository:
 
                         container.get(
@@ -171,8 +177,6 @@ document.addEventListener(
                             "processRepository"
 
                         )
-
-
 
                 }
 
@@ -182,10 +186,7 @@ document.addEventListener(
 
 
 
-
-
         await app.start();
-
 
 
     }

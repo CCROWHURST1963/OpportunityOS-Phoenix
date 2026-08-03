@@ -2,9 +2,7 @@ import { Logger }
     from "../services/Logger.js";
 
 
-
 export class App {
-
 
 
     constructor(
@@ -18,16 +16,29 @@ export class App {
     ){
 
 
-        this.appState = appState;
+        this.appState =
+
+            appState;
 
 
-        this.controllers = controllers;
+        this.controllers =
+
+            controllers;
 
 
-        this.services = services;
+        this.services =
+
+            services;
 
 
-        this.logger = new Logger();
+        this.logger =
+
+            new Logger();
+
+
+        this.toolbarRenderedHandler =
+
+            null;
 
 
     }
@@ -37,11 +48,7 @@ export class App {
 
 
 
-
-
-
     async start(){
-
 
 
         this.logger.info(
@@ -49,7 +56,6 @@ export class App {
             "Phoenix started"
 
         );
-
 
 
         console.log(
@@ -65,15 +71,14 @@ export class App {
 
 
 
-
-
         /*
             LOAD USER
         */
 
 
-        let user = null;
+        let user =
 
+            null;
 
 
         if(
@@ -83,11 +88,9 @@ export class App {
         ){
 
 
-
             user =
 
                 await this.services.wixUser.loadUserContext();
-
 
 
             console.log(
@@ -99,13 +102,11 @@ export class App {
             );
 
 
-
             this.appState.update({
 
+                user:
 
-
-                user,
-
+                    user,
 
 
                 userName:
@@ -117,7 +118,6 @@ export class App {
                     "User",
 
 
-
                 role:
 
                     user?.role
@@ -125,7 +125,6 @@ export class App {
                     ||
 
                     "User",
-
 
 
                 userKey:
@@ -136,10 +135,7 @@ export class App {
 
                     "DEFAULT"
 
-
-
             });
-
 
 
         }
@@ -156,7 +152,6 @@ export class App {
 
             this.appState.update({
 
-
                 userName:
 
                     "User",
@@ -171,10 +166,7 @@ export class App {
 
                     "DEFAULT"
 
-
-
             });
-
 
 
         }
@@ -184,11 +176,8 @@ export class App {
 
 
 
-
-
-
         /*
-            LOAD PROCESSES + VIEWS
+            LOAD PROCESSES + CUSTOM GRID VIEW
         */
 
 
@@ -199,18 +188,13 @@ export class App {
         ){
 
 
-
             const userKey =
-
 
                 this.appState.getState().userKey
 
                 ||
 
                 "DEFAULT";
-
-
-
 
 
             this.services.viewConfig.setUserKey(
@@ -220,16 +204,9 @@ export class App {
             );
 
 
+            let processes =
 
-
-
-
-
-
-            let processes = [];
-
-
-
+                [];
 
 
             if(
@@ -239,17 +216,14 @@ export class App {
             ){
 
 
-
                 processes =
 
                     await this.services.processRepository.getProcesses();
 
 
-
             }
 
             else {
-
 
 
                 console.error(
@@ -261,13 +235,7 @@ export class App {
                 );
 
 
-
             }
-
-
-
-
-
 
 
             console.log(
@@ -279,66 +247,30 @@ export class App {
             );
 
 
-
-
-
-
-
-
-
             const process =
-
-
 
                 this.appState.getState().process
 
-
-
                 ||
-
-
 
                 processes[0]?.process_name
 
-
-
                 ||
-
-
 
                 processes[0]?.name
 
-
-
                 ||
-
-
 
                 "Can We Sell";
 
 
-
-
-
-
-
-
-
             const currentView =
-
-
 
                 await this.services.viewConfig.loadCurrentView(
 
                     process
 
                 );
-
-
-
-
-
-
 
 
             console.log(
@@ -350,41 +282,28 @@ export class App {
             );
 
 
-
-
-
-
-
             console.log(
 
-                "[PHX SELECTED VIEW]",
+                "[PHX SELECTED CUSTOM VIEW]",
 
                 currentView
 
             );
 
 
-
-
-
-
-
-
             this.appState.update({
 
+                processes:
+
+                    processes,
 
 
-                processes,
+                process:
 
-
-
-                process,
-
+                    process,
 
 
                 currentView:
-
-
 
                     currentView?.active_view
 
@@ -393,11 +312,7 @@ export class App {
                     "",
 
 
-
-
                 currentViewConfig:
-
-
 
                     currentView?.view_config
 
@@ -405,10 +320,7 @@ export class App {
 
                     {}
 
-
-
             });
-
 
 
         }
@@ -418,18 +330,12 @@ export class App {
 
 
 
-
-
-
         /*
-            BUILD SHELL
+            BUILD APPLICATION SHELL
         */
 
 
         this.mountShell();
-
-
-
 
 
 
@@ -441,17 +347,43 @@ export class App {
         */
 
 
-        this.controllers.header.mount(
+        if(
 
-            document.getElementById(
+            this.controllers.header
 
-                "phoenix-header"
-
-            )
-
-        );
+        ){
 
 
+            this.controllers.header.mount(
+
+                document.getElementById(
+
+                    "phoenix-header"
+
+                )
+
+            );
+
+
+        }
+
+
+
+
+
+
+        /*
+            FILTER CONTROLLER REMOUNT SUPPORT
+
+            ToolbarController rebuilds its HTML whenever
+            the opportunity mode or selection changes.
+
+            Each rebuild creates a new filter host, so the
+            FilterController must mount to the new element.
+        */
+
+
+        this.bindToolbarRenderedEvent();
 
 
 
@@ -463,17 +395,37 @@ export class App {
         */
 
 
-        this.controllers.toolbar.mount(
+        if(
 
-            document.getElementById(
+            this.controllers.toolbar
 
-                "phoenix-toolbar"
-
-            )
-
-        );
+        ){
 
 
+            this.controllers.toolbar.mount(
+
+                document.getElementById(
+
+                    "phoenix-toolbar"
+
+                )
+
+            );
+
+
+        }
+
+
+
+
+
+
+        /*
+            FILTER CONTROLLER
+        */
+
+
+        this.mountFilterController();
 
 
 
@@ -485,17 +437,25 @@ export class App {
         */
 
 
-        this.controllers.status.mount(
+        if(
 
-            document.getElementById(
+            this.controllers.status
 
-                "phoenix-status"
-
-            )
-
-        );
+        ){
 
 
+            this.controllers.status.mount(
+
+                document.getElementById(
+
+                    "phoenix-status"
+
+                )
+
+            );
+
+
+        }
 
 
 
@@ -507,33 +467,25 @@ export class App {
         */
 
 
-        this.controllers.dashboard.mount(
+        if(
 
-            document.getElementById(
+            this.controllers.dashboard
 
-                "phoenix-dashboard"
-
-            )
-
-        );
+        ){
 
 
+            this.controllers.dashboard.mount(
+
+                document.getElementById(
+
+                    "phoenix-dashboard"
+
+                )
+
+            );
 
 
-
-
-
-
-        /*
-            IMPORTANT:
-            No automatic dashboard load.
-
-            Load Dashboard button triggers:
-
-            phoenix-load-dashboard
-
-        */
-
+        }
 
 
     }
@@ -543,13 +495,100 @@ export class App {
 
 
 
+    bindToolbarRenderedEvent(){
+
+
+        if(this.toolbarRenderedHandler){
+
+
+            document.removeEventListener(
+
+                "phoenix-toolbar-rendered",
+
+                this.toolbarRenderedHandler
+
+            );
+
+
+        }
+
+
+        this.toolbarRenderedHandler =
+
+            () => {
+
+
+                this.mountFilterController();
+
+
+            };
+
+
+        document.addEventListener(
+
+            "phoenix-toolbar-rendered",
+
+            this.toolbarRenderedHandler
+
+        );
+
+
+    }
+
+
+
+
+
+
+    mountFilterController(){
+
+
+        if(
+
+            !this.controllers.filter
+
+        ){
+
+
+            return;
+
+
+        }
+
+
+        const filterHost =
+
+            document.getElementById(
+
+                "phoenix-filter-host"
+
+            );
+
+
+        if(!filterHost){
+
+
+            return;
+
+
+        }
+
+
+        this.controllers.filter.mount(
+
+            filterHost
+
+        );
+
+
+    }
+
 
 
 
 
 
     mountShell(){
-
 
 
         const app =
@@ -561,23 +600,26 @@ export class App {
             );
 
 
+        if(!app){
 
-        if(!app)
+
+            console.error(
+
+                "[PHX APP] Root #app element not found"
+
+            );
+
 
             return;
 
 
-
-
-
+        }
 
 
         app.innerHTML = `
 
 
-
         <div class="phoenix-shell">
-
 
 
             <header
@@ -587,17 +629,11 @@ export class App {
             </header>
 
 
-
-
-
             <nav
 
                 id="phoenix-toolbar">
 
             </nav>
-
-
-
 
 
             <main
@@ -607,9 +643,6 @@ export class App {
             </main>
 
 
-
-
-
             <footer
 
                 id="phoenix-status">
@@ -617,17 +650,13 @@ export class App {
             </footer>
 
 
-
         </div>
-
 
 
         `;
 
 
-
     }
-
 
 
 }

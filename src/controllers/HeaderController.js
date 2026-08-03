@@ -4,11 +4,19 @@ export class HeaderController {
     constructor(state){
 
 
-        this.state = state;
+        this.state =
 
-        this.element = null;
+            state;
 
-        this.unsubscribe = null;
+
+        this.element =
+
+            null;
+
+
+        this.unsubscribe =
+
+            null;
 
 
     }
@@ -21,10 +29,25 @@ export class HeaderController {
     mount(element){
 
 
-        this.element = element;
+        this.element =
+
+            element;
 
 
         this.render();
+
+
+
+
+
+        if(this.unsubscribe){
+
+
+            this.unsubscribe();
+
+
+        }
+
 
 
 
@@ -33,7 +56,9 @@ export class HeaderController {
 
             this.state.subscribe(
 
-                () => this.render()
+                () =>
+
+                    this.render()
 
             );
 
@@ -45,15 +70,157 @@ export class HeaderController {
 
 
 
+    escapeHtml(value){
+
+
+        return String(
+
+            value
+
+            ??
+
+            ""
+
+        )
+
+            .replaceAll(
+
+                "&",
+
+                "&amp;"
+
+            )
+
+            .replaceAll(
+
+                "<",
+
+                "&lt;"
+
+            )
+
+            .replaceAll(
+
+                ">",
+
+                "&gt;"
+
+            )
+
+            .replaceAll(
+
+                "\"",
+
+                "&quot;"
+
+            )
+
+            .replaceAll(
+
+                "'",
+
+                "&#039;"
+
+            );
+
+
+    }
+
+
+
+
+
+
+    renderTotalOpportunitiesPill(state){
+
+
+        if(
+
+            state.gridLoaded !== true
+
+        ){
+
+
+            return "";
+
+
+        }
+
+
+
+
+
+        const totalOpportunities =
+
+            Number.isFinite(
+
+                Number(
+
+                    state.totalOpportunities
+
+                )
+
+            )
+
+                ? Number(
+
+                    state.totalOpportunities
+
+                )
+
+                : 0;
+
+
+
+
+
+        return `
+
+            <div
+
+                class="header-pill"
+
+                id="phoenix-total-opportunities-pill"
+
+            >
+
+
+                <span class="header-label">
+
+                    Total Opportunities
+
+                </span>
+
+
+                <span class="header-value">
+
+                    ${totalOpportunities}
+
+                </span>
+
+
+            </div>
+
+        `;
+
+
+    }
+
+
+
+
 
 
     render(){
 
 
+        if(!this.element){
 
-        if(!this.element)
 
             return;
+
+
+        }
 
 
 
@@ -62,9 +229,6 @@ export class HeaderController {
         const state =
 
             this.state.getState();
-
-
-
 
 
 
@@ -86,8 +250,6 @@ export class HeaderController {
 
 
 
-
-
         const role =
 
             state.role
@@ -99,8 +261,6 @@ export class HeaderController {
             ||
 
             "User";
-
-
 
 
 
@@ -118,8 +278,6 @@ export class HeaderController {
 
 
 
-
-
         const currentView =
 
             state.currentView
@@ -129,6 +287,16 @@ export class HeaderController {
             "";
 
 
+
+
+
+        const totalOpportunitiesPill =
+
+            this.renderTotalOpportunitiesPill(
+
+                state
+
+            );
 
 
 
@@ -175,7 +343,8 @@ export class HeaderController {
 
             <span class="header-value">
 
-                ${userName} (${role})
+                ${this.escapeHtml(userName)}
+                (${this.escapeHtml(role)})
 
             </span>
 
@@ -201,7 +370,7 @@ export class HeaderController {
 
             <span class="header-value">
 
-                ${process}
+                ${this.escapeHtml(process)}
 
             </span>
 
@@ -227,7 +396,7 @@ export class HeaderController {
 
             <span class="header-value">
 
-                ${currentView}
+                ${this.escapeHtml(currentView)}
 
             </span>
 
@@ -235,6 +404,13 @@ export class HeaderController {
         </div>
 
 
+
+
+
+
+
+
+        ${totalOpportunitiesPill}
 
 
 
@@ -248,9 +424,7 @@ export class HeaderController {
 `;
 
 
-
     }
-
 
 
 }
