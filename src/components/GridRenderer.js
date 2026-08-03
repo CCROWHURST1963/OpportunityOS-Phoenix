@@ -10,7 +10,7 @@ import { EDITABLE_COLUMNS }
 export class GridRenderer {
 
 
-    constructor() {
+    constructor(){
 
 
         this.container = null;
@@ -29,6 +29,34 @@ export class GridRenderer {
 
 
 
+    createSelectionColumn(){
+
+
+        return {
+
+
+            field:"_selected",
+
+            label:"",
+
+            width:50,
+
+            system:true
+
+
+        };
+
+
+    }
+
+
+
+
+
+
+
+
+
     isEditable(field){
 
 
@@ -40,6 +68,8 @@ export class GridRenderer {
 
 
     }
+
+
 
 
 
@@ -88,6 +118,7 @@ export class GridRenderer {
 
 
 
+
     render(
 
         container,
@@ -105,13 +136,25 @@ export class GridRenderer {
 
 
 
-        console.log(
+        /*
+            SYSTEM COLUMNS
 
-            "[PHX GRID COLUMNS RECEIVED]",
+            Always injected.
 
-            columns
+            Not controlled by Custom View Builder.
 
-        );
+        */
+
+
+        const renderColumns = [
+
+            this.createSelectionColumn(),
+
+            ...columns
+
+        ];
+
+
 
 
 
@@ -121,7 +164,7 @@ export class GridRenderer {
 
             "[PHX GRID FIELD LIST]",
 
-            columns.map(
+            renderColumns.map(
 
                 c => c.field
 
@@ -170,43 +213,80 @@ export class GridRenderer {
 
 
 
+
         container.innerHTML = `
 
 
 
-            <div class="phoenix-grid">
+        <div class="phoenix-grid">
 
 
 
 
 
-                <div class="phoenix-grid-row phoenix-grid-head">
+            <div class="phoenix-grid-row phoenix-grid-head">
 
 
-                    ${
 
-                        columns.map(column => `
+                ${
+
+                    renderColumns.map(column => `
 
 
-                            <div
 
-                                class="phoenix-grid-cell phoenix-grid-header-cell"
+                        <div
 
-                                style="${
+                            class="phoenix-grid-cell phoenix-grid-header-cell"
 
-                                    this.getColumnStyle(
+                            style="${
 
-                                        column
+                                this.getColumnStyle(
 
-                                    )
+                                    column
 
-                                }"
+                                )
 
-                            >
+                            }"
 
-                                ${
+                        >
+
+
+
+                            ${
+
+                                column.field === "_selected"
+
+
+
+                                ?
+
+
+
+                                `
+
+                                <input
+
+                                    type="checkbox"
+
+                                    class="phoenix-select-all"
+
+                                >
+
+                                `
+
+
+
+                                :
+
+
+
+                                (
 
                                     column.label
+
+                                    ||
+
+                                    column.header
 
                                     ||
 
@@ -216,20 +296,75 @@ export class GridRenderer {
 
                                     ""
 
-                                }
+                                )
 
 
-                            </div>
+
+                            }
 
 
-                        `).join("")
 
-                    }
+                        </div>
 
 
+
+                    `).join("")
+
+                }
+
+
+
+            </div>
+
+
+
+
+
+
+
+
+
+            ${
+
+                rows.length === 0
+
+
+
+                ?
+
+
+
+                `
+
+                <div class="phoenix-grid-empty">
+
+                    No opportunities loaded
 
                 </div>
 
+                `
+
+
+
+                :
+
+
+
+                rows.map(row => `
+
+
+
+                    <div class="phoenix-grid-row">
+
+
+
+                        ${
+
+                            renderColumns.map(column => {
+
+
+
+                                let content = "";
 
 
 
@@ -237,45 +372,48 @@ export class GridRenderer {
 
 
 
-                ${
-
-                    rows.length === 0
-
-
-                    ?
+                                /*
+                                    ROW SELECT CHECKBOX
+                                */
 
 
-                    `
+                                if(
 
-                    <div class="phoenix-grid-empty">
+                                    column.field === "_selected"
 
-                        No opportunities loaded
-
-                    </div>
-
-                    `
+                                ){
 
 
 
-                    :
+                                    content = `
 
 
 
-                    rows.map(row => `
+                                        <input
+
+                                            type="checkbox"
+
+                                            class="phoenix-row-selector"
+
+                                            data-asin="${
+
+                                                row.asin || ""
+
+                                            }"
+
+                                        >
 
 
 
-                        <div class="phoenix-grid-row">
+                                    `;
 
 
 
-
-
-                            ${
+                                }
 
 
 
-                                columns.map(column => {
+                                else {
 
 
 
@@ -289,16 +427,6 @@ export class GridRenderer {
                                             row
 
                                         );
-
-
-
-
-
-
-
-                                    let content =
-
-                                        value ?? "";
 
 
 
@@ -356,47 +484,21 @@ export class GridRenderer {
 
 
 
+                                    else {
 
 
 
+                                        content =
+
+                                            value ?? "";
 
 
 
-                                    return `
+                                    }
 
 
 
-                                        <div
-
-                                            class="phoenix-grid-cell"
-
-                                            style="${
-
-                                                this.getColumnStyle(
-
-                                                    column
-
-                                                )
-
-                                            }"
-
-                                        >
-
-                                            ${content}
-
-                                        </div>
-
-
-
-                                    `;
-
-
-
-                                }).join("")
-
-
-
-                            }
+                                }
 
 
 
@@ -404,21 +506,59 @@ export class GridRenderer {
 
 
 
-                        </div>
+
+
+                                return `
 
 
 
-                    `).join("")
+                                    <div
+
+                                        class="phoenix-grid-cell"
+
+                                        style="${
+
+                                            this.getColumnStyle(
+
+                                                column
+
+                                            )
+
+                                        }"
+
+                                    >
 
 
 
-                }
+                                        ${content}
 
 
 
+                                    </div>
 
 
-            </div>
+
+                                `;
+
+
+
+                            }).join("")
+
+                        }
+
+
+
+                    </div>
+
+
+
+                `).join("")
+
+            }
+
+
+
+        </div>
 
 
 
