@@ -1567,6 +1567,58 @@ export class CalculationEngine {
             );
 
 
+        const scorePercent =
+
+            Number(
+
+                score?.percent
+
+                ??
+
+                0
+
+            );
+
+
+        const scoreRaw =
+
+            Number(
+
+                score?.rawScore
+
+                ??
+
+                0
+
+            );
+
+
+        const scoreMax =
+
+            Number(
+
+                score?.maxScore
+
+                ??
+
+                0
+
+            );
+
+
+        const scoreRules =
+
+            Array.isArray(
+
+                score?.rules
+
+            )
+
+                ? score.rules
+
+                : [];
+
+
         if(score){
 
 
@@ -1577,20 +1629,12 @@ export class CalculationEngine {
 
             publishedCalculation.opportunityScore =
 
-                score.percent
-
-                ??
-
-                0;
+                scorePercent;
 
 
             publishedCalculation.opportunity_score =
 
-                score.percent
-
-                ??
-
-                0;
+                scorePercent;
 
 
         }
@@ -1599,6 +1643,46 @@ export class CalculationEngine {
         return {
 
             ...enrichedRow,
+
+
+            opportunity_score:
+
+                scorePercent,
+
+
+            opportunityScore:
+
+                scorePercent,
+
+
+            score:
+
+                scorePercent,
+
+
+            _score:
+
+                scorePercent,
+
+
+            score_raw:
+
+                scoreRaw,
+
+
+            score_max:
+
+                scoreMax,
+
+
+            score_rules:
+
+                scoreRules,
+
+
+            score_breakdown:
+
+                score,
 
 
             calc:

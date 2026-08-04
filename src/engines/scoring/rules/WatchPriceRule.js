@@ -179,6 +179,10 @@ export class WatchPriceRule {
 
                 ??
 
+                calc.target_selling_price
+
+                ??
+
                 row.target_selling_price
 
                 ??
@@ -195,11 +199,13 @@ export class WatchPriceRule {
 
 
         /*
-            Production behaviour:
+            When the Buy Box has already achieved the
+            Target Selling Price, award the full two
+            points directly.
 
-            When Target Selling Price is already achieved,
-            the watch value is zero and is resolved through
-            the best configured watch_price numeric band.
+            This path must bypass the band resolver.
+            Otherwise a value of zero can match the
+            wrong configured numeric band.
         */
 
 
@@ -253,7 +259,7 @@ export class WatchPriceRule {
 
                 resolverType:
 
-                    "band",
+                    "direct",
 
 
                 fallbackScore:

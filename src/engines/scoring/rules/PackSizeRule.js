@@ -246,7 +246,7 @@ export class PackSizeRule {
 
             rule:
 
-                "pack_size",
+                "pack_size_confidence",
 
 
             label:
