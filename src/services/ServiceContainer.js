@@ -824,7 +824,11 @@ export class ServiceContainer {
 
         const profitAtPrice =
 
-            new ProfitAtPrice();
+            new ProfitAtPrice(
+
+                financialEngine
+
+            );
 
 
         const findPriceForTarget =
