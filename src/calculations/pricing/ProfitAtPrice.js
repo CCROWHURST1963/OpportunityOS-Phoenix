@@ -1,40 +1,49 @@
 export class ProfitAtPrice {
 
 
-    constructor(){
+    constructor(
+
+        financialEngine
+
+    ){
 
 
-        this.tenPoundCategoryKeys = [
+        this.financialEngine =
 
-            "beauty",
+            financialEngine;
 
-            "health and personal care",
 
-            "business industrial and scientific supplier",
+    }
 
-            "business, industrial and scientific supplier",
 
-            "office products",
 
-            "grocery and gourmet",
 
-            "books",
 
-            "amazon device accessories",
 
-            "home and kitchen"
+    ensureAvailable(){
 
-        ].map(
 
-            value =>
+        if(
 
-                this.normaliseCategoryText(
+            !this.financialEngine
 
-                    value
+            ||
 
-                )
+            typeof this.financialEngine.calculate !==
 
-        );
+                "function"
+
+        ){
+
+
+            throw new Error(
+
+                "ProfitAtPrice requires FinancialEngine.calculate()"
+
+            );
+
+
+        }
 
 
     }
@@ -82,7 +91,15 @@ export class ProfitAtPrice {
     ){
 
 
-        if(!this.hasValue(value)){
+        if(
+
+            !this.hasValue(
+
+                value
+
+            )
+
+        ){
 
 
             return fallback;
@@ -117,6 +134,8 @@ export class ProfitAtPrice {
 
                     )
 
+                    .trim()
+
             );
 
 
@@ -129,50 +148,6 @@ export class ProfitAtPrice {
             ? parsed
 
             : fallback;
-
-
-    }
-
-
-
-
-
-
-    roundMoney(value){
-
-
-        const resolved =
-
-            this.number(
-
-                value,
-
-                0
-
-            );
-
-
-        return Math.round(
-
-            (
-
-                resolved
-
-                +
-
-                Number.EPSILON
-
-            )
-
-            *
-
-            100
-
-        )
-
-        /
-
-        100;
 
 
     }
@@ -220,278 +195,11 @@ export class ProfitAtPrice {
 
 
 
-    normaliseCategoryText(value){
-
-
-        return String(
-
-            value
-
-            ??
-
-            ""
-
-        )
-
-            .trim()
-
-            .toLowerCase()
-
-            .replaceAll(
-
-                "&",
-
-                "and"
-
-            )
-
-            .replace(
-
-                /\s+/g,
-
-                " "
-
-            );
-
-
-    }
-
-
-
-
-
-
-    getSettings(context){
-
-
-        const settings =
-
-            context?.row?.calculationSettings;
-
-
-        return settings
-
-        &&
-
-        typeof settings === "object"
-
-            ? settings
-
-            : {};
-
-
-    }
-
-
-
-
-
-
-    getConstants(context){
-
-
-        const settings =
-
-            this.getSettings(
-
-                context
-
-            );
-
-
-        const dashboardConstants =
-
-            context?.dashboardConstants
-
-            &&
-
-            typeof context.dashboardConstants ===
-
-                "object"
-
-                ? context.dashboardConstants
-
-                : {};
-
-
-        return {
-
-            ...dashboardConstants,
-
-
-            targetRoiPercent:
-
-                settings.targetRoiPercent
-
-                ??
-
-                dashboardConstants.targetRoiPercent
-
-                ??
-
-                20,
-
-
-            targetMarginPercent:
-
-                settings.targetMarginPercent
-
-                ??
-
-                dashboardConstants.targetMarginPercent
-
-                ??
-
-                20,
-
-
-            targetProfitAmount:
-
-                settings.targetProfitAmount
-
-                ??
-
-                dashboardConstants.targetProfitAmount
-
-                ??
-
-                3,
-
-
-            vatRatePercent:
-
-                dashboardConstants.vatRatePercent
-
-                ??
-
-                settings.vatRateOnSalePercent
-
-                ??
-
-                20,
-
-
-            vatOnCostPercent:
-
-                settings.vatRateOnCostPercent
-
-                ??
-
-                dashboardConstants.vatOnCostPercent
-
-                ??
-
-                dashboardConstants.vatRatePercent
-
-                ??
-
-                20,
-
-
-            vatOnSalePercent:
-
-                settings.vatRateOnSalePercent
-
-                ??
-
-                dashboardConstants.vatOnSalePercent
-
-                ??
-
-                dashboardConstants.vatRatePercent
-
-                ??
-
-                20,
-
-
-            referralFeePercent:
-
-                settings.referralFeePercent
-
-                ??
-
-                dashboardConstants.referralFeePercent
-
-                ??
-
-                15,
-
-
-            nettPrepFee:
-
-                settings.nettPrepFee
-
-                ??
-
-                dashboardConstants.nettPrepFee
-
-                ??
-
-                dashboardConstants.prepFee
-
-                ??
-
-                0,
-
-
-            digitalTaxFeePercent:
-
-                settings.digitalServiceFeePercent
-
-                ??
-
-                dashboardConstants.digitalTaxFeePercent
-
-                ??
-
-                dashboardConstants.digitalTaxFee
-
-                ??
-
-                2,
-
-
-            fuelSurchargePercent:
-
-                settings.fuelSurchargePercent
-
-                ??
-
-                dashboardConstants.fuelSurchargePercent
-
-                ??
-
-                1.5,
-
-
-            fbaFee:
-
-                dashboardConstants.fbaFee
-
-                ??
-
-                context?.fbaFee
-
-                ??
-
-                0
-
-        };
-
-
-    }
-
-
-
-
-
-
-    getRowInputs(
+    getRow(
 
         context,
 
-        suppliedRowInputs = {}
+        rowInputs = {}
 
     ){
 
@@ -505,7 +213,7 @@ export class ProfitAtPrice {
                 {}),
 
 
-            ...(suppliedRowInputs
+            ...(rowInputs
 
                 ??
 
@@ -521,347 +229,39 @@ export class ProfitAtPrice {
 
 
 
-    getCategory(row){
+    getSettings(
 
-
-        return (
-
-            row?._category
-
-            ??
-
-            row?.categories_root
-
-            ??
-
-            row?.category
-
-            ??
-
-            row?.product_category
-
-            ??
-
-            ""
-
-        );
-
-
-    }
-
-
-
-
-
-
-    isLowPriceFbaTenPoundCategory(category){
-
-
-        const resolvedCategory =
-
-            this.normaliseCategoryText(
-
-                category
-
-            );
-
-
-        return this.tenPoundCategoryKeys.some(
-
-            key =>
-
-                resolvedCategory.includes(
-
-                    key
-
-                )
-
-        );
-
-
-    }
-
-
-
-
-
-
-    getLowPriceFbaThresholdForRow(row){
-
-
-        if(
-
-            row
-
-            &&
-
-            typeof row === "object"
-
-            &&
-
-            row.__phoenixLowPriceThresholdCached ===
-
-                true
-
-        ){
-
-
-            return row.__phoenixLowPriceThreshold;
-
-
-        }
-
-
-        const threshold =
-
-            this.isLowPriceFbaTenPoundCategory(
-
-                this.getCategory(
-
-                    row
-
-                )
-
-            )
-
-                ? 10
-
-                : 20;
-
-
-        if(
-
-            row
-
-            &&
-
-            typeof row === "object"
-
-        ){
-
-
-            row.__phoenixLowPriceThreshold =
-
-                threshold;
-
-
-            row.__phoenixLowPriceThresholdCached =
-
-                true;
-
-
-        }
-
-
-        return threshold;
-
-
-    }
-
-
-
-
-
-
-    getFirstNumber(
-
-        source,
-
-        fields,
-
-        fallback = 0
-
-    ){
-
-
-        for(
-
-            const field of fields
-
-        ){
-
-
-            if(
-
-                this.hasValue(
-
-                    source?.[field]
-
-                )
-
-            ){
-
-
-                return this.number(
-
-                    source[field],
-
-                    fallback
-
-                );
-
-
-            }
-
-
-        }
-
-
-        return fallback;
-
-
-    }
-
-
-
-
-
-
-    resolveFbaFeeForPrice(
-
-        salePrice,
-
-        constants,
+        context,
 
         row
 
     ){
 
 
-        const threshold =
+        const settings =
 
-            this.getLowPriceFbaThresholdForRow(
+            row?.calculationSettings
 
-                row
+            ??
 
-            );
+            context?.calculationSettings
 
+            ??
 
-        const lowPriceFee =
+            context?.dashboardConstants;
 
-            this.getFirstNumber(
 
-                row,
+        return settings
 
-                [
+        &&
 
-                    "lowPriceFbaFeeRaw",
+        typeof settings ===
 
-                    "_lowPriceFbaFeeRaw",
+            "object"
 
-                    "low_price_fba_fee",
+            ? settings
 
-                    "lowPriceFbaFee",
-
-                    "_lowPriceFbaFee",
-
-                    "low_price_fba",
-
-                    "low_cost_fba_fee",
-
-                    "low_fba_fee"
-
-                ],
-
-                0
-
-            );
-
-
-        const standardFee =
-
-            this.getFirstNumber(
-
-                row,
-
-                [
-
-                    "standardFbaFeeRaw",
-
-                    "_standardFbaFeeRaw",
-
-                    "standard_fba_fee",
-
-                    "standardFbaFee",
-
-                    "_standardFbaFee",
-
-                    "standard_fba",
-
-                    "std_fba_fee",
-
-                    "fbaFeeRaw",
-
-                    "_fbaFeeRaw",
-
-                    "calculatedFbaFeeRaw",
-
-                    "fba_fee",
-
-                    "calculated_fba_fee"
-
-                ],
-
-                this.number(
-
-                    constants.fbaFee,
-
-                    0
-
-                )
-
-            );
-
-
-        const useLowPriceFba =
-
-            salePrice <= threshold
-
-            &&
-
-            lowPriceFee > 0;
-
-
-        return {
-
-            fee:
-
-                useLowPriceFba
-
-                    ? lowPriceFee
-
-                    : standardFee,
-
-
-            programme:
-
-                useLowPriceFba
-
-                    ? "LOW_PRICE_FBA"
-
-                    : "STANDARD_FBA",
-
-
-            lowPriceFee:
-
-                lowPriceFee,
-
-
-            standardFee:
-
-                standardFee,
-
-
-            lowPriceThreshold:
-
-                threshold,
-
-
-            useLowPriceFba:
-
-                useLowPriceFba
-
-        };
+            : {};
 
 
     }
@@ -871,79 +271,82 @@ export class ProfitAtPrice {
 
 
 
-    getFuelSurchargePercent(constants){
+    getTaxRateOnCost(
 
+        context,
 
-        return this.hasValue(
-
-            constants?.fuelSurchargePercent
-
-        )
-
-            ? this.number(
-
-                constants.fuelSurchargePercent,
-
-                1.5
-
-            )
-
-            : 1.5;
-
-
-    }
-
-
-
-
-
-
-    applyFuelSurchargeToFee(
-
-        fee,
-
-        constants
+        row
 
     ){
 
 
-        const baseFee =
+        return this.rate(
+
+            row?.taxRateOnCostForTarget
+
+            ??
+
+            row?.tax_rate_on_cost
+
+            ??
+
+            row?.supplier_tax_rate_on_cost
+
+            ??
+
+            context?.taxRateOnCost
+
+            ??
+
+            0,
+
+            0
+
+        );
+
+
+    }
+
+
+
+
+
+
+    getBuyQty(row){
+
+
+        const value =
 
             this.number(
 
-                fee,
+                row?.amazonpackinfo_buy_qty
 
-                0
+                ??
 
-            );
+                row?.buy_qty
 
+                ??
 
-        const surchargePercent =
+                row?.amazonpackinfo_pack_size
 
-            this.getFuelSurchargePercent(
+                ??
 
-                constants
+                row?.pack_size
 
-            );
+                ??
 
-
-        return this.roundMoney(
-
-            baseFee
-
-            *
-
-            (
+                1,
 
                 1
 
-                +
+            );
 
-                surchargePercent / 100
 
-            )
+        return value > 0
 
-        );
+            ? value
+
+            : 1;
 
 
     }
@@ -953,519 +356,39 @@ export class ProfitAtPrice {
 
 
 
-    calculateFeesForPrice({
+    resultToJSON(result){
 
-        salePrice,
 
-        constants,
+        if(
 
-        taxRateOnSale,
+            result
 
-        row
+            &&
 
-    }){
+            typeof result.toJSON ===
 
+                "function"
 
-        const resolvedSalePrice =
+        ){
 
-            Math.max(
 
-                0,
+            return result.toJSON();
 
-                this.number(
 
-                    salePrice,
+        }
 
-                    0
 
-                )
+        return result
 
-            );
+        &&
 
+        typeof result ===
 
-        const referralPercent =
+            "object"
 
-            this.hasValue(
+            ? result
 
-                row?.referralFeePercentRaw
-
-            )
-
-                ? this.rate(
-
-                    row.referralFeePercentRaw,
-
-                    0
-
-                )
-
-                : this.hasValue(
-
-                    row?._referralFeePercentRaw
-
-                )
-
-                    ? this.rate(
-
-                        row._referralFeePercentRaw,
-
-                        0
-
-                    )
-
-                    : this.hasValue(
-
-                        row?.referral_fee_percent
-
-                    )
-
-                        ? this.rate(
-
-                            row.referral_fee_percent,
-
-                            0
-
-                        )
-
-                        : this.rate(
-
-                            constants.referralFeePercent,
-
-                            0
-
-                        );
-
-
-        const vatRate =
-
-            this.rate(
-
-                constants.vatRatePercent,
-
-                0
-
-            );
-
-
-        const saleTaxRate =
-
-            taxRateOnSale === null
-
-            ||
-
-            taxRateOnSale === undefined
-
-                ? vatRate
-
-                : this.rate(
-
-                    taxRateOnSale,
-
-                    vatRate
-
-                );
-
-
-        const referralFee =
-
-            resolvedSalePrice
-
-            *
-
-            referralPercent;
-
-
-        const fba =
-
-            this.resolveFbaFeeForPrice(
-
-                resolvedSalePrice,
-
-                constants,
-
-                row
-
-            );
-
-
-        const baseFbaFee =
-
-            this.number(
-
-                fba.fee,
-
-                0
-
-            );
-
-
-        const fuelSurchargePercent =
-
-            this.getFuelSurchargePercent(
-
-                constants
-
-            );
-
-
-        const adjustedFbaFee =
-
-            this.applyFuelSurchargeToFee(
-
-                baseFbaFee,
-
-                constants
-
-            );
-
-
-        const prepFee =
-
-            this.hasValue(
-
-                row?.nettPrepFeeRaw
-
-            )
-
-                ? this.number(
-
-                    row.nettPrepFeeRaw,
-
-                    0
-
-                )
-
-                : this.hasValue(
-
-                    row?._nettPrepFee
-
-                )
-
-                    ? this.number(
-
-                        row._nettPrepFee,
-
-                        0
-
-                    )
-
-                    : this.hasValue(
-
-                        row?.nett_prep_fee
-
-                    )
-
-                        ? this.number(
-
-                            row.nett_prep_fee,
-
-                            0
-
-                        )
-
-                        : this.number(
-
-                            constants.nettPrepFee
-
-                            ??
-
-                            constants.prepFee,
-
-                            0
-
-                        );
-
-
-        const digitalTaxPercent =
-
-            this.hasValue(
-
-                row?.digitalTaxFeePercentRaw
-
-            )
-
-                ? this.rate(
-
-                    row.digitalTaxFeePercentRaw,
-
-                    0
-
-                )
-
-                : this.hasValue(
-
-                    row?._digitalTaxFeePercentRaw
-
-                )
-
-                    ? this.rate(
-
-                        row._digitalTaxFeePercentRaw,
-
-                        0
-
-                    )
-
-                    : this.hasValue(
-
-                        row?.digital_tax_fee_percent
-
-                    )
-
-                        ? this.rate(
-
-                            row.digital_tax_fee_percent,
-
-                            0
-
-                        )
-
-                        : this.rate(
-
-                            constants.digitalTaxFeePercent
-
-                            ??
-
-                            constants.digitalTaxFee,
-
-                            0
-
-                        );
-
-
-        /*
-            Production rule:
-
-            Digital service tax base =
-            Referral Fee + fuel-adjusted FBA Fee.
-        */
-
-
-        const digitalTaxBase =
-
-            referralFee
-
-            +
-
-            adjustedFbaFee;
-
-
-        const digitalTaxFee =
-
-            digitalTaxBase
-
-            *
-
-            digitalTaxPercent;
-
-
-        const totalFeesExTax =
-
-            referralFee
-
-            +
-
-            adjustedFbaFee
-
-            +
-
-            prepFee
-
-            +
-
-            digitalTaxFee;
-
-
-        const taxOnFees =
-
-            totalFeesExTax
-
-            *
-
-            vatRate;
-
-
-        const sellingPriceTax =
-
-            saleTaxRate > 0
-
-                ? resolvedSalePrice
-
-                    -
-
-                    (
-
-                        resolvedSalePrice
-
-                        /
-
-                        (
-
-                            1
-
-                            +
-
-                            saleTaxRate
-
-                        )
-
-                    )
-
-                : 0;
-
-
-        return {
-
-            referralFee:
-
-                this.roundMoney(
-
-                    referralFee
-
-                ),
-
-
-            referralFeePercent:
-
-                referralPercent,
-
-
-            fbaFee:
-
-                this.roundMoney(
-
-                    adjustedFbaFee
-
-                ),
-
-
-            baseFbaFee:
-
-                this.roundMoney(
-
-                    baseFbaFee
-
-                ),
-
-
-            fuelSurchargePercent:
-
-                fuelSurchargePercent,
-
-
-            adjustedFbaFee:
-
-                this.roundMoney(
-
-                    adjustedFbaFee
-
-                ),
-
-
-            lowPriceFbaThreshold:
-
-                fba.lowPriceThreshold,
-
-
-            fbaProgramme:
-
-                fba.programme,
-
-
-            lowPriceFbaFee:
-
-                this.roundMoney(
-
-                    fba.lowPriceFee
-
-                ),
-
-
-            standardFbaFee:
-
-                this.roundMoney(
-
-                    fba.standardFee
-
-                ),
-
-
-            prepFee:
-
-                this.roundMoney(
-
-                    prepFee
-
-                ),
-
-
-            digitalTaxFeePercent:
-
-                digitalTaxPercent,
-
-
-            digitalTaxBase:
-
-                this.roundMoney(
-
-                    digitalTaxBase
-
-                ),
-
-
-            digitalTaxFee:
-
-                this.roundMoney(
-
-                    digitalTaxFee
-
-                ),
-
-
-            totalFeesExTax:
-
-                this.roundMoney(
-
-                    totalFeesExTax
-
-                ),
-
-
-            taxOnFees:
-
-                this.roundMoney(
-
-                    taxOnFees
-
-                ),
-
-
-            sellingPriceTax:
-
-                this.roundMoney(
-
-                    sellingPriceTax
-
-                ),
-
-
-            totalFees:
-
-                this.roundMoney(
-
-                    totalFeesExTax
-
-                    +
-
-                    taxOnFees
-
-                    +
-
-                    sellingPriceTax
-
-                )
-
-        };
+            : {};
 
 
     }
@@ -1475,7 +398,7 @@ export class ProfitAtPrice {
 
 
 
-    calculate({
+    async calculate({
 
         salePrice,
 
@@ -1492,22 +415,27 @@ export class ProfitAtPrice {
     } = {}){
 
 
-        const constants =
-
-            this.getConstants(
-
-                context
-
-            );
+        this.ensureAvailable();
 
 
         const row =
 
-            this.getRowInputs(
+            this.getRow(
 
                 context,
 
                 rowInputs
+
+            );
+
+
+        const settings =
+
+            this.getSettings(
+
+                context,
+
+                row
 
             );
 
@@ -1534,7 +462,18 @@ export class ProfitAtPrice {
             );
 
 
-        const resolvedPackTaxAmount =
+        const taxRateOnCost =
+
+            this.getTaxRateOnCost(
+
+                context,
+
+                row
+
+            );
+
+
+        const suppliedPackTaxAmount =
 
             this.number(
 
@@ -1545,174 +484,248 @@ export class ProfitAtPrice {
             );
 
 
-        const fees =
+        const resolvedPackCostExTax =
 
-            this.calculateFeesForPrice({
+            resolvedPackCostInclTax > 0
+
+                ? taxRateOnCost > 0
+
+                    ? resolvedPackCostInclTax
+
+                        /
+
+                        (
+
+                            1
+
+                            +
+
+                            taxRateOnCost
+
+                        )
+
+                    : resolvedPackCostInclTax
+
+                : 0;
+
+
+        const resolvedPackTaxAmount =
+
+            suppliedPackTaxAmount !== 0
+
+                ? suppliedPackTaxAmount
+
+                : resolvedPackCostInclTax
+
+                    -
+
+                    resolvedPackCostExTax;
+
+
+        const financialResult =
+
+            await this.financialEngine.calculate({
+
+                row:
+
+                    row,
+
+
+                settings:
+
+                    settings,
+
 
                 salePrice:
 
                     resolvedSalePrice,
 
 
-                constants:
+                unitCostExclTax:
 
-                    constants,
+                    resolvedPackCostExTax,
+
+
+                buyQty:
+
+                    this.getBuyQty(
+
+                        row
+
+                    ),
+
+
+                packCostExTax:
+
+                    resolvedPackCostExTax,
+
+
+                packCostInclTax:
+
+                    resolvedPackCostInclTax,
+
+
+                packTaxAmount:
+
+                    resolvedPackTaxAmount,
+
+
+                taxRateOnCost:
+
+                    taxRateOnCost,
 
 
                 taxRateOnSale:
 
-                    taxRateOnSale,
-
-
-                row:
-
-                    row
+                    taxRateOnSale
 
             });
 
 
+        const financial =
 
+            this.resultToJSON(
 
-
-
-        /*
-            Production VAT rule:
-
-            VAT Due =
-            VAT on Sale
-            - VAT on Cost
-            - VAT on Fees
-        */
-
-
-        const taxDue =
-
-            fees.sellingPriceTax
-
-            -
-
-            resolvedPackTaxAmount
-
-            -
-
-            fees.taxOnFees;
-
-
-
-
-
-
-        /*
-            Phase1925 production formula:
-
-            Profit =
-            Sale
-            - Cost
-            - Total Fees including VAT on fees
-            - VAT Due
-        */
-
-
-        const totalFeesForProfit =
-
-            this.roundMoney(
-
-                fees.totalFeesExTax
-
-                +
-
-                fees.taxOnFees
+                financialResult
 
             );
 
 
-        const rawProfit =
+        const values =
 
-            resolvedSalePrice
+            financial.values
 
-            -
+            &&
 
-            resolvedPackCostInclTax
+            typeof financial.values ===
 
-            -
+                "object"
 
-            totalFeesForProfit
+                ? financial.values
 
-            -
-
-            taxDue;
+                : {};
 
 
-        fees.taxDue =
+        const fees =
 
-            this.roundMoney(
+            financial.fees
 
-                taxDue
+            &&
 
-            );
+            typeof financial.fees ===
+
+                "object"
+
+                ? financial.fees
+
+                : {};
 
 
-        fees.totalFeesForProfit =
+        const tax =
 
-            totalFeesForProfit;
+            financial.tax
+
+            &&
+
+            typeof financial.tax ===
+
+                "object"
+
+                ? financial.tax
+
+                : {};
 
 
         return {
 
             fees:
 
-                fees,
+                {
+
+                    ...fees,
+
+
+                    taxDue:
+
+                        tax.taxDue
+
+                        ??
+
+                        tax.vatDue
+
+                        ??
+
+                        0,
+
+
+                    totalFeesForProfit:
+
+                        tax.totalFeesForProfit
+
+                        ??
+
+                        tax.totalFeesIncludingVatOnFees
+
+                        ??
+
+                        fees.totalFeesExTax
+
+                        ??
+
+                        0
+
+                },
+
+
+            tax:
+
+                tax,
 
 
             profit:
 
-                this.roundMoney(
+                this.number(
 
-                    rawProfit
+                    values.profit,
+
+                    0
 
                 ),
 
 
             roiPercent:
 
-                resolvedPackCostInclTax > 0
+                this.number(
 
-                    ? (
+                    values.roiPercent
 
-                        rawProfit
+                    ??
 
-                        /
+                    values.roi,
 
-                        resolvedPackCostInclTax
+                    0
 
-                    )
-
-                    *
-
-                    100
-
-                    : 0,
+                ),
 
 
             marginPercent:
 
-                resolvedSalePrice > 0
+                this.number(
 
-                    ? (
+                    values.marginPercent
 
-                        rawProfit
+                    ??
 
-                        /
+                    values.margin,
 
-                        resolvedSalePrice
+                    0
 
-                    )
+                ),
 
-                    *
 
-                    100
+            financial:
 
-                    : 0
+                financial
 
         };
 

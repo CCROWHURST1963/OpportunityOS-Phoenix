@@ -845,97 +845,6 @@ export class FindPriceForTarget {
 
 
 
-        /*
-            Temporary parity trace.
-
-            This records the prices around the current
-            OpportunityOS target so we can see exactly
-            why Phoenix accepts or rejects each penny.
-        */
-
-
-        if(
-
-            roundedPrice >= 7.60
-
-            &&
-
-            roundedPrice <= 7.66
-
-        ){
-
-
-            console.log(
-
-                "[PHX TARGET TRACE]",
-
-                {
-
-                    price:
-
-                        roundedPrice,
-
-
-                    method:
-
-                        method,
-
-
-                    requiredProfit:
-
-                        requiredProfit,
-
-
-                    actualProfit:
-
-                        this.number(
-
-                            result?.profit,
-
-                            0
-
-                        ),
-
-
-                    roi:
-
-                        this.number(
-
-                            result?.roiPercent,
-
-                            0
-
-                        ),
-
-
-                    margin:
-
-                        this.number(
-
-                            result?.marginPercent,
-
-                            0
-
-                        ),
-
-
-                    pass:
-
-                        pass,
-
-
-                    refine:
-
-                        refine
-
-                }
-
-            );
-
-
-        }
-
-
         const difference =
 
             method
@@ -975,35 +884,6 @@ export class FindPriceForTarget {
                 roundedPrice,
 
 
-            profit:
-
-                this.number(
-
-                    result?.profit,
-
-                    0
-
-                ),
-
-
-            roi:
-
-                this.roundMoney(
-
-                    result?.roiPercent
-
-                ),
-
-
-            margin:
-
-                this.roundMoney(
-
-                    result?.marginPercent
-
-                ),
-
-
             requiredProfit:
 
                 requiredProfit,
@@ -1017,6 +897,39 @@ export class FindPriceForTarget {
             pass:
 
                 pass,
+
+
+            profit:
+
+                this.number(
+
+                    result?.profit,
+
+                    0
+
+                ),
+
+
+            roi:
+
+                this.number(
+
+                    result?.roiPercent,
+
+                    0
+
+                ),
+
+
+            margin:
+
+                this.number(
+
+                    result?.marginPercent,
+
+                    0
+
+                ),
 
 
             refine:
@@ -1817,12 +1730,63 @@ export class FindPriceForTarget {
             probe.price;
 
 
-        let guard =
+        /*
+            Continue downward until the previous penny fails.
+
+            The previous implementation stopped after only
+            30 iterations, limiting refinement to £0.30 even
+            when the current result still had positive profit.
+        */
+
+
+        const maximumDownwardIterations =
+
+            Math.max(
+
+                1,
+
+                Math.ceil(
+
+                    (
+
+                        answer
+
+                        -
+
+                        0.01
+
+                    )
+
+                    *
+
+                    100
+
+                )
+
+                +
+
+                1
+
+            );
+
+
+        let downwardIterations =
 
             0;
 
 
-        while(guard++ < 30){
+        while(
+
+            downwardIterations <
+
+                maximumDownwardIterations
+
+        ){
+
+
+            downwardIterations +=
+
+                1;
 
 
             const previousPrice =
@@ -1838,7 +1802,13 @@ export class FindPriceForTarget {
                 );
 
 
-            if(previousPrice < 0.01){
+            if(
+
+                previousPrice <
+
+                    0.01
+
+            ){
 
 
                 break;
@@ -1913,17 +1883,11 @@ export class FindPriceForTarget {
                 });
 
 
-            if(previousProbe.pass){
+            if(
 
+                !previousProbe.pass
 
-                answer =
-
-                    previousPrice;
-
-
-            }
-
-            else {
+            ){
 
 
                 break;
@@ -1932,10 +1896,50 @@ export class FindPriceForTarget {
             }
 
 
+            answer =
+
+                previousPrice;
+
+
         }
 
 
-        while(guard++ < 60){
+
+
+
+
+        /*
+            Safety verification.
+
+            Normally the downward loop leaves answer at the
+            lowest passing penny. If rounding leaves the
+            current answer failing, move upwards until a
+            passing penny is found.
+        */
+
+
+        const maximumUpwardIterations =
+
+            1000;
+
+
+        let upwardIterations =
+
+            0;
+
+
+        while(
+
+            upwardIterations <
+
+                maximumUpwardIterations
+
+        ){
+
+
+            upwardIterations +=
+
+                1;
 
 
             const currentProbe =
@@ -2004,7 +2008,11 @@ export class FindPriceForTarget {
                 });
 
 
-            if(currentProbe.pass){
+            if(
+
+                currentProbe.pass
+
+            ){
 
 
                 break;
@@ -2027,6 +2035,10 @@ export class FindPriceForTarget {
 
 
         }
+
+
+
+
 
 
         this.recordCompletedSearch({
@@ -2063,11 +2075,16 @@ export class FindPriceForTarget {
         });
 
 
-        return this.roundMoney(
+        const roundedAnswer =
 
-            answer
+            this.roundMoney(
 
-        );
+                answer
+
+            );
+
+
+        return roundedAnswer;
 
 
     }

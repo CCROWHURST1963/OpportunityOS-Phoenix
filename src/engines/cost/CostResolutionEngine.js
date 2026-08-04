@@ -22,7 +22,7 @@ export class CostResolutionEngine {
 
         this.version =
 
-            "1.0.0";
+            "1.0.1-PHX0052";
 
 
     }
@@ -1460,7 +1460,7 @@ export class CostResolutionEngine {
 
                         ? "USE_ACTUAL_SUPPLIER_COST"
 
-                        : "ZERO_COST_THEN_MAX_COST",
+                        : "DERIVED_MAX_COST_FOR_PROVISIONAL_BREAK_EVEN",
 
 
                 buyQty:
