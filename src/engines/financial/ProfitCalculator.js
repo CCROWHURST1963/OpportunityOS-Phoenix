@@ -3,15 +3,25 @@ export class ProfitCalculator {
 
     hasValue(value){
 
+
         return (
 
-            value !== null &&
+            value !== null
 
-            value !== undefined &&
+            &&
 
-            String(value).trim() !== ""
+            value !== undefined
+
+            &&
+
+            String(
+
+                value
+
+            ).trim() !== ""
 
         );
+
 
     }
 
@@ -28,27 +38,63 @@ export class ProfitCalculator {
 
     ){
 
-        if(!this.hasValue(value)){
+
+        if(
+
+            !this.hasValue(
+
+                value
+
+            )
+
+        ){
+
 
             return fallback;
 
+
         }
 
-        const parsed = Number(
 
-            String(value)
+        const parsed =
 
-                .replaceAll(",","")
+            Number(
 
-                .replace(/[£$€%\s]/g,"")
+                String(
 
-        );
+                    value
 
-        return Number.isFinite(parsed)
+                )
+
+                    .replaceAll(
+
+                        ",",
+
+                        ""
+
+                    )
+
+                    .replace(
+
+                        /[£$€%\s]/g,
+
+                        ""
+
+                    )
+
+            );
+
+
+        return Number.isFinite(
+
+            parsed
+
+        )
 
             ? parsed
 
             : fallback;
+
 
     }
 
@@ -59,13 +105,33 @@ export class ProfitCalculator {
 
     roundMoney(value){
 
+
         return Math.round(
 
-            (this.number(value)+Number.EPSILON)
+            (
 
-            *100
+                this.number(
 
-        )/100;
+                    value
+
+                )
+
+                +
+
+                Number.EPSILON
+
+            )
+
+            *
+
+            100
+
+        )
+
+        /
+
+        100;
+
 
     }
 
@@ -76,13 +142,33 @@ export class ProfitCalculator {
 
     roundPercent(value){
 
+
         return Math.round(
 
-            (this.number(value)+Number.EPSILON)
+            (
 
-            *100
+                this.number(
 
-        )/100;
+                    value
+
+                )
+
+                +
+
+                Number.EPSILON
+
+            )
+
+            *
+
+            100
+
+        )
+
+        /
+
+        100;
+
 
     }
 
@@ -91,7 +177,44 @@ export class ProfitCalculator {
 
 
 
-    calculate(input={}){
+    getAsin(input){
+
+
+        return String(
+
+            input?.row?.asin
+
+            ??
+
+            input?.row?._asin
+
+            ??
+
+            input?.row?.matched_asin
+
+            ??
+
+            input?.asin
+
+            ??
+
+            ""
+
+        )
+
+            .trim()
+
+            .toUpperCase();
+
+
+    }
+
+
+
+
+
+
+    calculate(input = {}){
 
 
         const salePrice =
@@ -118,12 +241,32 @@ export class ProfitCalculator {
 
         const fees =
 
-            input.fees || {};
+            input.fees
+
+            &&
+
+            typeof input.fees ===
+
+                "object"
+
+                ? input.fees
+
+                : {};
 
 
         const tax =
 
-            input.tax || {};
+            input.tax
+
+            &&
+
+            typeof input.tax ===
+
+                "object"
+
+                ? input.tax
+
+                : {};
 
 
 
@@ -136,7 +279,7 @@ export class ProfitCalculator {
             Profit =
             Sale Price
             - Pack Cost
-            - Total Fees (incl VAT on fees)
+            - Total Fees (including VAT on fees)
             - VAT Due
         */
 
@@ -196,6 +339,285 @@ export class ProfitCalculator {
 
 
 
+        /*
+            Temporary targeted diagnostic.
+
+            This exposes every value used to calculate
+            the zero-cost profit for B07F84FJ8N.
+
+            Calculation behaviour is unchanged.
+        */
+
+
+        const debugAsin =
+
+            this.getAsin(
+
+                input
+
+            );
+
+
+        if(
+
+            debugAsin ===
+
+                "B07F84FJ8N"
+
+        ){
+
+
+            console.group(
+
+                "[PHX PROFIT CALCULATION B07F84FJ8N]"
+
+            );
+
+
+            console.log(
+
+                "CORE PROFIT INPUTS",
+
+                {
+
+                    asin:
+
+                        debugAsin,
+
+
+                    salePrice:
+
+                        salePrice,
+
+
+                    packCost:
+
+                        packCost,
+
+
+                    totalFees:
+
+                        totalFees,
+
+
+                    vatDue:
+
+                        vatDue,
+
+
+                    calculatedProfit:
+
+                        profit,
+
+
+                    roundedProfit:
+
+                        this.roundMoney(
+
+                            profit
+
+                        )
+
+                }
+
+            );
+
+
+            console.log(
+
+                "FORMULA",
+
+                `${salePrice}`
+                +
+                ` - ${packCost}`
+                +
+                ` - ${totalFees}`
+                +
+                ` - ${vatDue}`
+                +
+                ` = ${profit}`
+
+            );
+
+
+            console.log(
+
+                "FEE COMPONENTS",
+
+                {
+
+                    referralFee:
+
+                        fees.referralFee,
+
+
+                    referralFeePercent:
+
+                        fees.referralFeePercent,
+
+
+                    baseFbaFee:
+
+                        fees.baseFbaFee,
+
+
+                    fbaFee:
+
+                        fees.fbaFee,
+
+
+                    adjustedFbaFee:
+
+                        fees.adjustedFbaFee,
+
+
+                    fuelSurchargePercent:
+
+                        fees.fuelSurchargePercent,
+
+
+                    prepFee:
+
+                        fees.prepFee,
+
+
+                    digitalTaxBase:
+
+                        fees.digitalTaxBase,
+
+
+                    digitalTaxFeePercent:
+
+                        fees.digitalTaxFeePercent,
+
+
+                    digitalTaxFee:
+
+                        fees.digitalTaxFee,
+
+
+                    totalFeesExTax:
+
+                        fees.totalFeesExTax,
+
+
+                    totalFees:
+
+                        fees.totalFees
+
+                }
+
+            );
+
+
+            console.log(
+
+                "VAT COMPONENTS",
+
+                {
+
+                    vatRateOnCost:
+
+                        tax.vatRateOnCost,
+
+
+                    vatRateOnSale:
+
+                        tax.vatRateOnSale,
+
+
+                    vatRateOnFees:
+
+                        tax.vatRateOnFees,
+
+
+                    vatOnSale:
+
+                        tax.vatOnSale
+
+                        ??
+
+                        tax.sellingPriceTax,
+
+
+                    vatOnCost:
+
+                        tax.vatOnCost
+
+                        ??
+
+                        tax.costVatAmount,
+
+
+                    vatOnFees:
+
+                        tax.vatOnFees
+
+                        ??
+
+                        tax.taxOnFees,
+
+
+                    totalFeesIncludingVatOnFees:
+
+                        tax.totalFeesIncludingVatOnFees,
+
+
+                    totalFeesForProfit:
+
+                        tax.totalFeesForProfit,
+
+
+                    vatDue:
+
+                        tax.vatDue
+
+                        ??
+
+                        tax.taxDue
+
+                }
+
+            );
+
+
+            console.log(
+
+                "FULL FEES OBJECT",
+
+                fees
+
+            );
+
+
+            console.log(
+
+                "FULL TAX OBJECT",
+
+                tax
+
+            );
+
+
+            console.log(
+
+                "FULL PROFIT INPUT",
+
+                input
+
+            );
+
+
+            console.groupEnd();
+
+
+        }
+
+
+
+
+
+
         const roi =
 
             packCost > 0
@@ -208,13 +630,13 @@ export class ProfitCalculator {
 
                     packCost
 
-                ) * 100
+                )
+
+                *
+
+                100
 
                 : 0;
-
-
-
-
 
 
         const margin =
@@ -229,7 +651,11 @@ export class ProfitCalculator {
 
                     salePrice
 
-                ) * 100
+                )
+
+                *
+
+                100
 
                 : 0;
 

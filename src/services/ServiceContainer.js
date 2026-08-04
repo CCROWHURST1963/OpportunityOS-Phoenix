@@ -102,6 +102,18 @@ import { SupplierOpportunityService }
     from "./SupplierOpportunityService.js";
 
 
+import { DomainService }
+    from "../domain/DomainService.js";
+
+
+import { DomainResolverPipeline }
+    from "../domain/DomainResolverPipeline.js";
+
+
+import { ValidatedPriceResolver }
+    from "../domain/resolvers/ValidatedPriceResolver.js";
+
+
 import { CalculationEngine }
     from "../calculations/CalculationEngine.js";
 
@@ -529,6 +541,51 @@ export class ServiceContainer {
 
 
 
+        /*
+            DOMAIN LAYER
+        */
+
+
+        const validatedPriceResolver =
+
+            new ValidatedPriceResolver();
+
+
+        const domainResolverPipeline =
+
+            new DomainResolverPipeline([
+
+                validatedPriceResolver
+
+            ]);
+
+
+        const domainService =
+
+            new DomainService(
+
+                domainResolverPipeline
+
+            );
+
+
+        this.services.validatedPriceResolver =
+
+            validatedPriceResolver;
+
+
+        this.services.domainResolverPipeline =
+
+            domainResolverPipeline;
+
+
+        this.services.domainService =
+
+            domainService;
+
+
+
+
 
         /*
             APPLICATION SERVICES
@@ -541,7 +598,9 @@ export class ServiceContainer {
 
                 opportunityRepository,
 
-                enrichmentPipeline
+                enrichmentPipeline,
+
+                domainService
 
             );
 
@@ -552,7 +611,9 @@ export class ServiceContainer {
 
                 supplierOpportunityRepository,
 
-                enrichmentPipeline
+                enrichmentPipeline,
+
+                domainService
 
             );
 
@@ -903,7 +964,7 @@ export class ServiceContainer {
 
             new EstimatedSalesRule(scoringRuleResolver),
 
-            new EstimatedSharedSalesRule(scoringRuleResolver),
+             new EstimatedSharedSalesRule(scoringRuleResolver),
 
             new PackSizeRule(scoringRuleResolver),
 

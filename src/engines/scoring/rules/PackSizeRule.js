@@ -26,25 +26,179 @@ export class PackSizeRule {
 
 
 
-    number(
-
-        value,
-
-        fallback = 0
-
-    ){
+    normalisePackSource(value){
 
 
-        const parsed =
+        const source =
 
-            Number(value);
+            this.normaliseText(
+
+                value
+
+            )
+
+                .toLowerCase()
+
+                .replaceAll(
+
+                    "-",
+
+                    "_"
+
+                )
+
+                .replaceAll(
+
+                    " ",
+
+                    "_"
+
+                );
 
 
-        return Number.isFinite(parsed)
+        if(
 
-            ? parsed
+            source ===
 
-            : fallback;
+                "manual"
+
+        ){
+
+
+            return "Manual";
+
+
+        }
+
+
+        if(
+
+            source ===
+
+                "derived"
+
+        ){
+
+
+            return "Derived";
+
+
+        }
+
+
+        if(
+
+            source ===
+
+                "number_of_items"
+
+            ||
+
+            source ===
+
+                "numberofitems"
+
+        ){
+
+
+            return "Number of Items";
+
+
+        }
+
+
+        return "Default";
+
+
+    }
+
+
+
+
+
+
+    getPackSource(row){
+
+
+        return this.normalisePackSource(
+
+            row.pack_source
+
+            ??
+
+            row.pack_size_source
+
+            ??
+
+            row.amazonpackinfo_pack_source
+
+            ??
+
+            row._packSource
+
+            ??
+
+            "default"
+
+        );
+
+
+    }
+
+
+
+
+
+
+    getFallbackScore(packLabel){
+
+
+        if(
+
+            packLabel ===
+
+                "Manual"
+
+        ){
+
+
+            return 3;
+
+
+        }
+
+
+        if(
+
+            packLabel ===
+
+                "Derived"
+
+        ){
+
+
+            return 2;
+
+
+        }
+
+
+        if(
+
+            packLabel ===
+
+                "Number of Items"
+
+        ){
+
+
+            return 1;
+
+
+        }
+
+
+        return 2;
 
 
     }
@@ -70,72 +224,22 @@ export class PackSizeRule {
             {};
 
 
-        const packSize =
+        const packLabel =
 
-            this.number(
+            this.getPackSource(
 
-                row.pack_size
-
-                ??
-
-                row.packSize
-
-                ??
-
-                0,
-
-                0
+                row
 
             );
 
 
-        /*
-            Production behaviour:
+        const fallbackScore =
 
-            Pack Size 1
+            this.getFallbackScore(
 
-                ↓
+                packLabel
 
-            "Single"
-
-            Pack Size >1
-
-                ↓
-
-            "Multi"
-
-            Missing
-
-                ↓
-
-            "Unknown"
-        */
-
-
-        let outcome =
-
-            "Unknown";
-
-
-        if(packSize === 1){
-
-
-            outcome =
-
-                "Single";
-
-
-        }
-
-        else if(packSize > 1){
-
-
-            outcome =
-
-                "Multi";
-
-
-        }
+            );
 
 
         return new RuleResult({
@@ -147,33 +251,32 @@ export class PackSizeRule {
 
             label:
 
-                "Pack Size",
+                "Pack Size Confidence",
 
 
             outcome:
 
-
-                outcome,
+                packLabel,
 
 
             value:
 
-                packSize,
+                packLabel,
 
 
             validated:
 
-                `${packSize}`,
+                packLabel,
 
 
             ruleApplied:
 
-                "Configured Pack Size Rule",
+                "Manual = 3 | Derived/Default = 2 | Number of Items = 1",
 
 
             calculation:
 
-                `Pack Size = ${packSize}`,
+                "Uses HTML pack source value",
 
 
             resolverType:
@@ -183,7 +286,7 @@ export class PackSizeRule {
 
             fallbackScore:
 
-                0
+                fallbackScore
 
         });
 

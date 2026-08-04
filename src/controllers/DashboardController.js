@@ -1212,6 +1212,205 @@ export class DashboardController {
                 );
 
 
+
+
+
+
+            /*
+                Temporary targeted parity trace.
+
+                This records the final Phoenix values after
+                repository loading, enrichment, domain
+                resolution and calculation have completed.
+            */
+
+
+            const parityRow =
+
+                rows.find(
+
+                    row =>
+
+                        this.normaliseText(
+
+                            row?.asin
+
+                            ??
+
+                            row?._asin
+
+                        ) ===
+
+                            "B09X5WMPBL"
+
+                );
+
+
+            if(parityRow){
+
+
+                console.group(
+
+                    "[PHX PARITY B09X5WMPBL]"
+
+                );
+
+
+                console.log({
+
+                    asin:
+
+                        parityRow.asin
+
+                        ??
+
+                        parityRow._asin
+
+                        ??
+
+                        "",
+
+
+                    validated_sales_price:
+
+                        parityRow.validated_sales_price
+
+                        ??
+
+                        null,
+
+
+                    validated_price_used:
+
+                        parityRow.validated_price_used
+
+                        ??
+
+                        null,
+
+
+                    break_even_price:
+
+                        parityRow.break_even_price
+
+                        ??
+
+                        parityRow.calc?.breakEvenPrice
+
+                        ??
+
+                        parityRow.calc?.break_even_price
+
+                        ??
+
+                        null,
+
+
+                    target_selling_price:
+
+                        parityRow.target_selling_price
+
+                        ??
+
+                        parityRow.calc?.targetSellingPrice
+
+                        ??
+
+                        parityRow.calc?.target_selling_price
+
+                        ??
+
+                        null,
+
+
+                    max_cost:
+
+                        parityRow.max_cost
+
+                        ??
+
+                        parityRow.calc?.maximumCost
+
+                        ??
+
+                        parityRow.calc?.maxCost
+
+                        ??
+
+                        parityRow.calc?.max_cost
+
+                        ??
+
+                        null,
+
+
+                    opportunity_score:
+
+                        parityRow.opportunity_score
+
+                        ??
+
+                        parityRow.score
+
+                        ??
+
+                        parityRow._score
+
+                        ??
+
+                        parityRow.calc?.opportunityScore
+
+                        ??
+
+                        parityRow.calc?.opportunity_score
+
+                        ??
+
+                        null,
+
+
+                    calc:
+
+                        parityRow.calc
+
+                        ??
+
+                        null
+
+                });
+
+
+                console.groupEnd();
+
+
+            }
+
+            else {
+
+
+                console.warn(
+
+                    "[PHX PARITY ROW NOT FOUND]",
+
+                    {
+
+                        asin:
+
+                            "B09X5WMPBL",
+
+
+                        rowsAvailable:
+
+                            rows.length
+
+                    }
+
+                );
+
+
+            }
+
+
             console.log(
 
                 "[PHX DASHBOARD ROW COUNT]",

@@ -5,7 +5,9 @@ export class OpportunityService {
 
         opportunityRepository,
 
-        enrichmentPipeline
+        enrichmentPipeline,
+
+        domainService
 
     ){
 
@@ -18,6 +20,11 @@ export class OpportunityService {
         this.enrichmentPipeline =
 
             enrichmentPipeline;
+
+
+        this.domainService =
+
+            domainService;
 
 
     }
@@ -116,6 +123,33 @@ export class OpportunityService {
             parsed
 
         );
+
+
+    }
+
+
+
+
+
+
+    normaliseObject(value){
+
+
+        return value
+
+        &&
+
+        typeof value ===
+
+            "object"
+
+        &&
+
+        !Array.isArray(value)
+
+            ? value
+
+            : {};
 
 
     }
@@ -311,7 +345,60 @@ export class OpportunityService {
 
                 request.restrictAssigned ===
 
-                true
+                true,
+
+
+            dashboardConstants:
+
+                this.normaliseObject(
+
+                    request.dashboardConstants
+
+                ),
+
+
+            domainServices:
+
+                this.normaliseObject(
+
+                    request.domainServices
+
+                    ??
+
+                    request.services
+
+                ),
+
+
+            domainLookups:
+
+                this.normaliseObject(
+
+                    request.domainLookups
+
+                    ??
+
+                    request.lookups
+
+                ),
+
+
+            user:
+
+                request.user
+
+                ??
+
+                null,
+
+
+            domainCache:
+
+                request.domainCache instanceof Map
+
+                    ? request.domainCache
+
+                    : new Map()
 
         };
 
@@ -510,6 +597,130 @@ export class OpportunityService {
 
 
 
+    async resolveDomainRows(
+
+        rows,
+
+        request = {}
+
+    ){
+
+
+        const sourceRows =
+
+            Array.isArray(rows)
+
+                ? rows
+
+                : [];
+
+
+        if(
+
+            !this.domainService
+
+            ||
+
+            typeof this.domainService.resolveRows !==
+
+                "function"
+
+            ||
+
+            sourceRows.length ===
+
+                0
+
+        ){
+
+
+            return sourceRows;
+
+
+        }
+
+
+        const dashboardConstants =
+
+            this.normaliseObject(
+
+                request.dashboardConstants
+
+            );
+
+
+        const resolvedRows =
+
+            await this.domainService.resolveRows(
+
+                sourceRows,
+
+                dashboardConstants,
+
+                {
+
+                    services:
+
+                        this.normaliseObject(
+
+                            request.domainServices
+
+                            ??
+
+                            request.services
+
+                        ),
+
+
+                    user:
+
+                        request.user
+
+                        ??
+
+                        null,
+
+
+                    lookups:
+
+                        this.normaliseObject(
+
+                            request.domainLookups
+
+                            ??
+
+                            request.lookups
+
+                        ),
+
+
+                    cache:
+
+                        request.domainCache instanceof Map
+
+                            ? request.domainCache
+
+                            : new Map()
+
+                }
+
+            );
+
+
+        return Array.isArray(resolvedRows)
+
+            ? resolvedRows
+
+            : sourceRows;
+
+
+    }
+
+
+
+
+
+
     async getRows(request){
 
 
@@ -592,14 +803,43 @@ export class OpportunityService {
 
         console.log(
 
-            "[PHX PROCESSED ROW COUNT]",
+            "[PHX ENRICHED ROW COUNT]",
 
             enrichedRows.length
 
         );
 
 
-        return enrichedRows;
+        const domainResolvedRows =
+
+            await this.resolveDomainRows(
+
+                enrichedRows,
+
+                resolvedRequest
+
+            );
+
+
+        console.log(
+
+            "[PHX DOMAIN ROW COUNT]",
+
+            domainResolvedRows.length
+
+        );
+
+
+        console.log(
+
+            "[PHX PROCESSED ROW COUNT]",
+
+            domainResolvedRows.length
+
+        );
+
+
+        return domainResolvedRows;
 
 
     }

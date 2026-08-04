@@ -974,6 +974,500 @@ export class MaxCostAtPrice {
             );
 
 
+
+
+
+        /*
+            Temporary zero-cost financial debug.
+
+            This exposes the exact profit and fee values
+            used to derive Maximum Cost.
+        */
+
+
+        const debugAsin =
+
+            this.getAsin(
+
+                context,
+
+                rowInputs
+
+            );
+
+
+        console.group(
+
+            `[PHX ZERO COST FINANCIAL ${debugAsin}]`
+
+        );
+
+
+        console.log(
+
+            "SALE PRICE",
+
+            resolvedSalePrice
+
+        );
+
+
+        console.log(
+
+            "FINANCIAL OBJECT",
+
+            financial
+
+        );
+
+
+        console.log(
+
+            "VALUES",
+
+            financial?.values
+
+            ??
+
+            {}
+
+        );
+
+
+        console.log(
+
+            "FEES",
+
+            financial?.fees
+
+            ??
+
+            {}
+
+        );
+
+
+        console.log(
+
+            "TAX",
+
+            financial?.tax
+
+            ??
+
+            {}
+
+        );
+
+
+        console.log(
+
+            "SUMMARY",
+
+            {
+
+                asin:
+
+                    debugAsin,
+
+
+                salePrice:
+
+                    resolvedSalePrice,
+
+
+                profitWithoutCost:
+
+                    financial?.values?.profit
+
+                    ??
+
+                    null,
+
+
+                referralFee:
+
+                    financial?.fees?.referralFee
+
+                    ??
+
+                    null,
+
+
+                fbaFee:
+
+                    financial?.fees?.fbaFee
+
+                    ??
+
+                    null,
+
+
+                prepFee:
+
+                    financial?.fees?.prepFee
+
+                    ??
+
+                    null,
+
+
+                digitalServicesFee:
+
+                    financial?.fees?.digitalServicesFee
+
+                    ??
+
+                    financial?.fees?.digitalTaxFee
+
+                    ??
+
+                    null,
+
+
+                totalFeesExTax:
+
+                    financial?.fees?.totalFeesExTax
+
+                    ??
+
+                    null,
+
+
+                vatOnFees:
+
+                    financial?.tax?.vatOnFees
+
+                    ??
+
+                    financial?.tax?.taxOnFees
+
+                    ??
+
+                    null,
+
+
+                vatDue:
+
+                    financial?.tax?.vatDue
+
+                    ??
+
+                    financial?.tax?.taxDue
+
+                    ??
+
+                    null
+
+            }
+
+        );
+
+
+        console.groupEnd();
+
+
+        const debugValues =
+
+            financial?.values
+
+            ??
+
+            {};
+
+
+        const debugFees =
+
+            financial?.fees
+
+            ??
+
+            {};
+
+
+        const debugTax =
+
+            financial?.tax
+
+            ??
+
+            {};
+
+
+        const debugSalePrice =
+
+            this.number(
+
+                debugValues.salePrice
+
+                ??
+
+                resolvedSalePrice,
+
+                0
+
+            );
+
+
+        const debugPackCost =
+
+            this.number(
+
+                debugValues.packCostInclTax
+
+                ??
+
+                debugValues.packCost
+
+                ??
+
+                0,
+
+                0
+
+            );
+
+
+        const debugTotalFees =
+
+            this.number(
+
+                debugTax.totalFeesForProfit
+
+                ??
+
+                debugTax.totalFeesIncludingVatOnFees
+
+                ??
+
+                debugFees.totalFeesExTax
+
+                ??
+
+                0,
+
+                0
+
+            );
+
+
+        const debugVatDue =
+
+            this.number(
+
+                debugTax.taxDue
+
+                ??
+
+                debugTax.vatDue
+
+                ??
+
+                0,
+
+                0
+
+            );
+
+
+        const debugCalculatedProfit =
+
+            debugSalePrice
+
+            -
+
+            debugPackCost
+
+            -
+
+            debugTotalFees
+
+            -
+
+            debugVatDue;
+
+
+        if(
+
+            debugAsin ===
+
+                "B07F84FJ8N"
+
+        ){
+
+
+            console.group(
+
+                "[PHX ZERO COST PROFIT INPUTS B07F84FJ8N]"
+
+            );
+
+
+            console.log(
+
+                "CORE INPUTS",
+
+                {
+
+                    salePrice:
+
+                        debugSalePrice,
+
+
+                    packCostInclTax:
+
+                        debugPackCost,
+
+
+                    totalFeesForProfit:
+
+                        debugTotalFees,
+
+
+                    vatDue:
+
+                        debugVatDue,
+
+
+                    calculatedProfit:
+
+                        debugCalculatedProfit,
+
+
+                    financialProfit:
+
+                        debugValues.profit
+
+                }
+
+            );
+
+
+            console.log(
+
+                "FEE COMPONENTS",
+
+                {
+
+                    referralFee:
+
+                        debugFees.referralFee,
+
+
+                    baseFbaFee:
+
+                        debugFees.baseFbaFee,
+
+
+                    fbaFee:
+
+                        debugFees.fbaFee,
+
+
+                    adjustedFbaFee:
+
+                        debugFees.adjustedFbaFee,
+
+
+                    fuelSurchargePercent:
+
+                        debugFees.fuelSurchargePercent,
+
+
+                    prepFee:
+
+                        debugFees.prepFee,
+
+
+                    digitalTaxBase:
+
+                        debugFees.digitalTaxBase,
+
+
+                    digitalTaxFeePercent:
+
+                        debugFees.digitalTaxFeePercent,
+
+
+                    digitalTaxFee:
+
+                        debugFees.digitalTaxFee,
+
+
+                    totalFeesExTax:
+
+                        debugFees.totalFeesExTax
+
+                }
+
+            );
+
+
+            console.log(
+
+                "VAT COMPONENTS",
+
+                {
+
+                    vatRateOnSale:
+
+                        debugTax.vatRateOnSale,
+
+
+                    vatRateOnCost:
+
+                        debugTax.vatRateOnCost,
+
+
+                    vatRateOnFees:
+
+                        debugTax.vatRateOnFees,
+
+
+                    vatOnSale:
+
+                        debugTax.vatOnSale,
+
+
+                    vatOnCost:
+
+                        debugTax.vatOnCost,
+
+
+                    vatOnFees:
+
+                        debugTax.vatOnFees,
+
+
+                    totalFeesIncludingVatOnFees:
+
+                        debugTax.totalFeesIncludingVatOnFees,
+
+
+                    vatDue:
+
+                        debugTax.vatDue
+
+                }
+
+            );
+
+
+            console.log(
+
+                "FULL FINANCIAL",
+
+                financial
+
+            );
+
+
+            console.groupEnd();
+
+
+        }
+
+
         const profitWithoutCost =
 
             this.number(
@@ -983,6 +1477,15 @@ export class MaxCostAtPrice {
                 0
 
             );
+
+
+        console.log(
+
+            `[PHX PROFIT USED FOR MAX COST ${debugAsin}]`,
+
+            profitWithoutCost
+
+        );
 
 
         const targetRoi =
