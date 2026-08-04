@@ -162,6 +162,10 @@ import { ScoreEngine }
     from "../engines/scoring/ScoreEngine.js";
 
 
+import { BuySignalEngine }
+    from "../engines/buysignal/BuySignalEngine.js";
+
+
 import { BuyBoxAtOrAboveTargetRule }
     from "../engines/scoring/rules/BuyBoxAtOrAboveTargetRule.js";
 
@@ -820,11 +824,7 @@ export class ServiceContainer {
 
         const profitAtPrice =
 
-            new ProfitAtPrice(
-
-                financialEngine
-
-            );
+            new ProfitAtPrice();
 
 
         const findPriceForTarget =
@@ -1001,6 +1001,16 @@ this.services.scoreEngine =
         */
 
 
+        const buySignalEngine =
+
+            new BuySignalEngine();
+
+
+        this.services.buySignalEngine =
+
+            buySignalEngine;
+
+
         const calculationEngine =
 
             new CalculationEngine(
@@ -1009,7 +1019,9 @@ this.services.scoreEngine =
 
                 null,
 
-                scoreEngine
+                scoreEngine,
+
+                buySignalEngine
 
             );
 
@@ -1217,6 +1229,15 @@ this.services.scoreEngine =
                     Boolean(
 
                         scoreEngine
+
+                    ),
+
+
+                buySignalEngine:
+
+                    Boolean(
+
+                        buySignalEngine
 
                     ),
 

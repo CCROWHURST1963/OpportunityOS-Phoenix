@@ -1950,7 +1950,49 @@ export class GridRenderer {
 
             Array.isArray(rows)
 
-                ? rows
+                ? [...rows].sort(
+
+                    (a, b) =>
+
+                        Number(
+
+                            b.opportunity_score
+
+                            ??
+
+                            b.opportunityScore
+
+                            ??
+
+                            b.score
+
+                            ??
+
+                            0
+
+                        )
+
+                        -
+
+                        Number(
+
+                            a.opportunity_score
+
+                            ??
+
+                            a.opportunityScore
+
+                            ??
+
+                            a.score
+
+                            ??
+
+                            0
+
+                        )
+
+                )
 
                 : [];
 

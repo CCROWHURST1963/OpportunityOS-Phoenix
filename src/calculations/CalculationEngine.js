@@ -24,7 +24,9 @@ export class CalculationEngine {
 
         rowCalculationSettingsEnricher = null,
 
-        scoreEngine = null
+        scoreEngine = null,
+
+        buySignalEngine = null
 
     ){
 
@@ -47,6 +49,11 @@ export class CalculationEngine {
         this.scoreEngine =
 
             scoreEngine;
+
+
+        this.buySignalEngine =
+
+            buySignalEngine;
 
 
 
@@ -1459,6 +1466,205 @@ export class CalculationEngine {
 
 
 
+    normaliseEngineResult(result){
+
+
+        if(
+
+            result
+
+            &&
+
+            typeof result.toJSON ===
+
+                "function"
+
+        ){
+
+
+            return result.toJSON();
+
+
+        }
+
+
+        return result
+
+        &&
+
+        typeof result ===
+
+            "object"
+
+            ? result
+
+            : null;
+
+
+    }
+
+
+
+
+
+
+    async calculateBuySignal(
+
+        row,
+
+        publishedCalculation,
+
+        score
+
+    ){
+
+
+        if(
+
+            !this.buySignalEngine
+
+            ||
+
+            typeof this.buySignalEngine.calculate !==
+
+                "function"
+
+        ){
+
+
+            return null;
+
+
+        }
+
+
+        try{
+
+
+            const result =
+
+                await this.buySignalEngine.calculate({
+
+                    row:
+
+                        row,
+
+
+                    calc:
+
+                        publishedCalculation,
+
+
+                    score:
+
+                        score,
+
+
+                    scoreResult:
+
+                        score
+
+                });
+
+
+            return this.normaliseEngineResult(
+
+                result
+
+            );
+
+
+        }
+
+        catch(error){
+
+
+            console.error(
+
+                "[PHX BUY SIGNAL CALCULATION ERROR]",
+
+                {
+
+                    asin:
+
+                        row?.asin
+
+                        ??
+
+                        row?._asin
+
+                        ??
+
+                        "",
+
+
+                    error:
+
+                        error
+
+                }
+
+            );
+
+
+            return {
+
+                signal:
+
+                    "Avoid",
+
+
+                buySignal:
+
+                    "Avoid",
+
+
+                buy_signal:
+
+                    "Avoid",
+
+
+                colour:
+
+                    "avoid",
+
+
+                reason:
+
+                    error?.message
+
+                    ??
+
+                    "Buy Signal calculation failed",
+
+
+                reasonCode:
+
+                    "BUY_SIGNAL_CALCULATION_ERROR",
+
+
+                rules:
+
+                    [],
+
+
+                completed:
+
+                    false
+
+            };
+
+
+        }
+
+
+    }
+
+
+
+
+
+
     async calculateRow(
 
         row,
@@ -1640,6 +1846,145 @@ export class CalculationEngine {
         }
 
 
+        const buySignal =
+
+            await this.calculateBuySignal(
+
+                enrichedRow,
+
+                publishedCalculation,
+
+                score
+
+            );
+
+
+        const buySignalLabel =
+
+            String(
+
+                buySignal?.signal
+
+                ??
+
+                buySignal?.buySignal
+
+                ??
+
+                buySignal?.buy_signal
+
+                ??
+
+                ""
+
+            ).trim();
+
+
+        const buySignalColour =
+
+            String(
+
+                buySignal?.colour
+
+                ??
+
+                buySignal?.color
+
+                ??
+
+                ""
+
+            ).trim();
+
+
+        const buySignalReason =
+
+            String(
+
+                buySignal?.reason
+
+                ??
+
+                buySignal?.reasonText
+
+                ??
+
+                ""
+
+            ).trim();
+
+
+        const buySignalReasonCode =
+
+            String(
+
+                buySignal?.reasonCode
+
+                ??
+
+                buySignal?.code
+
+                ??
+
+                ""
+
+            ).trim();
+
+
+        const buySignalRules =
+
+            Array.isArray(
+
+                buySignal?.rules
+
+            )
+
+                ? buySignal.rules
+
+                : [];
+
+
+        if(buySignal){
+
+
+            publishedCalculation.buySignal =
+
+                buySignal;
+
+
+            publishedCalculation.buy_signal =
+
+                buySignalLabel;
+
+
+            publishedCalculation.buySignalLabel =
+
+                buySignalLabel;
+
+
+            publishedCalculation.buySignalColour =
+
+                buySignalColour;
+
+
+            publishedCalculation.buySignalReason =
+
+                buySignalReason;
+
+
+            publishedCalculation.buySignalReasonCode =
+
+                buySignalReasonCode;
+
+
+            publishedCalculation.buySignalRules =
+
+                buySignalRules;
+
+
+        }
+
+
         return {
 
             ...enrichedRow,
@@ -1683,6 +2028,91 @@ export class CalculationEngine {
             score_breakdown:
 
                 score,
+
+
+            buy_signal:
+
+                buySignalLabel,
+
+
+            buySignal:
+
+                buySignalLabel,
+
+
+            BuySignal:
+
+                buySignalLabel,
+
+
+            _buySignal:
+
+                buySignalLabel,
+
+
+            __finalBuySignal:
+
+                buySignalLabel,
+
+
+            signal:
+
+                buySignalLabel,
+
+
+            buy_signal_colour:
+
+                buySignalColour,
+
+
+            buySignalColour:
+
+                buySignalColour,
+
+
+            buy_signal_reason:
+
+                buySignalReason,
+
+
+            buySignalReason:
+
+                buySignalReason,
+
+
+            _buySignalReason:
+
+                buySignalReason,
+
+
+            buy_signal_reason_text:
+
+                buySignalReason,
+
+
+            buySignalReasonText:
+
+                buySignalReason,
+
+
+            buy_signal_reason_code:
+
+                buySignalReasonCode,
+
+
+            buySignalReasonCode:
+
+                buySignalReasonCode,
+
+
+            _buySignalReasonCode:
+
+                buySignalReasonCode,
+
+
+            buy_signal_rules:
+
+                buySignalRules,
 
 
             calc:
