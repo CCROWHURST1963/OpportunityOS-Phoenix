@@ -13,7 +13,11 @@ export class DashboardController {
 
         appState,
 
-        gridRenderer
+        gridRenderer,
+
+        calculationEngine,
+
+        dashboardConstantsService
 
     ){
 
@@ -46,6 +50,16 @@ export class DashboardController {
         this.gridRenderer =
 
             gridRenderer;
+
+
+        this.calculationEngine =
+
+            calculationEngine;
+
+
+        this.dashboardConstantsService =
+
+            dashboardConstantsService;
 
 
         this.container =
@@ -183,7 +197,11 @@ export class DashboardController {
     normaliseRows(rows){
 
 
-        return Array.isArray(rows)
+        return Array.isArray(
+
+            rows
+
+        )
 
             ? rows
 
@@ -433,9 +451,11 @@ export class DashboardController {
 
         return {
 
+
             /*
                 Workflow process
             */
+
 
             process:
 
@@ -451,11 +471,14 @@ export class DashboardController {
 
 
 
+
+
             /*
                 Saved Custom View.
 
                 This controls grid columns only.
             */
+
 
             currentView:
 
@@ -476,9 +499,12 @@ export class DashboardController {
 
 
 
+
+
             /*
                 Dashboard data mode
             */
+
 
             opportunityMode:
 
@@ -491,9 +517,12 @@ export class DashboardController {
 
 
 
+
+
             /*
                 Attribute filters
             */
+
 
             attributeField:
 
@@ -532,9 +561,12 @@ export class DashboardController {
 
 
 
+
+
             /*
                 Lookup/date filters
             */
+
 
             viewFilterType:
 
@@ -569,9 +601,12 @@ export class DashboardController {
 
 
 
+
+
             /*
                 Supplier mode
             */
+
 
             selectedSupplier:
 
@@ -583,9 +618,12 @@ export class DashboardController {
 
 
 
+
+
             /*
                 Request context
             */
+
 
             rowsLimit:
 
@@ -643,7 +681,7 @@ export class DashboardController {
 
                 state.restrictAssigned ===
 
-                true
+                    true
 
         };
 
@@ -858,6 +896,154 @@ export class DashboardController {
 
 
 
+    async loadDashboardConstants(request){
+
+
+        if(
+
+            !this.dashboardConstantsService
+
+            ||
+
+            typeof this.dashboardConstantsService.load !==
+
+                "function"
+
+        ){
+
+
+            console.warn(
+
+                "[PHX DASHBOARD CONSTANTS SERVICE MISSING]"
+
+            );
+
+
+            return {};
+
+
+        }
+
+
+        const constants =
+
+            await this.dashboardConstantsService.load(
+
+                request.userKey
+
+            );
+
+
+        console.log(
+
+            "[PHX DASHBOARD CONSTANTS]",
+
+            constants
+
+        );
+
+
+        return constants
+
+        &&
+
+        typeof constants ===
+
+            "object"
+
+            ? constants
+
+            : {};
+
+
+    }
+
+
+
+
+
+
+    async calculateRows(
+
+        rows,
+
+        dashboardConstants
+
+    ){
+
+
+        if(
+
+            !this.calculationEngine
+
+            ||
+
+            typeof this.calculationEngine.calculateRows !==
+
+                "function"
+
+        ){
+
+
+            console.warn(
+
+                "[PHX CALCULATION ENGINE MISSING]"
+
+            );
+
+
+            return this.normaliseRows(
+
+                rows
+
+            );
+
+
+        }
+
+
+        const calculatedRows =
+
+            await this.calculationEngine.calculateRows(
+
+                this.normaliseRows(
+
+                    rows
+
+                ),
+
+                dashboardConstants
+
+            );
+
+
+        console.log(
+
+            "[PHX CALC COMPLETE]",
+
+            calculatedRows[0]?.calc
+
+            ??
+
+            null
+
+        );
+
+
+        return this.normaliseRows(
+
+            calculatedRows
+
+        );
+
+
+    }
+
+
+
+
+
+
     async loadDashboard(){
 
 
@@ -957,23 +1143,73 @@ export class DashboardController {
             }
 
 
+
+
+
+
+            /*
+                Load constants and opportunities in parallel.
+
+                OpportunityService already performs the
+                enrichment pipeline before returning rows.
+            */
+
+
+            const [
+
+                dashboardConstants,
+
+                loadedRows
+
+            ] =
+
+                await Promise.all([
+
+                    this.loadDashboardConstants(
+
+                        request
+
+                    ),
+
+
+                    request.opportunityMode ===
+
+                        "By Supplier"
+
+                        ? this.loadBySupplier(
+
+                            request
+
+                        )
+
+                        : this.loadByView(
+
+                            request
+
+                        )
+
+                ]);
+
+
+
+
+
+
+            /*
+                Calculation Engine runs after enrichment and
+                before AppState publication and grid rendering.
+            */
+
+
             const rows =
 
-                request.opportunityMode ===
+                await this.calculateRows(
 
-                    "By Supplier"
+                    loadedRows,
 
-                    ? await this.loadBySupplier(
+                    dashboardConstants
 
-                        request
-
-                    )
-
-                    : await this.loadByView(
-
-                        request
-
-                    );
+                );
 
 
             console.log(
@@ -1003,6 +1239,11 @@ export class DashboardController {
                 rows:
 
                     rows,
+
+
+                dashboardConstants:
+
+                    dashboardConstants,
 
 
                 totalRecords:
@@ -1091,6 +1332,17 @@ export class DashboardController {
                     rowsRendered:
 
                         rows.length,
+
+
+                    calculatedRows:
+
+                        rows.filter(
+
+                            row =>
+
+                                row?.calc
+
+                        ).length,
 
 
                     request:
@@ -1182,7 +1434,15 @@ export class DashboardController {
 
                     <div class="phoenix-dashboard-message phoenix-dashboard-error">
 
-                        ${this.escapeHtml(errorMessage)}
+                        ${
+
+                            this.escapeHtml(
+
+                                errorMessage
+
+                            )
+
+                        }
 
                     </div>
 
@@ -1224,7 +1484,6 @@ export class DashboardController {
 
             >
 
-                
 
             </div>
 

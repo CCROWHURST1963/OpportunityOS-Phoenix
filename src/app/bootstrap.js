@@ -1,3 +1,6 @@
+import "../tests/FinancialParityTest.js";
+
+
 import { App }
     from "./app.js";
 
@@ -63,6 +66,33 @@ document.addEventListener(
 
 
         await container.build();
+
+
+
+
+
+
+        /*
+            Diagnostic globals.
+
+            These let us inspect the live Phoenix state and
+            service container from the browser console.
+        */
+
+
+        window.phoenixState =
+
+            state;
+
+
+        window.phoenixViewState =
+
+            viewState;
+
+
+        window.phoenixContainer =
+
+            container;
 
 
 
@@ -175,42 +205,6 @@ document.addEventListener(
 
                             "processRepository"
 
-                        ),
-
-
-                    trackerLookupService:
-
-                        container.get(
-
-                            "trackerLookupService"
-
-                        ),
-
-
-                    dashboardConstantsService:
-
-                        container.get(
-
-                            "dashboardConstantsService"
-
-                        ),
-
-
-                    statusTrackerService:
-
-                        container.get(
-
-                            "statusTrackerService"
-
-                        ),
-
-
-                    amazonPackInfoService:
-
-                        container.get(
-
-                            "amazonPackInfoService"
-
                         )
 
                 }
@@ -221,9 +215,63 @@ document.addEventListener(
 
 
 
+        window.phoenixApp =
+
+            app;
+
+
+
+
+
+
         await app.start();
-window.phoenixState = state;
-window.phoenixContainer = container;
+
+
+        console.log(
+
+            "[PHX GLOBALS READY]",
+
+            {
+
+                phoenixState:
+
+                    Boolean(
+
+                        window.phoenixState
+
+                    ),
+
+
+                phoenixContainer:
+
+                    Boolean(
+
+                        window.phoenixContainer
+
+                    ),
+
+
+                phoenixApp:
+
+                    Boolean(
+
+                        window.phoenixApp
+
+                    ),
+
+
+                financialParityTest:
+
+                    Boolean(
+
+                        window.financialParityTest
+
+                    )
+
+            }
+
+        );
+
 
     }
 

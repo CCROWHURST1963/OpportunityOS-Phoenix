@@ -75,11 +75,11 @@ import { DashboardConstantsService }
 
 
 import { EnrichmentPipeline }
-    from "./enrichment/EnrichmentPipeline.js";
+    from "./enrichment/EnrichmentPipeline.js?v=PHX_PACK_PIPELINE_001";
 
 
 import { AmazonPackInfoEnricher }
-    from "./enrichment/AmazonPackInfoEnricher.js";
+    from "./enrichment/AmazonPackInfoEnricher.js?v=PHX_PACK_ENRICH_002";
 
 
 import { PackSizeDerivationService }
@@ -92,6 +92,46 @@ import { OpportunityService }
 
 import { SupplierOpportunityService }
     from "./SupplierOpportunityService.js";
+
+
+import { CalculationEngine }
+    from "../calculations/CalculationEngine.js";
+
+
+import { FinancialEngine }
+    from "../engines/financial/FinancialEngine.js";
+
+
+import { FeeCalculator }
+    from "../engines/financial/FeeCalculator.js";
+
+
+import { VatCalculator }
+    from "../engines/financial/VatCalculator.js";
+
+
+import { ProfitCalculator }
+    from "../engines/financial/ProfitCalculator.js";
+
+
+import { CostResolutionEngine }
+    from "../engines/cost/CostResolutionEngine.js";
+
+
+import { ProfitAtPrice }
+    from "../calculations/pricing/ProfitAtPrice.js";
+
+
+import { FindPriceForTarget }
+    from "../calculations/pricing/FindPriceForTarget.js";
+
+
+import { MaxCostAtPrice }
+    from "../calculations/pricing/MaxCostAtPrice.js";
+
+
+import { PricingTargetEngine }
+    from "../calculations/pricing/PricingTargetEngine.js";
 
 
 import { HeaderController }
@@ -355,13 +395,7 @@ export class ServiceContainer {
         this.services.dashboardConstantsRepository =
 
             dashboardConstantsRepository;
-
-
-
-
-
-
-        /*
+                   /*
             ENRICHMENT
         */
 
@@ -554,6 +588,224 @@ export class ServiceContainer {
 
 
         /*
+            FINANCIAL ENGINE
+        */
+
+
+        const feeCalculator =
+
+            new FeeCalculator();
+
+
+        const vatCalculator =
+
+            new VatCalculator();
+
+
+        const profitCalculator =
+
+            new ProfitCalculator();
+
+
+        const financialEngine =
+
+            new FinancialEngine({
+
+                feeCalculator:
+
+                    feeCalculator,
+
+
+                vatCalculator:
+
+                    vatCalculator,
+
+
+                profitCalculator:
+
+                    profitCalculator
+
+            });
+
+
+        this.services.feeCalculator =
+
+            feeCalculator;
+
+
+        this.services.vatCalculator =
+
+            vatCalculator;
+
+
+        this.services.profitCalculator =
+
+            profitCalculator;
+
+
+        this.services.financialEngine =
+
+            financialEngine;
+
+
+
+
+
+
+        /*
+            PRICING AND COST RESOLUTION
+        */
+
+
+        const profitAtPrice =
+
+            new ProfitAtPrice();
+
+
+        const findPriceForTarget =
+
+            new FindPriceForTarget(
+
+                profitAtPrice
+
+            );
+
+
+        const maxCostAtPrice =
+
+            new MaxCostAtPrice(
+
+                financialEngine
+
+            );
+
+
+        const costResolutionEngine =
+
+            new CostResolutionEngine({
+
+                financialEngine:
+
+                    financialEngine,
+
+
+                maxCostAtPrice:
+
+                    maxCostAtPrice
+
+            });
+
+
+        const pricingTargetEngine =
+
+            new PricingTargetEngine({
+
+                profitAtPrice:
+
+                    profitAtPrice,
+
+
+                financialEngine:
+
+                    financialEngine,
+
+
+                costResolutionEngine:
+
+                    costResolutionEngine,
+
+
+                maxCostAtPrice:
+
+                    maxCostAtPrice,
+
+
+                findPriceForTarget:
+
+                    findPriceForTarget
+
+            });
+
+
+        this.services.profitAtPrice =
+
+            profitAtPrice;
+
+
+        this.services.findPriceForTarget =
+
+            findPriceForTarget;
+
+
+        this.services.maxCostAtPrice =
+
+            maxCostAtPrice;
+
+
+        this.services.costResolutionEngine =
+
+            costResolutionEngine;
+
+
+        this.services.pricingTargetEngine =
+
+            pricingTargetEngine;
+                     /*
+            CALCULATION PIPELINE
+
+            PricingTargetEngine runs first so that
+            Break Even, Target Selling Price and
+            Maximum Cost are available before the
+            remaining calculators execute.
+        */
+
+
+        const calculationEngine =
+
+            new CalculationEngine();
+
+
+        if(
+
+            typeof calculationEngine.registerFirst ===
+
+                "function"
+
+        ){
+
+
+            calculationEngine.registerFirst(
+
+                pricingTargetEngine
+
+            );
+
+
+        }
+
+        else {
+
+
+            calculationEngine.register(
+
+                pricingTargetEngine
+
+            );
+
+
+        }
+
+
+        this.services.calculationEngine =
+
+            calculationEngine;
+
+
+
+
+
+
+        /*
             GRID
         */
 
@@ -632,7 +884,11 @@ export class ServiceContainer {
 
                 this.appState,
 
-                gridRenderer
+                gridRenderer,
+
+                calculationEngine,
+
+                dashboardConstantsService
 
             );
 
@@ -669,6 +925,101 @@ export class ServiceContainer {
         this.services.statusController =
 
             statusController;
+                   /*
+            STARTUP DIAGNOSTICS
+        */
+
+
+        console.log(
+
+            "[PHX SERVICE CONTAINER READY]",
+
+            {
+
+                calculationEngine:
+
+                    Boolean(
+
+                        calculationEngine
+
+                    ),
+
+
+                financialEngine:
+
+                    Boolean(
+
+                        financialEngine
+
+                    ),
+
+
+                pricingTargetEngine:
+
+                    Boolean(
+
+                        pricingTargetEngine
+
+                    ),
+
+
+                costResolutionEngine:
+
+                    Boolean(
+
+                        costResolutionEngine
+
+                    ),
+
+
+                maxCostAtPrice:
+
+                    Boolean(
+
+                        maxCostAtPrice
+
+                    ),
+
+
+                dashboardConstantsService:
+
+                    Boolean(
+
+                        dashboardConstantsService
+
+                    ),
+
+
+                calculatorCount:
+
+                    calculationEngine.calculators?.length
+
+                    ??
+
+                    0,
+
+
+                calculatorOrder:
+
+                    calculationEngine.calculators?.map(
+
+                        calculator =>
+
+                            calculator?.constructor?.name
+
+                            ??
+
+                            "UnknownCalculator"
+
+                    )
+
+                    ??
+
+                    []
+
+            }
+
+        );
 
 
     }
@@ -688,3 +1039,4 @@ export class ServiceContainer {
 
 
 }
+ 
