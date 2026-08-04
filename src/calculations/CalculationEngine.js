@@ -1,4 +1,4 @@
-import { CalculationContext }
+ import { CalculationContext }
     from "./CalculationContext.js";
 
 
@@ -22,7 +22,9 @@ export class CalculationEngine {
 
         calculators = null,
 
-        rowCalculationSettingsEnricher = null
+        rowCalculationSettingsEnricher = null,
+
+        scoreEngine = null
 
     ){
 
@@ -40,6 +42,11 @@ export class CalculationEngine {
                 ? rowCalculationSettingsEnricher
 
                 : new RowCalculationSettingsEnricher();
+
+
+        this.scoreEngine =
+
+            scoreEngine;
 
 
 
@@ -1270,6 +1277,188 @@ export class CalculationEngine {
 
 
 
+    async calculateScore(
+
+        row,
+
+        publishedCalculation
+
+    ){
+
+
+        if(
+
+            !this.scoreEngine
+
+            ||
+
+            typeof this.scoreEngine.calculate !==
+
+                "function"
+
+        ){
+
+
+            return null;
+
+
+        }
+
+
+        try{
+
+
+            const scoreResult =
+
+                await this.scoreEngine.calculate({
+
+                    row:
+
+                        row,
+
+
+                    calc:
+
+                        publishedCalculation
+
+                });
+
+
+            if(
+
+                scoreResult
+
+                &&
+
+                typeof scoreResult.toJSON ===
+
+                    "function"
+
+            ){
+
+
+                return scoreResult.toJSON();
+
+
+            }
+
+
+            return scoreResult
+
+            &&
+
+            typeof scoreResult ===
+
+                "object"
+
+                ? scoreResult
+
+                : null;
+
+
+        }
+
+        catch(error){
+
+
+            console.error(
+
+                "[PHX SCORE CALCULATION ERROR]",
+
+                {
+
+                    asin:
+
+                        row?.asin
+
+                        ??
+
+                        row?._asin
+
+                        ??
+
+                        "",
+
+
+                    error:
+
+                        error
+
+                }
+
+            );
+
+
+            return {
+
+                rawScore:
+
+                    0,
+
+
+                maxScore:
+
+                    0,
+
+
+                percent:
+
+                    0,
+
+
+                completed:
+
+                    false,
+
+
+                rules:
+
+                    [],
+
+
+                breakdown:
+
+                    [],
+
+
+                error:{
+
+                    message:
+
+                        error?.message
+
+                        ??
+
+                        String(
+
+                            error
+
+                        ),
+
+
+                    stack:
+
+                        error?.stack
+
+                        ??
+
+                        ""
+
+                }
+
+            };
+
+
+        }
+
+
+    }
+
+
+
+
+
+
     async calculateRow(
 
         row,
@@ -1365,6 +1554,46 @@ export class CalculationEngine {
                 calculation
 
             );
+
+
+        const score =
+
+            await this.calculateScore(
+
+                enrichedRow,
+
+                publishedCalculation
+
+            );
+
+
+        if(score){
+
+
+            publishedCalculation.score =
+
+                score;
+
+
+            publishedCalculation.opportunityScore =
+
+                score.percent
+
+                ??
+
+                0;
+
+
+            publishedCalculation.opportunity_score =
+
+                score.percent
+
+                ??
+
+                0;
+
+
+        }
 
 
         return {

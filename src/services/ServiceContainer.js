@@ -46,6 +46,10 @@ import { DashboardConstantsRepository }
     from "../repositories/DashboardConstantsRepository.js";
 
 
+import { ScoringRuleRepository }
+    from "../repositories/ScoringRuleRepository.js";
+
+
 import { ViewConfigService }
     from "./ViewConfigService.js";
 
@@ -72,6 +76,10 @@ import { TrackerLookupService }
 
 import { DashboardConstantsService }
     from "./DashboardConstantsService.js";
+
+
+import { ScoringRuleService }
+    from "./ScoringRuleService.js";
 
 
 import { EnrichmentPipeline }
@@ -132,6 +140,70 @@ import { MaxCostAtPrice }
 
 import { PricingTargetEngine }
     from "../calculations/pricing/PricingTargetEngine.js";
+
+
+import { ScoringRuleResolver }
+    from "../engines/scoring/ScoringRuleResolver.js";
+
+
+import { ScoreEngine }
+    from "../engines/scoring/ScoreEngine.js";
+
+
+import { BuyBoxAtOrAboveTargetRule }
+    from "../engines/scoring/rules/BuyBoxAtOrAboveTargetRule.js";
+
+
+import { WatchPriceRule }
+    from "../engines/scoring/rules/WatchPriceRule.js";
+
+
+import { ValidatedPriceTypeRule }
+    from "../engines/scoring/rules/ValidatedPriceTypeRule.js";
+
+
+import { BreakevenWiggleRule }
+    from "../engines/scoring/rules/BreakevenWiggleRule.js";
+
+
+import { CurrentMinimumEconomicsRule }
+    from "../engines/scoring/rules/CurrentMinimumEconomicsRule.js";
+
+
+import { PriceDeviationRule }
+    from "../engines/scoring/rules/PriceDeviationRule.js";
+
+
+import { AmazonOOSRule }
+    from "../engines/scoring/rules/AmazonOOSRule.js";
+
+
+import { BuyBoxWinnersRule }
+    from "../engines/scoring/rules/BuyBoxWinnersRule.js";
+
+
+import { TopSellerWinRule }
+    from "../engines/scoring/rules/TopSellerWinRule.js";
+
+
+import { SalesEstimatedOnRule }
+    from "../engines/scoring/rules/SalesEstimatedOnRule.js";
+
+
+import { EstimatedSalesRule }
+    from "../engines/scoring/rules/EstimatedSalesRule.js";
+
+
+import { EstimatedSharedSalesRule }
+    from "../engines/scoring/rules/EstimatedSharedSalesRule.js";
+
+
+import { PackSizeRule }
+    from "../engines/scoring/rules/PackSizeRule.js";
+
+
+import { EligibleToSellRule }
+    from "../engines/scoring/rules/EligibleToSellRule.js";
 
 
 import { HeaderController }
@@ -342,6 +414,15 @@ export class ServiceContainer {
             );
 
 
+        const scoringRuleRepository =
+
+            new ScoringRuleRepository(
+
+                supabaseClient
+
+            );
+
+
         this.services.opportunityRepository =
 
             opportunityRepository;
@@ -395,7 +476,12 @@ export class ServiceContainer {
         this.services.dashboardConstantsRepository =
 
             dashboardConstantsRepository;
-                   /*
+
+
+        this.services.scoringRuleRepository =
+
+            scoringRuleRepository;
+                    /*
             ENRICHMENT
         */
 
@@ -538,6 +624,15 @@ export class ServiceContainer {
             );
 
 
+        const scoringRuleService =
+
+            new ScoringRuleService(
+
+                scoringRuleRepository
+
+            );
+
+
         this.services.opportunityService =
 
             opportunityService;
@@ -581,6 +676,11 @@ export class ServiceContainer {
         this.services.dashboardConstantsService =
 
             dashboardConstantsService;
+
+
+        this.services.scoringRuleService =
+
+            scoringRuleService;
 
 
 
@@ -750,7 +850,83 @@ export class ServiceContainer {
         this.services.pricingTargetEngine =
 
             pricingTargetEngine;
-                     /*
+                    /*
+            SCORING ENGINE
+        */
+
+
+        const scoringRuleResolver =
+
+            new ScoringRuleResolver(
+
+                scoringRuleService
+
+            );
+
+
+        await scoringRuleResolver.load(
+
+            this.appState.getState()
+
+                ?.userKey
+
+        );
+
+
+    const scoreEngine =
+
+    new ScoreEngine(
+
+        scoringRuleResolver,
+
+        [
+
+            new BuyBoxAtOrAboveTargetRule(scoringRuleResolver),
+
+            new WatchPriceRule(scoringRuleResolver),
+
+            new ValidatedPriceTypeRule(scoringRuleResolver),
+
+            new BreakevenWiggleRule(scoringRuleResolver),
+
+            new CurrentMinimumEconomicsRule(scoringRuleResolver),
+
+            new PriceDeviationRule(scoringRuleResolver),
+
+            new AmazonOOSRule(scoringRuleResolver),
+
+            new BuyBoxWinnersRule(scoringRuleResolver),
+
+            new TopSellerWinRule(scoringRuleResolver),
+
+            new SalesEstimatedOnRule(scoringRuleResolver),
+
+            new EstimatedSalesRule(scoringRuleResolver),
+
+            new EstimatedSharedSalesRule(scoringRuleResolver),
+
+            new PackSizeRule(scoringRuleResolver),
+
+            new EligibleToSellRule(scoringRuleResolver)
+
+        ]
+
+    );
+
+this.services.scoringRuleResolver =
+
+    scoringRuleResolver;
+
+this.services.scoreEngine =
+
+    scoreEngine;
+
+
+
+
+
+
+        /*
             CALCULATION PIPELINE
 
             PricingTargetEngine runs first so that
@@ -762,7 +938,15 @@ export class ServiceContainer {
 
         const calculationEngine =
 
-            new CalculationEngine();
+            new CalculationEngine(
+
+                null,
+
+                null,
+
+                scoreEngine
+
+            );
 
 
         if(
@@ -925,7 +1109,7 @@ export class ServiceContainer {
         this.services.statusController =
 
             statusController;
-                   /*
+                /*
             STARTUP DIAGNOSTICS
         */
 
@@ -959,6 +1143,33 @@ export class ServiceContainer {
                     Boolean(
 
                         pricingTargetEngine
+
+                    ),
+
+
+                scoreEngine:
+
+                    Boolean(
+
+                        scoreEngine
+
+                    ),
+
+
+                scoringRuleResolver:
+
+                    Boolean(
+
+                        scoringRuleResolver
+
+                    ),
+
+
+                scoringRuleService:
+
+                    Boolean(
+
+                        scoringRuleService
 
                     ),
 
@@ -1015,7 +1226,35 @@ export class ServiceContainer {
 
                     ??
 
-                    []
+                    [],
+
+
+                scoringRules:
+
+                    scoreEngine?.rules?.map(
+
+                        rule =>
+
+                            rule?.constructor?.name
+
+                            ??
+
+                            "UnknownRule"
+
+                    )
+
+                    ??
+
+                    [],
+
+
+                scoringRuleCount:
+
+                    scoreEngine?.rules?.length
+
+                    ??
+
+                    0
 
             }
 
@@ -1039,4 +1278,3 @@ export class ServiceContainer {
 
 
 }
- 
