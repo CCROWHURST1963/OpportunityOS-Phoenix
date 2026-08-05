@@ -26,7 +26,9 @@ export class CalculationEngine {
 
         scoreEngine = null,
 
-        buySignalEngine = null
+        buySignalEngine = null,
+
+        statusEngine = null
 
     ){
 
@@ -54,6 +56,11 @@ export class CalculationEngine {
         this.buySignalEngine =
 
             buySignalEngine;
+
+
+        this.statusEngine =
+
+            statusEngine;
 
 
 
@@ -1665,6 +1672,104 @@ export class CalculationEngine {
 
 
 
+    async calculateStatusTransition(
+
+        row
+
+    ){
+
+
+        if(
+
+            !this.statusEngine
+
+            ||
+
+            typeof this.statusEngine.calculateTransition !==
+
+                "function"
+
+        ){
+
+
+            return null;
+
+
+        }
+
+
+        try{
+
+
+            const transition =
+
+                await this.statusEngine.calculateTransition(
+
+                    row
+
+                );
+
+
+            return transition ===
+
+                "Qualified"
+
+                ||
+
+                transition ===
+
+                    "Qualified Out"
+
+                ? transition
+
+                : null;
+
+
+        }
+
+        catch(error){
+
+
+            console.error(
+
+                "[PHX STATUS TRANSITION ERROR]",
+
+                {
+
+                    asin:
+
+                        row?.asin
+
+                        ??
+
+                        row?._asin
+
+                        ??
+
+                        "",
+
+
+                    error:
+
+                        error
+
+                }
+
+            );
+
+
+            return null;
+
+
+        }
+
+
+    }
+
+
+
+
+
     async calculateRow(
 
         row,
@@ -1985,7 +2090,7 @@ export class CalculationEngine {
         }
 
 
-        return {
+        const canonicalRowBeforeStatus = {
 
             ...enrichedRow,
 
@@ -2113,6 +2218,184 @@ export class CalculationEngine {
             buy_signal_rules:
 
                 buySignalRules,
+
+
+            calc:
+
+                publishedCalculation
+
+        };
+
+
+        const statusTracker =
+
+            canonicalRowBeforeStatus.status_tracker
+
+            ||
+
+            null;
+
+
+        const currentStatus =
+
+            String(
+
+                statusTracker?.status
+
+                ??
+
+                canonicalRowBeforeStatus.status
+
+                ??
+
+                "Review"
+
+            ).trim()
+
+            ||
+
+            "Review";
+
+
+        const overrideStatus =
+
+            String(
+
+                statusTracker?.override
+
+                ??
+
+                canonicalRowBeforeStatus.override
+
+                ??
+
+                canonicalRowBeforeStatus._override
+
+                ??
+
+                canonicalRowBeforeStatus.override_status
+
+                ??
+
+                canonicalRowBeforeStatus._override_status
+
+                ??
+
+                canonicalRowBeforeStatus.tracker_override
+
+                ??
+
+                canonicalRowBeforeStatus.status_tracker_override
+
+                ??
+
+                ""
+
+            ).trim();
+
+
+        const overrideEnabled =
+
+            overrideStatus !==
+
+            "";
+
+
+        const statusTransition =
+
+            overrideEnabled
+
+                ? null
+
+                : await this.calculateStatusTransition(
+
+                    canonicalRowBeforeStatus
+
+                );
+
+
+        const status =
+
+            overrideEnabled
+
+                ? overrideStatus
+
+                : statusTransition
+
+                    ??
+
+                    currentStatus;
+
+
+        const statusReason =
+
+            overrideEnabled
+
+                ? "Manual override"
+
+                : statusTransition
+
+                    &&
+
+                    statusTransition !==
+
+                        currentStatus
+
+                    ? "Automatic status update"
+
+                    : "";
+
+
+        const statusChanged =
+
+            status !==
+
+            currentStatus;
+
+
+        publishedCalculation.status =
+
+            status;
+
+
+        publishedCalculation.status_reason =
+
+            statusReason;
+
+
+        publishedCalculation.status_changed =
+
+            statusChanged;
+
+
+        return {
+
+            ...canonicalRowBeforeStatus,
+
+
+            status:
+
+                status,
+
+
+            status_reason:
+
+                statusReason,
+
+
+            statusReason:
+
+                statusReason,
+
+
+            status_changed:
+
+                statusChanged,
+
+
+            statusChanged:
+
+                statusChanged,
 
 
             calc:
