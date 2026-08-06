@@ -168,6 +168,272 @@ export class ToolbarController {
 
 
 
+    getProcessName(process){
+
+
+        if(
+
+            typeof process ===
+
+            "string"
+
+        ){
+
+
+            return process.trim();
+
+
+        }
+
+
+        return String(
+
+            process?.process_name
+
+            ??
+
+            process?.processName
+
+            ??
+
+            process?.name
+
+            ??
+
+            process?.label
+
+            ??
+
+            process?.value
+
+            ??
+
+            ""
+
+        ).trim();
+
+
+    }
+
+
+
+
+
+
+    renderProcessOptions(state){
+
+
+        const currentProcess =
+
+            String(
+
+                state?.process
+
+                ??
+
+                ""
+
+            ).trim();
+
+
+        const sourceProcesses =
+
+            Array.isArray(
+
+                state?.processes
+
+            )
+
+                ? state.processes
+
+                : [];
+
+
+        const seen =
+
+            new Set();
+
+
+        const processes =
+
+            [];
+
+
+        for(const source of sourceProcesses){
+
+
+            const processName =
+
+                this.getProcessName(
+
+                    source
+
+                );
+
+
+            if(!processName){
+
+
+                continue;
+
+
+            }
+
+
+            const key =
+
+                processName.toLocaleLowerCase();
+
+
+            if(seen.has(key)){
+
+
+                continue;
+
+
+            }
+
+
+            seen.add(key);
+
+
+            processes.push(
+
+                processName
+
+            );
+
+
+        }
+
+
+        /*
+            Keep the currently selected process visible while
+            startup data is loading or if a saved process is
+            temporarily absent from the returned process list.
+        */
+
+
+        if(
+
+            currentProcess
+
+            &&
+
+            !seen.has(
+
+                currentProcess.toLocaleLowerCase()
+
+            )
+
+        ){
+
+
+            processes.unshift(
+
+                currentProcess
+
+            );
+
+
+        }
+
+
+        if(processes.length === 0){
+
+
+            const fallback =
+
+                currentProcess
+
+                ||
+
+                "Can We Sell";
+
+
+            const escapedFallback =
+
+                this.escapeHtml(
+
+                    fallback
+
+                );
+
+
+            return `
+
+                <option
+
+                    value="${escapedFallback}"
+
+                    selected
+
+                >
+
+                    ${escapedFallback}
+
+                </option>
+
+            `;
+
+
+        }
+
+
+        return processes
+
+            .map(processName => {
+
+
+                const escapedProcessName =
+
+                    this.escapeHtml(
+
+                        processName
+
+                    );
+
+
+                const selected =
+
+                    processName ===
+
+                    currentProcess
+
+                        ? "selected"
+
+                        : "";
+
+
+                return `
+
+                    <option
+
+                        value="${escapedProcessName}"
+
+                        ${selected}
+
+                    >
+
+                        ${escapedProcessName}
+
+                    </option>
+
+                `;
+
+
+            })
+
+            .join("");
+
+
+    }
+
+
+
+
+
+
     getOpportunityViewOptions(){
 
 
@@ -1039,13 +1305,17 @@ export class ToolbarController {
             100;
 
 
-        const safeProcess =
+        const processOptions =
 
-            this.escapeHtml(
+            this.renderProcessOptions(
 
-                process
+                state
 
             );
+
+
+
+
 
 
         const viewSelector =
@@ -1106,11 +1376,7 @@ export class ToolbarController {
             <select id="phoenix-process">
 
 
-                <option value="${safeProcess}">
-
-                    ${safeProcess}
-
-                </option>
+                ${processOptions}
 
 
             </select>
@@ -2193,13 +2459,59 @@ export class ToolbarController {
             processSelect.onchange = event => {
 
 
+                const process =
+
+                    String(
+
+                        event.target.value
+
+                        ??
+
+                        ""
+
+                    ).trim();
+
+
                 this.appState.update({
 
                     process:
 
-                        event.target.value
+                        process,
+
+
+                    gridLoaded:
+
+                        false,
+
+
+                    totalOpportunities:
+
+                        0
 
                 });
+
+
+                document.dispatchEvent(
+
+                    new CustomEvent(
+
+                        "phoenix-process-changed",
+
+                        {
+
+                            detail:{
+
+                                process:
+
+                                    process
+
+                            }
+
+                        }
+
+                    )
+
+                );
 
 
             };

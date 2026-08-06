@@ -41,6 +41,21 @@ export class App {
             null;
 
 
+        this.processChangedHandler =
+
+            null;
+
+
+        this.loadedProcess =
+
+            "";
+
+
+        this.processViewLoadSequence =
+
+            0;
+
+
     }
 
 
@@ -79,6 +94,9 @@ export class App {
 
 
             await this.loadDashboardConfiguration();
+
+
+            this.bindProcessChangeHandling();
 
 
 
@@ -620,12 +638,21 @@ export class App {
 
                 await this.services.viewConfig.loadCurrentView(
 
-                    process
+                    this.resolveProcessView(
+
+                        process
+
+                    )
 
                 );
 
 
         }
+
+
+        this.loadedProcess =
+
+            process;
 
 
         this.appState.update({
@@ -674,6 +701,625 @@ export class App {
                 {}
 
         });
+
+
+    }
+
+
+
+
+
+
+    getProcessName(process){
+
+
+        if(
+
+            typeof process ===
+
+            "string"
+
+        ){
+
+
+            return process.trim();
+
+
+        }
+
+
+        return String(
+
+            process?.process_name
+
+            ??
+
+            process?.processName
+
+            ??
+
+            process?.name
+
+            ??
+
+            ""
+
+        ).trim();
+
+
+    }
+
+
+
+
+
+
+    getProcessView(process){
+
+
+        return String(
+
+            process?.process_view
+
+            ??
+
+            process?.processView
+
+            ??
+
+            ""
+
+        ).trim();
+
+
+    }
+
+
+
+
+
+
+    resolveProcessView(processName){
+
+
+        const resolvedProcessName =
+
+            String(
+
+                processName
+
+                ??
+
+                ""
+
+            ).trim();
+
+
+        const processes =
+
+            this.appState.getState().processes;
+
+
+        const matchingProcess =
+
+            Array.isArray(processes)
+
+                ? processes.find(process =>
+
+                    this.getProcessName(
+
+                        process
+
+                    ) ===
+
+                    resolvedProcessName
+
+                )
+
+                : null;
+
+
+        return this.getProcessView(
+
+            matchingProcess
+
+        )
+
+        ||
+
+        resolvedProcessName;
+
+
+    }
+
+
+
+
+
+
+    bindProcessChangeHandling(){
+
+
+        if(this.processChangedHandler){
+
+
+            document.removeEventListener(
+
+                "phoenix-process-changed",
+
+                this.processChangedHandler
+
+            );
+
+
+        }
+
+
+        this.processChangedHandler =
+
+            event => {
+
+
+                const process =
+
+                    String(
+
+                        event?.detail?.process
+
+                        ??
+
+                        this.appState.getState().process
+
+                        ??
+
+                        ""
+
+                    ).trim();
+
+
+                if(!process){
+
+
+                    return;
+
+
+                }
+
+
+                this.loadedProcess =
+
+                    process;
+
+
+                console.log(
+
+                    "[PHX PROCESS CHANGE EVENT]",
+
+                    {
+
+                        process:
+
+                            process,
+
+
+                        currentViewBeforeLoad:
+
+                            this.appState.getState().currentView
+
+                            ??
+
+                            ""
+
+                    }
+
+                );
+
+
+                this.loadCurrentViewForProcess(
+
+                    process
+
+                );
+
+
+            };
+
+
+        document.addEventListener(
+
+            "phoenix-process-changed",
+
+            this.processChangedHandler
+
+        );
+
+
+    }
+
+
+
+
+
+
+    async loadCurrentViewForProcess(process){
+
+
+        const resolvedProcess =
+
+            String(
+
+                process
+
+                ??
+
+                ""
+
+            ).trim();
+
+
+        if(!resolvedProcess){
+
+
+            return null;
+
+
+        }
+
+
+        const processView =
+
+            this.resolveProcessView(
+
+                resolvedProcess
+
+            );
+
+
+        const requestSequence =
+
+            ++this.processViewLoadSequence;
+
+
+        this.appState.update({
+
+            currentView:
+
+                "",
+
+
+            currentViewConfig:
+
+                null,
+
+
+            rows:
+
+                [],
+
+
+            totalRecords:
+
+                0,
+
+
+            gridLoaded:
+
+                false,
+
+
+            totalOpportunities:
+
+                0,
+
+
+            dashboardStatus:
+
+                "Loading",
+
+
+            status:
+
+                `Loading ${resolvedProcess} View`
+
+        });
+
+
+        try{
+
+
+            let currentView =
+
+                null;
+
+
+            if(
+
+                this.services.viewConfig
+
+                &&
+
+                typeof this.services.viewConfig.loadCurrentView ===
+
+                    "function"
+
+            ){
+
+
+                currentView =
+
+                    await this.services.viewConfig.loadCurrentView(
+
+                        processView
+
+                    );
+
+
+            }
+
+
+            /*
+                Ignore a slower response if the user selected
+                another process while this request was loading.
+            */
+
+
+            if(
+
+                requestSequence !==
+
+                    this.processViewLoadSequence
+
+                ||
+
+                this.appState.getState().process !==
+
+                    resolvedProcess
+
+            ){
+
+
+                return null;
+
+
+            }
+
+
+            const activeView =
+
+                currentView?.active_view
+
+                ??
+
+                currentView?.activeView
+
+                ??
+
+                "";
+
+
+            const viewConfig =
+
+                currentView?.view_config
+
+                ??
+
+                currentView?.viewConfig
+
+                ??
+
+                {};
+
+
+            this.appState.update({
+
+                currentView:
+
+                    activeView,
+
+
+                currentViewConfig:
+
+                    viewConfig,
+
+
+                rows:
+
+                    [],
+
+
+                totalRecords:
+
+                    0,
+
+
+                gridLoaded:
+
+                    false,
+
+
+                totalOpportunities:
+
+                    0,
+
+
+                dashboardStatus:
+
+                    "Ready",
+
+
+                status:
+
+                    `${resolvedProcess} View Ready`
+
+            });
+
+
+            console.log(
+
+                "[PHX0070E PROCESS CURRENT VIEW LOADED]",
+
+                {
+
+                    process:
+
+                        resolvedProcess,
+
+
+                    processView:
+
+                        processView,
+
+
+                    currentView:
+
+                        activeView,
+
+
+                    currentViewConfig:
+
+                        viewConfig
+
+                }
+
+            );
+
+
+            if(
+
+                this.controllers.toolbar
+
+                &&
+
+                typeof this.controllers.toolbar.renderAndBind ===
+
+                    "function"
+
+            ){
+
+
+                this.controllers.toolbar.renderAndBind();
+
+
+            }
+
+
+            const dashboardHost =
+
+                document.getElementById(
+
+                    "phoenix-dashboard"
+
+                );
+
+
+            if(dashboardHost){
+
+
+                dashboardHost.innerHTML =
+
+                    "";
+
+
+            }
+
+
+            return currentView;
+
+
+        }
+
+
+        catch(error){
+
+
+            if(
+
+                requestSequence !==
+
+                    this.processViewLoadSequence
+
+            ){
+
+
+                return null;
+
+
+            }
+
+
+            console.error(
+
+                "[PHX PROCESS CURRENT VIEW LOAD ERROR]",
+
+                {
+
+                    process:
+
+                        resolvedProcess,
+
+
+                    processView:
+
+                        processView,
+
+
+                    error:
+
+                        error
+
+                }
+
+            );
+
+
+            this.appState.update({
+
+                currentView:
+
+                    "",
+
+
+                currentViewConfig:
+
+                    {},
+
+
+                rows:
+
+                    [],
+
+
+                totalRecords:
+
+                    0,
+
+
+                gridLoaded:
+
+                    false,
+
+
+                totalOpportunities:
+
+                    0,
+
+
+                dashboardStatus:
+
+                    "Error",
+
+
+                status:
+
+                    `Unable to load ${resolvedProcess} View`
+
+            });
+
+
+            return null;
+
+
+        }
 
 
     }
