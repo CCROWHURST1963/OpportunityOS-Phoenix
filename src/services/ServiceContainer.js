@@ -891,7 +891,11 @@ export class ServiceContainer {
 
         const profitAtPrice =
 
-            new ProfitAtPrice();
+            new ProfitAtPrice(
+
+                financialEngine
+
+            );
 
 
         const findPriceForTarget =
@@ -1288,6 +1292,21 @@ this.services.scoreEngine =
                     Boolean(
 
                         financialEngine
+
+                    ),
+
+
+                profitAtPriceFinancialEngine:
+
+                    Boolean(
+
+                        profitAtPrice?.financialEngine
+
+                        &&
+
+                        typeof profitAtPrice.financialEngine.calculate ===
+
+                            "function"
 
                     ),
 

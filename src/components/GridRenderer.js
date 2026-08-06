@@ -660,6 +660,521 @@ export class GridRenderer {
 
 
 
+    getAvailableGridWidth(container){
+
+
+        const directWidth =
+
+            Number(
+
+                container?.clientWidth
+
+            );
+
+
+        if(
+
+            Number.isFinite(directWidth)
+
+            &&
+
+            directWidth > 0
+
+        ){
+
+
+            return directWidth;
+
+
+        }
+
+
+        const viewportWidth =
+
+            Number(
+
+                window?.innerWidth
+
+            );
+
+
+        return Number.isFinite(viewportWidth)
+
+            &&
+
+            viewportWidth > 0
+
+                ? viewportWidth
+
+                : 1200;
+
+
+    }
+
+
+
+
+
+
+    getMinimumResponsiveWidth(column){
+
+
+        const field =
+
+            this.normaliseText(
+
+                column?.field
+
+            ).toLowerCase();
+
+
+        if(field === "_selected"){
+
+
+            return 46;
+
+
+        }
+
+
+        if(this.isToolsField(field)){
+
+
+            return 205;
+
+
+        }
+
+
+        if(
+
+            this.isStatusField(field)
+
+            ||
+
+            this.isBuySignalField(field)
+
+            ||
+
+            this.isScoreField(field)
+
+            ||
+
+            this.isPackSourceField(field)
+
+        ){
+
+
+            return 92;
+
+
+        }
+
+
+        if(
+
+            field.includes("title")
+
+            ||
+
+            field.includes("description")
+
+            ||
+
+            field.includes("comment")
+
+        ){
+
+
+            return 150;
+
+
+        }
+
+
+        return 82;
+
+
+    }
+
+
+
+
+
+
+    getResponsiveColumns(
+
+        columns,
+
+        container
+
+    ){
+
+
+        const sourceColumns =
+
+            Array.isArray(columns)
+
+                ? columns
+
+                : [];
+
+
+        const availableWidth =
+
+            Math.max(
+
+                320,
+
+                this.getAvailableGridWidth(
+
+                    container
+
+                )
+
+                -
+
+                2
+
+            );
+
+
+        const widths =
+
+            sourceColumns.map(
+
+                column => {
+
+
+                    const parsed =
+
+                        Number(
+
+                            column?.width
+
+                        );
+
+
+                    return Number.isFinite(parsed)
+
+                        &&
+
+                        parsed > 0
+
+                            ? parsed
+
+                            : 140;
+
+
+                }
+
+            );
+
+
+        const totalWidth =
+
+            widths.reduce(
+
+                (
+
+                    sum,
+
+                    width
+
+                ) =>
+
+                    sum
+
+                    +
+
+                    width,
+
+                0
+
+            );
+
+
+        if(
+
+            totalWidth <= 0
+
+            ||
+
+            totalWidth <= availableWidth
+
+        ){
+
+
+            return sourceColumns.map(
+
+                column => ({
+
+                    ...column
+
+                })
+
+            );
+
+
+        }
+
+
+        const idealScale =
+
+            availableWidth
+
+            /
+
+            totalWidth;
+
+
+        /*
+            Keep text and controls readable. When the grid
+            cannot safely shrink further, the grid itself
+            scrolls horizontally rather than widening the page.
+        */
+
+
+        const appliedScale =
+
+            Math.max(
+
+                0.72,
+
+                Math.min(
+
+                    1,
+
+                    idealScale
+
+                )
+
+            );
+
+
+        return sourceColumns.map(
+
+            (
+
+                column,
+
+                index
+
+            ) => {
+
+
+                const minimumWidth =
+
+                    this.getMinimumResponsiveWidth(
+
+                        column
+
+                    );
+
+
+                const responsiveWidth =
+
+                    Math.max(
+
+                        minimumWidth,
+
+                        Math.round(
+
+                            widths[index]
+
+                            *
+
+                            appliedScale
+
+                        )
+
+                    );
+
+
+                return {
+
+                    ...column,
+
+                    width:
+
+                        responsiveWidth
+
+                };
+
+
+            }
+
+        );
+
+
+    }
+
+
+
+
+
+
+    ensureResponsiveGridStyles(){
+
+
+        if(
+
+            document.getElementById(
+
+                "phoenix-responsive-grid-style"
+
+            )
+
+        ){
+
+
+            return;
+
+
+        }
+
+
+        const style =
+
+            document.createElement(
+
+                "style"
+
+            );
+
+
+        style.id =
+
+            "phoenix-responsive-grid-style";
+
+
+        style.textContent = `
+
+            .phoenix-grid-viewport{
+
+                width:100%;
+
+                max-width:100%;
+
+                overflow-x:auto;
+
+                overflow-y:visible;
+
+                box-sizing:border-box;
+
+                overscroll-behavior-x:contain;
+
+                -webkit-overflow-scrolling:touch;
+
+            }
+
+
+            .phoenix-grid{
+
+                width:max-content;
+
+                min-width:100%;
+
+                max-width:none;
+
+                box-sizing:border-box;
+
+            }
+
+
+            .phoenix-grid-row{
+
+                width:100%;
+
+                min-width:max-content;
+
+                box-sizing:border-box;
+
+            }
+
+
+            .phoenix-grid-cell{
+
+                min-width:0;
+
+                overflow:hidden;
+
+                box-sizing:border-box;
+
+            }
+
+
+            .phoenix-grid-header-cell{
+
+                overflow:hidden;
+
+                text-overflow:ellipsis;
+
+                white-space:nowrap;
+
+            }
+
+
+            @media (max-width:900px){
+
+                .phoenix-grid-cell{
+
+                    padding-left:6px;
+
+                    padding-right:6px;
+
+                    font-size:13px;
+
+                }
+
+
+                .phoenix-grid-header-cell{
+
+                    font-size:12px;
+
+                }
+
+            }
+
+
+            @media (max-width:600px){
+
+                .phoenix-grid-cell{
+
+                    padding-left:4px;
+
+                    padding-right:4px;
+
+                    font-size:12px;
+
+                }
+
+
+                .phoenix-grid-header-cell{
+
+                    font-size:11px;
+
+                }
+
+            }
+
+        `;
+
+
+        document.head.appendChild(
+
+            style
+
+        );
+
+
+    }
+
+
+
+
+
+
     getColumnStyle(column){
 
 
@@ -5357,6 +5872,747 @@ export class GridRenderer {
 
 
 
+    isCurrencyField(field){
+
+
+        return [
+
+            "supplier_price",
+
+            "supplier_cost",
+
+            "std_supplier_price",
+
+            "unit_cost_excl_tax",
+
+            "_cost",
+
+            "pack_cost",
+
+            "_pack_cost",
+
+            "validated_sales_price",
+
+            "avg_price_30",
+
+            "avg_price_30_day",
+
+            "avg_price_90",
+
+            "avg_price_90_day",
+
+            "avg_price_180",
+
+            "avg_price_180_day",
+
+            "competitive_price_threshold",
+
+            "target_selling_price",
+
+            "break_even_price",
+
+            "breakeven_price",
+
+            "max_cost",
+
+            "maximum_cost",
+
+            "target_selling_price_max_cost",
+
+            "adjusted_target_selling_price",
+
+            "effective_target_selling_price_for_rule",
+
+            "profit",
+
+            "calc_profit",
+
+            "fba_fee",
+
+            "referral_fee",
+
+            "nett_prep_fee",
+
+            "fbm_cost",
+
+            "digital_service_fee",
+
+            "digital_tax_fee",
+
+            "tax_due",
+
+            "competing_price",
+
+            "new_current_price"
+
+        ].includes(
+
+            this.normaliseFieldName(
+
+                field
+
+            )
+
+        );
+
+
+    }
+
+
+
+
+
+
+    isPercentField(field){
+
+
+        return [
+
+            "roi",
+
+            "roi_percent",
+
+            "calc_roi_percent",
+
+            "margin",
+
+            "margin_percent",
+
+            "profit_margin",
+
+            "profit_margin_percent",
+
+            "calc_margin_percent",
+
+            "tax_rate_on_cost",
+
+            "tax_rate_on_sale",
+
+            "referral_fee_percent",
+
+            "digital_service_fee_percent",
+
+            "digital_tax_fee_percent",
+
+            "top_seller_win_percent_30_day",
+
+            "amazon_oos_90_day",
+
+            "match_confidence"
+
+        ].includes(
+
+            this.normaliseFieldName(
+
+                field
+
+            )
+
+        );
+
+
+    }
+
+
+
+
+
+
+    isNumericDisplayField(field){
+
+
+        return [
+
+            "number_of_offers",
+
+            "win_count_30_day",
+
+            "bought_past_month",
+
+            "estimated_sales",
+
+            "estimated_share_of_sales",
+
+            "revised_estimated_share_of_sales",
+
+            "total_seller_sales",
+
+            "30_day_seller_sales",
+
+            "competing_sellers",
+
+            "competing_stock",
+
+            "available_qty",
+
+            "inner_case",
+
+            "outer_case"
+
+        ].includes(
+
+            this.normaliseFieldName(
+
+                field
+
+            )
+
+        );
+
+
+    }
+
+
+
+
+
+
+    parseDisplayNumber(value){
+
+
+        if(
+
+            value === null
+
+            ||
+
+            value === undefined
+
+            ||
+
+            value === ""
+
+        ){
+
+
+            return null;
+
+
+        }
+
+
+        const parsed =
+
+            Number(
+
+                String(
+
+                    value
+
+                )
+
+                    .replaceAll(
+
+                        ",",
+
+                        ""
+
+                    )
+
+                    .replace(
+
+                        /[£$€%]/g,
+
+                        ""
+
+                    )
+
+                    .trim()
+
+            );
+
+
+        return Number.isFinite(parsed)
+
+            ? parsed
+
+            : null;
+
+
+    }
+
+
+
+
+
+
+    buildCurrencyCell(value){
+
+
+        const number =
+
+            this.parseDisplayNumber(
+
+                value
+
+            );
+
+
+        if(number === null){
+
+
+            return this.escapeHtml(
+
+                value
+
+                ??
+
+                ""
+
+            );
+
+
+        }
+
+
+        const shown =
+
+            new Intl.NumberFormat(
+
+                "en-GB",
+
+                {
+
+                    style:
+
+                        "currency",
+
+                    currency:
+
+                        "GBP",
+
+                    minimumFractionDigits:
+
+                        2,
+
+                    maximumFractionDigits:
+
+                        2
+
+                }
+
+            ).format(
+
+                number
+
+            );
+
+
+        return `
+
+            <span
+
+                class="
+
+                    phoenix-financial-value
+
+                    phoenix-currency-value
+
+                    ${number < 0 ? "is-negative" : ""}
+
+                    ${number === 0 ? "is-zero" : ""}
+
+                "
+
+                title="${
+
+                    this.escapeAttribute(
+
+                        shown
+
+                    )
+
+                }"
+
+            >
+
+                ${
+
+                    this.escapeHtml(
+
+                        shown
+
+                    )
+
+                }
+
+            </span>
+
+        `;
+
+
+    }
+
+
+
+
+
+
+    buildPercentCell(value){
+
+
+        const number =
+
+            this.parseDisplayNumber(
+
+                value
+
+            );
+
+
+        if(number === null){
+
+
+            return this.escapeHtml(
+
+                value
+
+                ??
+
+                ""
+
+            );
+
+
+        }
+
+
+        const shown =
+
+            `${
+
+                number.toLocaleString(
+
+                    "en-GB",
+
+                    {
+
+                        minimumFractionDigits:
+
+                            Number.isInteger(number)
+
+                                ? 0
+
+                                : 1,
+
+                        maximumFractionDigits:
+
+                            2
+
+                    }
+
+                )
+
+            }%`;
+
+
+        return `
+
+            <span
+
+                class="
+
+                    phoenix-financial-value
+
+                    phoenix-percent-value
+
+                    ${number < 0 ? "is-negative" : ""}
+
+                    ${number === 0 ? "is-zero" : ""}
+
+                "
+
+                title="${
+
+                    this.escapeAttribute(
+
+                        shown
+
+                    )
+
+                }"
+
+            >
+
+                ${
+
+                    this.escapeHtml(
+
+                        shown
+
+                    )
+
+                }
+
+            </span>
+
+        `;
+
+
+    }
+
+
+
+
+
+
+    buildNumberCell(value){
+
+
+        const number =
+
+            this.parseDisplayNumber(
+
+                value
+
+            );
+
+
+        if(number === null){
+
+
+            return this.escapeHtml(
+
+                value
+
+                ??
+
+                ""
+
+            );
+
+
+        }
+
+
+        const shown =
+
+            number.toLocaleString(
+
+                "en-GB",
+
+                {
+
+                    maximumFractionDigits:
+
+                        2
+
+                }
+
+            );
+
+
+        return `
+
+            <span
+
+                class="
+
+                    phoenix-financial-value
+
+                    phoenix-number-value
+
+                    ${number < 0 ? "is-negative" : ""}
+
+                    ${number === 0 ? "is-zero" : ""}
+
+                "
+
+                title="${
+
+                    this.escapeAttribute(
+
+                        shown
+
+                    )
+
+                }"
+
+            >
+
+                ${
+
+                    this.escapeHtml(
+
+                        shown
+
+                    )
+
+                }
+
+            </span>
+
+        `;
+
+
+    }
+
+
+
+
+
+
+    getCalculatedDisplayValue(
+
+        columnIdentity,
+
+        row,
+
+        value
+
+    ){
+
+
+        const field =
+
+            this.normaliseFieldName(
+
+                columnIdentity
+
+            );
+
+
+        if(
+
+            field === "max_cost"
+
+            ||
+
+            field === "maximum_cost"
+
+            ||
+
+            field === "target_selling_price_max_cost"
+
+        ){
+
+
+            return value
+
+            ??
+
+            row?.max_cost
+
+            ??
+
+            row?.maximumCost
+
+            ??
+
+            row?.maximum_cost
+
+            ??
+
+            row?.targetSellingPriceMaxCost
+
+            ??
+
+            row?.target_selling_price_max_cost
+
+            ??
+
+            row?.calc?.maxCost
+
+            ??
+
+            row?.calc?.maximumCost
+
+            ??
+
+            row?.calc?.targetSellingPriceMaxCost
+
+            ??
+
+            null;
+
+
+        }
+
+
+        if(
+
+            field === "break_even_price"
+
+            ||
+
+            field === "breakeven_price"
+
+        ){
+
+
+            return value
+
+            ??
+
+            row?.break_even_price
+
+            ??
+
+            row?.breakEvenPrice
+
+            ??
+
+            row?.breakeven_price
+
+            ??
+
+            row?.calc?.breakEvenPrice
+
+            ??
+
+            row?.calc?.break_even_price
+
+            ??
+
+            null;
+
+
+        }
+
+
+        if(
+
+            field === "target_selling_price"
+
+        ){
+
+
+            return value
+
+            ??
+
+            row?.target_selling_price
+
+            ??
+
+            row?.targetSellingPrice
+
+            ??
+
+            row?.calc?.targetSellingPrice
+
+            ??
+
+            row?.calc?.target_selling_price
+
+            ??
+
+            null;
+
+
+        }
+
+
+        return value;
+
+
+    }
+
+
+
+
+
+
     buildFormattedCell(
 
         column,
@@ -5377,6 +6633,19 @@ export class GridRenderer {
             );
 
 
+        const displayValue =
+
+            this.getCalculatedDisplayValue(
+
+                columnIdentity,
+
+                row,
+
+                value
+
+            );
+
+
         if(
 
             this.isStatusField(
@@ -5390,7 +6659,7 @@ export class GridRenderer {
 
             return this.buildStatusPill(
 
-                value,
+                displayValue,
 
                 row
 
@@ -5413,7 +6682,7 @@ export class GridRenderer {
 
             return this.buildBuySignalPill(
 
-                value
+                displayValue
 
             );
 
@@ -5434,7 +6703,7 @@ export class GridRenderer {
 
             return this.buildScorePill(
 
-                value,
+                displayValue,
 
                 row
 
@@ -5457,7 +6726,7 @@ export class GridRenderer {
 
             return this.buildPackSourcePill(
 
-                value,
+                displayValue,
 
                 row
 
@@ -5480,7 +6749,7 @@ export class GridRenderer {
 
             return this.buildSupplierPill(
 
-                value,
+                displayValue,
 
                 row
 
@@ -5490,9 +6759,72 @@ export class GridRenderer {
         }
 
 
+        if(
+
+            this.isCurrencyField(
+
+                columnIdentity
+
+            )
+
+        ){
+
+
+            return this.buildCurrencyCell(
+
+                displayValue
+
+            );
+
+
+        }
+
+
+        if(
+
+            this.isPercentField(
+
+                columnIdentity
+
+            )
+
+        ){
+
+
+            return this.buildPercentCell(
+
+                displayValue
+
+            );
+
+
+        }
+
+
+        if(
+
+            this.isNumericDisplayField(
+
+                columnIdentity
+
+            )
+
+        ){
+
+
+            return this.buildNumberCell(
+
+                displayValue
+
+            );
+
+
+        }
+
+
         return this.escapeHtml(
 
-            value
+            displayValue
 
             ??
 
@@ -5889,6 +7221,43 @@ export class GridRenderer {
 
             }
 
+
+            .phoenix-financial-value{
+
+                display:block;
+
+                width:100%;
+
+                overflow:hidden;
+
+                text-overflow:ellipsis;
+
+                white-space:nowrap;
+
+                text-align:center;
+
+                font-variant-numeric:
+
+                    tabular-nums;
+
+            }
+
+
+            .phoenix-financial-value.is-negative{
+
+                color:#b91c1c;
+
+                font-weight:800;
+
+            }
+
+
+            .phoenix-financial-value.is-zero{
+
+                color:#94a3b8;
+
+            }
+
         `;
 
 
@@ -6149,7 +7518,7 @@ export class GridRenderer {
 
         console.log(
 
-            "[PHX0067A GRID FORMATTER ACTIVE]"
+            "[PHX0069 RESPONSIVE DEVICE GRID ACTIVE]"
 
         );
 
@@ -6158,6 +7527,9 @@ export class GridRenderer {
 
 
         this.ensureFormattingStyles();
+
+
+        this.ensureResponsiveGridStyles();
 
 
         this.renderedRows =
@@ -6220,16 +7592,26 @@ export class GridRenderer {
                 : [];
 
 
-        const renderColumns = [
+        const renderColumns =
 
-            this.createSelectionColumn(),
+            this.getResponsiveColumns(
 
-            ...configuredColumns
+                [
 
-        ];
+                    this.createSelectionColumn(),
+
+                    ...configuredColumns
+
+                ],
+
+                container
+
+            );
 
 
         container.innerHTML = `
+
+            <div class="phoenix-grid-viewport">
 
             <div class="phoenix-grid">
 
@@ -6404,6 +7786,8 @@ export class GridRenderer {
                             `).join("")
 
                 }
+
+            </div>
 
             </div>
 
