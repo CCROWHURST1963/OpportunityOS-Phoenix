@@ -368,17 +368,6 @@ export class SupabaseOpportunityRepository {
         }
 
 
-        /*
-            Some wrappers return:
-
-            {
-                data:{
-                    rows:[...]
-                }
-            }
-        */
-
-
         if(Array.isArray(response?.data?.rows)){
 
 
@@ -442,13 +431,6 @@ export class SupabaseOpportunityRepository {
             case "category":
 
             case "categories_root":
-
-
-                /*
-                    The row RPC uses the logical field name
-                    "category" and maps it internally to
-                    categories_root.
-                */
 
 
                 return "category";
@@ -684,6 +666,166 @@ export class SupabaseOpportunityRepository {
         console.log(
 
             "[PHX ATTRIBUTE ROW FIRST ROW]",
+
+            rows[0]
+
+            ||
+
+            null
+
+        );
+
+
+        return rows;
+
+
+    }
+
+
+
+
+
+
+    async loadRowsByBarcode(request = {}){
+
+
+        const values =
+
+            this.normaliseStringArray(
+
+                request.importValues
+
+                ??
+
+                request.values
+
+            );
+
+
+        if(values.length === 0){
+
+
+            throw new Error(
+
+                "No barcode values were supplied"
+
+            );
+
+
+        }
+
+
+        const params = {
+
+            p_values:
+
+                values,
+
+
+            p_view:
+
+                this.normaliseText(
+
+                    request.currentView
+
+                    ??
+
+                    request.view
+
+                    ??
+
+                    request.process
+
+                )
+
+                ||
+
+                "Can We Sell",
+
+
+            p_user_key:
+
+                this.getUserKey(
+
+                    request
+
+                ),
+
+
+            p_limit:
+
+                this.normaliseLimit(
+
+                    request.rowsLimit
+
+                    ??
+
+                    request.limit
+
+                ),
+
+
+            p_locale:
+
+                this.getLocale(
+
+                    request
+
+                )
+
+        };
+
+
+        console.log(
+
+            "[PHX BARCODE ROW RPC PARAMS]",
+
+            params
+
+        );
+
+
+        const response =
+
+            await this.supabaseClient.rpc(
+
+                "get_opportunity_rows_by_barcode_v1",
+
+                params
+
+            );
+
+
+        console.log(
+
+            "[PHX BARCODE ROW RAW RESPONSE]",
+
+            response
+
+        );
+
+
+        const rows =
+
+            this.extractRows(
+
+                response
+
+            );
+
+
+        console.log(
+
+            "[PHX BARCODE ROW RPC COUNT]",
+
+            rows.length
+
+        );
+
+
+        console.log(
+
+            "[PHX BARCODE ROW FIRST ROW]",
 
             rows[0]
 

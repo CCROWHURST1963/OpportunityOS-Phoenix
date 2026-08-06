@@ -651,6 +651,350 @@ export class ToolbarController {
 
 
 
+    getImportTypeOptions(){
+
+
+        return [
+
+            {
+
+                value:
+
+                    "By ASIN",
+
+
+                label:
+
+                    "By ASIN"
+
+            },
+
+            {
+
+                value:
+
+                    "By Brand",
+
+
+                label:
+
+                    "By Brand"
+
+            },
+
+            {
+
+                value:
+
+                    "By Barcode",
+
+
+                label:
+
+                    "By Barcode"
+
+            }
+
+        ];
+
+
+    }
+
+
+
+
+
+
+    renderImportTypeOptions(state){
+
+
+        const importTypes =
+
+            this.getImportTypeOptions();
+
+
+        const currentImportType =
+
+            String(
+
+                state.importType
+
+                ??
+
+                ""
+
+            ).trim();
+
+
+        const options =
+
+            importTypes
+
+                .map(importType => {
+
+
+                    const escapedValue =
+
+                        this.escapeHtml(
+
+                            importType.value
+
+                        );
+
+
+                    const escapedLabel =
+
+                        this.escapeHtml(
+
+                            importType.label
+
+                        );
+
+
+                    const selected =
+
+                        currentImportType ===
+
+                        importType.value
+
+                            ? "selected"
+
+                            : "";
+
+
+                    return `
+
+                        <option
+
+                            value="${escapedValue}"
+
+                            ${selected}
+
+                        >
+
+                            ${escapedLabel}
+
+                        </option>
+
+                    `;
+
+
+                })
+
+                .join("");
+
+
+        const currentImportTypeExists =
+
+            importTypes.some(importType =>
+
+                importType.value ===
+
+                currentImportType
+
+            );
+
+
+        return `
+
+            <option
+
+                value=""
+
+                ${currentImportTypeExists ? "" : "selected"}
+
+            >
+
+                Select Import Type
+
+            </option>
+
+            ${options}
+
+        `;
+
+
+    }
+
+
+
+
+
+
+    renderImportSelector(state){
+
+
+        if(
+
+            state.opportunityMode !==
+
+            "By Import"
+
+        ){
+
+
+            return "";
+
+
+        }
+
+
+        return `
+
+            <div
+
+                class="toolbar-pill toolbar-green"
+
+                id="phoenix-import-type-pill"
+
+            >
+
+
+                <span class="toolbar-pill-label">
+
+                    Import Type
+
+                </span>
+
+
+                <select
+
+                    id="phoenix-import-type"
+
+                >
+
+                    ${this.renderImportTypeOptions(state)}
+
+                </select>
+
+
+            </div>
+
+        `;
+
+
+    }
+
+
+
+
+
+
+    renderImportFileSelector(state){
+
+
+        if(
+
+            state.opportunityMode !==
+
+            "By Import"
+
+        ){
+
+
+            return "";
+
+
+        }
+
+
+        const fileName =
+
+            String(
+
+                state.importFileName
+
+                ??
+
+                ""
+
+            ).trim();
+
+
+        const safeFileName =
+
+            this.escapeHtml(
+
+                fileName
+
+                ||
+
+                "No file selected"
+
+            );
+
+
+        return `
+
+            <div
+
+                class="toolbar-pill toolbar-green"
+
+                id="phoenix-import-file-pill"
+
+            >
+
+
+                <span class="toolbar-pill-label">
+
+                    Import File
+
+                </span>
+
+
+                <label
+
+                    for="phoenix-import-file"
+
+                    class="toolbar-file-button"
+
+                >
+
+                    Choose File
+
+                </label>
+
+
+                <input
+
+                    id="phoenix-import-file"
+
+                    type="file"
+
+                    accept=".csv,.xlsx,.xls"
+
+                    style="display:none;"
+
+                >
+
+
+                <span
+
+                    id="phoenix-import-file-name"
+
+                    class="toolbar-file-name"
+
+                    title="${safeFileName}"
+
+                >
+
+                    ${safeFileName}
+
+                </span>
+
+
+            </div>
+
+        `;
+
+
+    }
+
+
+
+
+
+
     render(){
 
 
@@ -716,6 +1060,24 @@ export class ToolbarController {
         const supplierSelector =
 
             this.renderSupplierSelector(
+
+                state
+
+            );
+
+
+        const importSelector =
+
+            this.renderImportSelector(
+
+                state
+
+            );
+
+
+        const importFileSelector =
+
+            this.renderImportFileSelector(
 
                 state
 
@@ -796,6 +1158,19 @@ export class ToolbarController {
                 </option>
 
 
+                <option
+
+                    value="By Import"
+
+                    ${opportunityMode === "By Import" ? "selected" : ""}
+
+                >
+
+                    By Import
+
+                </option>
+
+
             </select>
 
 
@@ -806,6 +1181,12 @@ export class ToolbarController {
 
 
         ${supplierSelector}
+
+
+        ${importSelector}
+
+
+        ${importFileSelector}
 
 
         <div
@@ -1212,6 +1593,513 @@ export class ToolbarController {
 
 
 
+    normaliseImportValues(values, importType){
+
+
+        const seen =
+
+            new Set();
+
+
+        const result =
+
+            [];
+
+
+        const headerNames =
+
+            new Set([
+
+                "asin",
+
+                "brand",
+
+                "barcode",
+
+                "ean",
+
+                "upc",
+
+                String(importType ?? "")
+
+                    .replace(/^By\s+/i, "")
+
+                    .trim()
+
+                    .toLocaleLowerCase()
+
+            ]);
+
+
+        for(const source of values){
+
+
+            const value =
+
+                String(
+
+                    source
+
+                    ??
+
+                    ""
+
+                ).trim();
+
+
+            if(!value){
+
+
+                continue;
+
+
+            }
+
+
+            const key =
+
+                value.toLocaleLowerCase();
+
+
+            if(headerNames.has(key)){
+
+
+                continue;
+
+
+            }
+
+
+            if(seen.has(key)){
+
+
+                continue;
+
+
+            }
+
+
+            seen.add(key);
+
+
+            result.push(value);
+
+
+        }
+
+
+        return result;
+
+
+    }
+
+
+
+
+
+
+    parseCsvText(text){
+
+
+        const rows =
+
+            [];
+
+
+        let field =
+
+            "";
+
+
+        let row =
+
+            [];
+
+
+        let quoted =
+
+            false;
+
+
+        const pushField = () => {
+
+
+            row.push(field);
+
+
+            field = "";
+
+
+        };
+
+
+        const pushRow = () => {
+
+
+            pushField();
+
+
+            rows.push(row);
+
+
+            row = [];
+
+
+        };
+
+
+        const source =
+
+            String(text ?? "");
+
+
+        for(let index = 0; index < source.length; index += 1){
+
+
+            const character =
+
+                source[index];
+
+
+            if(quoted){
+
+
+                if(character === '"' && source[index + 1] === '"'){
+
+
+                    field += '"';
+
+
+                    index += 1;
+
+
+                }
+
+
+                else if(character === '"'){
+
+
+                    quoted = false;
+
+
+                }
+
+
+                else {
+
+
+                    field += character;
+
+
+                }
+
+
+                continue;
+
+
+            }
+
+
+            if(character === '"'){
+
+
+                quoted = true;
+
+
+            }
+
+
+            else if(character === ','){
+
+
+                pushField();
+
+
+            }
+
+
+            else if(character === '\n'){
+
+
+                pushRow();
+
+
+            }
+
+
+            else if(character !== '\r'){
+
+
+                field += character;
+
+
+            }
+
+
+        }
+
+
+        if(field || row.length){
+
+
+            pushRow();
+
+
+        }
+
+
+        return rows.flat();
+
+
+    }
+
+
+
+
+
+
+    async ensureXlsxLibrary(){
+
+
+        if(window.XLSX){
+
+
+            return window.XLSX;
+
+
+        }
+
+
+        await new Promise((resolve, reject) => {
+
+
+            const existing =
+
+                document.querySelector(
+
+                    'script[data-phx-xlsx-parser="true"]'
+
+                );
+
+
+            if(existing){
+
+
+                existing.addEventListener(
+
+                    "load",
+
+                    resolve,
+
+                    {once:true}
+
+                );
+
+
+                existing.addEventListener(
+
+                    "error",
+
+                    reject,
+
+                    {once:true}
+
+                );
+
+
+                return;
+
+
+            }
+
+
+            const script =
+
+                document.createElement(
+
+                    "script"
+
+                );
+
+
+            script.src =
+
+                "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+
+
+            script.async =
+
+                true;
+
+
+            script.dataset.phxXlsxParser =
+
+                "true";
+
+
+            script.onload =
+
+                resolve;
+
+
+            script.onerror = () =>
+
+                reject(
+
+                    new Error(
+
+                        "Could not load the Excel parser. Save the file as CSV and try again."
+
+                    )
+
+                );
+
+
+            document.head.appendChild(script);
+
+
+        });
+
+
+        return window.XLSX;
+
+
+    }
+
+
+
+
+
+
+    async parseImportFile(file, importType){
+
+
+        if(!file){
+
+
+            return [];
+
+
+        }
+
+
+        const extension =
+
+            String(file.name ?? "")
+
+                .split(".")
+
+                .pop()
+
+                .toLocaleLowerCase();
+
+
+        let values =
+
+            [];
+
+
+        if(extension === "csv"){
+
+
+            values =
+
+                this.parseCsvText(
+
+                    await file.text()
+
+                );
+
+
+        }
+
+
+        else if(
+
+            extension === "xlsx"
+
+            ||
+
+            extension === "xls"
+
+        ){
+
+
+            const XLSX =
+
+                await this.ensureXlsxLibrary();
+
+
+            const workbook =
+
+                XLSX.read(
+
+                    await file.arrayBuffer(),
+
+                    {type:"array"}
+
+                );
+
+
+            const firstSheetName =
+
+                workbook.SheetNames?.[0];
+
+
+            if(firstSheetName){
+
+
+                const matrix =
+
+                    XLSX.utils.sheet_to_json(
+
+                        workbook.Sheets[firstSheetName],
+
+                        {header:1, raw:false, defval:""}
+
+                    );
+
+
+                values =
+
+                    matrix.flat();
+
+
+            }
+
+
+        }
+
+
+        else {
+
+
+            throw new Error(
+
+                "Choose a CSV, XLSX or XLS import file"
+
+            );
+
+
+        }
+
+
+        return this.normaliseImportValues(
+
+            values,
+
+            importType
+
+        );
+
+
+    }
+
+
+
+
+
+
     bind(){
 
 
@@ -1340,109 +2228,44 @@ export class ToolbarController {
                     event.target.value;
 
 
-                if(
+                const sharedReset = {
 
-                    opportunityMode ===
+                    opportunityView:
 
-                    "By Supplier"
-
-                ){
-
-
-                    this.appState.update({
-
-                        opportunityMode:
-
-                            "By Supplier",
-
-
-                        opportunityView:
-
-                            "",
-
-
-                        viewFilterType:
-
-                            "",
-
-
-                        viewFilterValue:
-
-                            "",
-
-
-                        viewFilterValues:
-
-                            [],
-
-
-                        viewDateValue:
-
-                            "",
-
-
-                        attributeSelectionType:
-
-                            "",
-
-
-                        attributeTopCount:
-
-                            10,
-
-
-                        attributeOptions:
-
-                            [],
-
-
-                        selectedAttributeValues:
-
-                            [],
-
-
-                        selectedCategory:
-
-                            "",
-
-
-                        selectedSubCategory:
-
-                            "",
-
-
-                        gridLoaded:
-
-                            false,
-
-
-                        totalOpportunities:
-
-                            0
-
-                    });
-
-
-                    this.renderAndBind();
-
-
-                    this.ensureSuppliersLoaded();
-
-
-                    return;
-
-
-                }
-
-
-                this.appState.update({
-
-                    opportunityMode:
-
-                        "By View",
+                        "",
 
 
                     selectedSupplier:
+
+                        "",
+
+
+                    importType:
+
+                        "",
+
+
+                    importFileName:
+
+                        "",
+
+
+                    importValues:
+
+                        [],
+
+
+                    importLoading:
+
+                        false,
+
+
+                    importLoaded:
+
+                        false,
+
+
+                    importError:
 
                         "",
 
@@ -1460,6 +2283,31 @@ export class ToolbarController {
                     viewFilterValues:
 
                         [],
+
+
+                    viewFilterLabel:
+
+                        "",
+
+
+                    viewFilterOptions:
+
+                        [],
+
+
+                    viewFilterLoading:
+
+                        false,
+
+
+                    viewFilterLoaded:
+
+                        false,
+
+
+                    viewFilterError:
+
+                        "",
 
 
                     viewDateValue:
@@ -1487,6 +2335,21 @@ export class ToolbarController {
                         [],
 
 
+                    attributeOptionsLoading:
+
+                        false,
+
+
+                    attributeOptionsLoaded:
+
+                        false,
+
+
+                    attributeOptionsError:
+
+                        "",
+
+
                     selectedCategory:
 
                         "",
@@ -1506,6 +2369,81 @@ export class ToolbarController {
 
                         0
 
+                };
+
+
+                if(
+
+                    opportunityMode ===
+
+                    "By Supplier"
+
+                ){
+
+
+                    this.appState.update({
+
+                        ...sharedReset,
+
+
+                        opportunityMode:
+
+                            "By Supplier"
+
+                    });
+
+
+                    this.renderAndBind();
+
+
+                    this.ensureSuppliersLoaded();
+
+
+                    return;
+
+
+                }
+
+
+                if(
+
+                    opportunityMode ===
+
+                    "By Import"
+
+                ){
+
+
+                    this.appState.update({
+
+                        ...sharedReset,
+
+
+                        opportunityMode:
+
+                            "By Import"
+
+                    });
+
+
+                    this.renderAndBind();
+
+
+                    return;
+
+
+                }
+
+
+                this.appState.update({
+
+                    ...sharedReset,
+
+
+                    opportunityMode:
+
+                        "By View"
+
                 });
 
 
@@ -1516,6 +2454,7 @@ export class ToolbarController {
 
 
         }
+
 
 
         const viewSelect =
@@ -1689,6 +2628,369 @@ export class ToolbarController {
 
 
         }
+
+
+        const importTypeSelect =
+
+            this.element.querySelector(
+
+                "#phoenix-import-type"
+
+            );
+
+
+        if(importTypeSelect){
+
+
+            importTypeSelect.onchange = event => {
+
+
+                this.appState.update({
+
+                    importType:
+
+                        event.target.value,
+
+
+                    importFileName:
+
+                        "",
+
+
+                    importValues:
+
+                        [],
+
+
+                    importLoading:
+
+                        false,
+
+
+                    importLoaded:
+
+                        false,
+
+
+                    importError:
+
+                        "",
+
+
+                    gridLoaded:
+
+                        false,
+
+
+                    totalOpportunities:
+
+                        0
+
+                });
+
+
+                this.renderAndBind();
+
+
+            };
+
+
+        }
+
+
+        const importFileInput =
+
+            this.element.querySelector(
+
+                "#phoenix-import-file"
+
+            );
+
+
+        if(importFileInput){
+
+
+            importFileInput.onchange = async event => {
+
+
+                const file =
+
+                    event.target.files?.[0]
+
+                    ||
+
+                    null;
+
+
+                const state =
+
+                    this.appState.getState();
+
+
+                const importType =
+
+                    String(
+
+                        state.importType
+
+                        ??
+
+                        ""
+
+                    ).trim();
+
+
+                if(!file){
+
+
+                    this.appState.update({
+
+                        importFileName:
+
+                            "",
+
+
+                        importValues:
+
+                            [],
+
+
+                        importLoading:
+
+                            false,
+
+
+                        importLoaded:
+
+                            false,
+
+
+                        importError:
+
+                            ""
+
+                    });
+
+
+                    this.renderAndBind();
+
+
+                    return;
+
+
+                }
+
+
+                if(!importType){
+
+
+                    this.appState.update({
+
+                        importFileName:
+
+                            file.name,
+
+
+                        importValues:
+
+                            [],
+
+
+                        importLoading:
+
+                            false,
+
+
+                        importLoaded:
+
+                            false,
+
+
+                        importError:
+
+                            "Select an Import Type before choosing a file"
+
+                    });
+
+
+                    this.renderAndBind();
+
+
+                    return;
+
+
+                }
+
+
+                this.appState.update({
+
+                    importFileName:
+
+                        file.name,
+
+
+                    importValues:
+
+                        [],
+
+
+                    importLoading:
+
+                        true,
+
+
+                    importLoaded:
+
+                        false,
+
+
+                    importError:
+
+                        "",
+
+
+                    gridLoaded:
+
+                        false,
+
+
+                    totalOpportunities:
+
+                        0
+
+                });
+
+
+                this.renderAndBind();
+
+
+                try{
+
+
+                    const importValues =
+
+                        await this.parseImportFile(
+
+                            file,
+
+                            importType
+
+                        );
+
+
+                    if(importValues.length === 0){
+
+
+                        throw new Error(
+
+                            "The selected import file did not contain any values"
+
+                        );
+
+
+                    }
+
+
+                    this.appState.update({
+
+                        importFileName:
+
+                            file.name,
+
+
+                        importValues:
+
+                            importValues,
+
+
+                        importLoading:
+
+                            false,
+
+
+                        importLoaded:
+
+                            true,
+
+
+                        importError:
+
+                            ""
+
+                    });
+
+
+                    console.log(
+
+                        "[PHX IMPORT FILE PARSED]",
+
+                        {
+
+                            importType,
+
+                            fileName:file.name,
+
+                            values:importValues.length
+
+                        }
+
+                    );
+
+
+                }
+
+
+                catch(error){
+
+
+                    console.error(
+
+                        "[PHX IMPORT FILE ERROR]",
+
+                        error
+
+                    );
+
+
+                    this.appState.update({
+
+                        importValues:
+
+                            [],
+
+
+                        importLoading:
+
+                            false,
+
+
+                        importLoaded:
+
+                            false,
+
+
+                        importError:
+
+                            error?.message
+
+                            ||
+
+                            "Unable to read the import file"
+
+                    });
+
+
+                }
+
+
+                this.renderAndBind();
+
+
+            };
+
+
+        }
+
 
 
     }

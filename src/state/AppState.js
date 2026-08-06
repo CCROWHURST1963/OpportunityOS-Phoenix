@@ -239,6 +239,44 @@ export class AppState {
 
 
             /*
+                Import selection
+            */
+
+
+            importType:
+
+                "",
+
+
+            importFileName:
+
+                "",
+
+
+            importValues:
+
+                [],
+
+
+            importLoading:
+
+                false,
+
+
+            importLoaded:
+
+                false,
+
+
+            importError:
+
+                "",
+
+
+
+
+
+            /*
                 Tracker lookup configuration
             */
 
@@ -865,6 +903,23 @@ export class AppState {
                     ? [
 
                         ...this.state.suppliers
+
+                    ]
+
+                    : [],
+
+
+            importValues:
+
+                Array.isArray(
+
+                    this.state.importValues
+
+                )
+
+                    ? [
+
+                        ...this.state.importValues
 
                     ]
 

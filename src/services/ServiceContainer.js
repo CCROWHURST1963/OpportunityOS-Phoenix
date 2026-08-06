@@ -94,12 +94,20 @@ import { PackSizeDerivationService }
     from "./enrichment/PackSizeDerivationService.js";
 
 
-import { OpportunityService }
+import * as OpportunityServiceModule
     from "./OpportunityService.js";
 
 
-import { SupplierOpportunityService }
+import * as SupplierOpportunityServiceModule
     from "./SupplierOpportunityService.js";
+
+
+import { OpportunitySourceService }
+    from "./OpportunitySourceService.js?v=PHX0062_FIX1";
+
+
+import { ImportOpportunityService }
+    from "./ImportOpportunityService.js?v=PHX0063";
 
 
 import { DomainService }
@@ -249,6 +257,25 @@ import { StatusBarController }
 import { GridRenderer }
     from "../components/GridRenderer.js";
 
+
+
+
+const OpportunityService =
+
+    OpportunityServiceModule.OpportunityService
+
+    ||
+
+    OpportunityServiceModule.default;
+
+
+const SupplierOpportunityService =
+
+    SupplierOpportunityServiceModule.SupplierOpportunityService
+
+    ||
+
+    SupplierOpportunityServiceModule.default;
 
 
 
@@ -626,6 +653,32 @@ export class ServiceContainer {
             );
 
 
+        const importOpportunityService =
+
+            new ImportOpportunityService(
+
+                opportunityService,
+
+                supabaseClient,
+
+                this.appState
+
+            );
+
+
+        const opportunitySourceService =
+
+            new OpportunitySourceService(
+
+                opportunityService,
+
+                supplierOpportunityService,
+
+                importOpportunityService
+
+            );
+
+
         const viewConfigService =
 
             new ViewConfigService(
@@ -710,6 +763,16 @@ export class ServiceContainer {
         this.services.supplierOpportunityService =
 
             supplierOpportunityService;
+
+
+        this.services.importOpportunityService =
+
+            importOpportunityService;
+
+
+        this.services.opportunitySourceService =
+
+            opportunitySourceService;
 
 
         this.services.viewConfig =
@@ -1151,9 +1214,7 @@ this.services.scoreEngine =
 
             new DashboardController(
 
-                opportunityService,
-
-                supplierOpportunityService,
+                opportunitySourceService,
 
                 viewConfigService,
 

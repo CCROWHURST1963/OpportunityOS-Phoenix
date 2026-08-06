@@ -32,13 +32,10 @@ export class SupabaseClient {
 
 
 
-    async rpc(
-        functionName,
-        params = {}
-    ) {
+    ensureConfigured(){
 
 
-        if (!this.isConfigured()) {
+        if(!this.isConfigured()){
 
 
             throw new Error(
@@ -48,6 +45,75 @@ export class SupabaseClient {
 
         }
 
+
+    }
+
+
+
+    getHeaders(){
+
+
+        return {
+
+            "apikey":
+                this.key,
+
+
+            "Authorization":
+                `Bearer ${this.key}`,
+
+
+            "Content-Type":
+                "application/json"
+
+        };
+
+
+    }
+
+
+
+    async parseResponse(response){
+
+
+        if(!response.ok){
+
+
+            const responseText =
+                await response.text();
+
+
+            throw new Error(
+                `Supabase request failed: ${response.status}${responseText ? ` - ${responseText}` : ""}`
+            );
+
+
+        }
+
+
+        if(response.status === 204){
+
+
+            return null;
+
+
+        }
+
+
+        return await response.json();
+
+
+    }
+
+
+
+    async rpc(
+        functionName,
+        params = {}
+    ) {
+
+
+        this.ensureConfigured();
 
 
         const response =
@@ -61,22 +127,8 @@ export class SupabaseClient {
                     method: "POST",
 
 
-                    headers: {
-
-
-                        "apikey":
-                            this.key,
-
-
-                        "Authorization":
-                            `Bearer ${this.key}`,
-
-
-                        "Content-Type":
-                            "application/json"
-
-
-                    },
+                    headers:
+                        this.getHeaders(),
 
 
                     body:
@@ -90,22 +142,142 @@ export class SupabaseClient {
             );
 
 
+        return this.parseResponse(
+            response
+        );
 
-        if (!response.ok) {
+
+    }
+
+
+
+    async selectRows(
+        tableName,
+        {
+            select = "*",
+            filters = {},
+            or = "",
+            limit = null
+        } = {}
+    ){
+
+
+        this.ensureConfigured();
+
+
+        const resolvedTableName =
+            String(
+                tableName
+                ??
+                ""
+            ).trim();
+
+
+        if(!resolvedTableName){
 
 
             throw new Error(
-
-                `Supabase RPC failed: ${response.status}`
-
+                "Supabase table name is required"
             );
 
 
         }
 
 
+        const query =
+            new URLSearchParams();
 
-        return await response.json();
+
+        query.set(
+            "select",
+            String(select || "*")
+        );
+
+
+        for(
+            const [field, expression]
+            of Object.entries(filters || {})
+        ){
+
+
+            if(
+                expression === null
+                ||
+                expression === undefined
+                ||
+                expression === ""
+            ){
+
+
+                continue;
+
+
+            }
+
+
+            query.set(
+                field,
+                String(expression)
+            );
+
+
+        }
+
+
+        if(or){
+
+
+            query.set(
+                "or",
+                String(or)
+            );
+
+
+        }
+
+
+        const parsedLimit =
+            Number(limit);
+
+
+        if(
+            Number.isFinite(parsedLimit)
+            &&
+            parsedLimit > 0
+        ){
+
+
+            query.set(
+                "limit",
+                String(
+                    Math.floor(parsedLimit)
+                )
+            );
+
+
+        }
+
+
+        const response =
+            await fetch(
+                `${this.url}/rest/v1/${encodeURIComponent(resolvedTableName)}?${query.toString()}`,
+                {
+                    method: "GET",
+                    headers:
+                        this.getHeaders()
+                }
+            );
+
+
+        const rows =
+            await this.parseResponse(
+                response
+            );
+
+
+        return Array.isArray(rows)
+            ? rows
+            : [];
 
 
     }

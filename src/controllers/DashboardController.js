@@ -3,9 +3,7 @@ export class DashboardController {
 
     constructor(
 
-        opportunityService,
-
-        supplierOpportunityService,
+        opportunitySourceService,
 
         viewConfig,
 
@@ -22,14 +20,9 @@ export class DashboardController {
     ){
 
 
-        this.opportunityService =
+        this.opportunitySourceService =
 
-            opportunityService;
-
-
-        this.supplierOpportunityService =
-
-            supplierOpportunityService;
+            opportunitySourceService;
 
 
         this.viewConfig =
@@ -174,17 +167,46 @@ export class DashboardController {
     normaliseMode(value){
 
 
-        return this.normaliseText(
+        const mode =
 
-            value
+            this.normaliseText(
 
-        ) ===
+                value
+
+            );
+
+
+        if(
+
+            mode ===
 
             "By Supplier"
 
-            ? "By Supplier"
+        ){
 
-            : "By View";
+
+            return "By Supplier";
+
+
+        }
+
+
+        if(
+
+            mode ===
+
+            "By Import"
+
+        ){
+
+
+            return "By Import";
+
+
+        }
+
+
+        return "By View";
 
 
     }
@@ -621,6 +643,41 @@ export class DashboardController {
 
 
             /*
+                Import mode
+            */
+
+
+            importType:
+
+                this.normaliseText(
+
+                    state.importType
+
+                ),
+
+
+            importFileName:
+
+                this.normaliseText(
+
+                    state.importFileName
+
+                ),
+
+
+            importValues:
+
+                this.normaliseStringArray(
+
+                    state.importValues
+
+                ),
+
+
+
+
+
+            /*
                 Request context
             */
 
@@ -693,74 +750,16 @@ export class DashboardController {
 
 
 
-    validateByViewRequest(request){
+    async loadOpportunityRows(request){
 
 
         if(
 
-            !this.normaliseText(
-
-                request.opportunityView
-
-            )
-
-        ){
-
-
-            throw new Error(
-
-                "Select a View before loading the dashboard"
-
-            );
-
-
-        }
-
-
-        if(
-
-            this.isAttributeView(
-
-                request.opportunityView
-
-            )
-
-            &&
-
-            request.selectedAttributeValues.length ===
-
-                0
-
-        ){
-
-
-            throw new Error(
-
-                "Choose at least one filter value before loading the dashboard"
-
-            );
-
-
-        }
-
-
-    }
-
-
-
-
-
-
-    async loadByView(request){
-
-
-        if(
-
-            !this.opportunityService
+            !this.opportunitySourceService
 
             ||
 
-            typeof this.opportunityService.getRows !==
+            typeof this.opportunitySourceService.getRows !==
 
                 "function"
 
@@ -769,7 +768,7 @@ export class DashboardController {
 
             throw new Error(
 
-                "Opportunity service is not available"
+                "Opportunity source service is not available"
 
             );
 
@@ -777,109 +776,13 @@ export class DashboardController {
         }
 
 
-        this.validateByViewRequest(
-
-            request
-
-        );
-
-
         const rows =
 
-            await this.opportunityService.getRows(
+            await this.opportunitySourceService.getRows(
 
                 request
 
             );
-
-
-        return this.normaliseRows(
-
-            rows
-
-        );
-
-
-    }
-
-
-
-
-
-
-    async loadBySupplier(request){
-
-
-        if(!request.selectedSupplier){
-
-
-            throw new Error(
-
-                "Select a supplier before loading the dashboard"
-
-            );
-
-
-        }
-
-
-        if(
-
-            !this.supplierOpportunityService
-
-            ||
-
-            typeof this.supplierOpportunityService.getRows !==
-
-                "function"
-
-        ){
-
-
-            throw new Error(
-
-                "Supplier opportunity service is not available"
-
-            );
-
-
-        }
-
-
-        const rows =
-
-            await this.supplierOpportunityService.getRows({
-
-                supplier:
-
-                    request.selectedSupplier,
-
-
-                process:
-
-                    request.process,
-
-
-                currentView:
-
-                    request.currentView,
-
-
-                limit:
-
-                    request.rowsLimit,
-
-
-                userKey:
-
-                    request.userKey,
-
-
-                locale:
-
-                    request.locale
-
-            });
 
 
         return this.normaliseRows(
@@ -1172,21 +1075,11 @@ export class DashboardController {
                     ),
 
 
-                    request.opportunityMode ===
+                    this.loadOpportunityRows(
 
-                        "By Supplier"
+                        request
 
-                        ? this.loadBySupplier(
-
-                            request
-
-                        )
-
-                        : this.loadByView(
-
-                            request
-
-                        )
+                    )
 
                 ]);
 
